@@ -2,8 +2,16 @@
 
 import { useEffect, useState } from "react";
 
-/** Small "ops center is live" affordance: a ticking UTC clock. Zulu time is
- * the standard military time reference, appropriate for a C2 dashboard. */
+const PH_TIME_FORMAT = new Intl.DateTimeFormat("en-PH", {
+  timeZone: "Asia/Manila",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false,
+});
+
+/** Small "ops center is live" affordance: a ticking clock showing current
+ * Philippine local time (PHT, UTC+8) — WESMINCOM's own timezone. */
 export function LiveClock() {
   const [now, setNow] = useState<Date | null>(null);
 
@@ -20,10 +28,10 @@ export function LiveClock() {
   }, []);
 
   if (!now) {
-    return <span className="font-mono text-xs text-muted-foreground">--:--:--Z</span>;
+    return <span className="font-mono text-xs text-muted-foreground">--:--:-- PHT</span>;
   }
 
-  const time = now.toISOString().slice(11, 19);
+  const time = PH_TIME_FORMAT.format(now);
 
   return (
     <span className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground">
@@ -31,7 +39,7 @@ export function LiveClock() {
         <span className="absolute inline-flex size-full animate-ping rounded-full bg-status-good opacity-75" />
         <span className="relative inline-flex size-1.5 rounded-full bg-status-good" />
       </span>
-      {time}Z
+      {time} PHT
     </span>
   );
 }
