@@ -145,3 +145,4 @@ Explicitly out of scope for this MVP (per SPEC.md §3):
   were full of.
 - `.env` is gitignored; use `.env.example` as a template and never commit
   real secrets.
+"# MC" 
