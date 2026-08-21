@@ -1,0 +1,69 @@
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
+import { requireSessionUser } from "@/lib/session";
+import { assertCanReadJtf, assertCanWriteJtf } from "@/lib/rbac";
+import { handleApiError } from "@/lib/api-error";
+import { withAudit } from "@/lib/audit";
+
+const createAreaSchema = z.object({
+  jtfId: z.string().min(1),
+  unitId: z.string().optional(),
+  region: z.string().optional(),
+  province: z.string().min(1),
+  city: z.string().optional(),
+  municipality: z.string().optional(),
+  barangay: z.string().optional(),
+  hotspotCategory: z.string().optional(),
+  hotspotReason: z.string().optional(),
+  numPrecincts: z.number().int().nonnegative().optional(),
+  numCenters: z.number().int().nonnegative().optional(),
+  registeredVoters: z.number().int().nonnegative().optional(),
+  lat: z.number().optional(),
+  lng: z.number().optional(),
+});
+
+export async function GET(request: NextRequest) {
+  try {
+    const user = await requireSessionUser();
+    const jtfId = request.nextUrl.searchParams.get("jtfId");
+    if (jtfId) {
+      assertCanReadJtf(user, jtfId);
+    }
+
+    const isCommandLevel = user.role === "ADMIN" || user.role === "COMMAND";
+    const scopeJtfId = jtfId ?? (isCommandLevel ? undefined : (user.jtfId ?? "__none__"));
+
+    const areas = await prisma.electionArea.findMany({
+      where: { jtfId: scopeJtfId },
+      include: { unit: true, opsStatus: true },
+      orderBy: [{ province: "asc" }, { municipality: "asc" }, { barangay: "asc" }],
+    });
+    return NextResponse.json(areas);
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const user = await requireSessionUser();
+    const body = createAreaSchema.parse(await request.json());
+    assertCanWriteJtf(user, body.jtfId);
+
+    const area = await withAudit(
+      (tx) => tx.electionArea.create({ data: body }),
+      {
+        userId: user.id,
+        action: "CREATE",
+        entity: "ElectionArea",
+        entityId: (result) => result.id,
+        diff: body,
+      }
+    );
+
+    return NextResponse.json(area, { status: 201 });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
