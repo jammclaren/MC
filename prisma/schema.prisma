@@ -1,0 +1,230 @@
+// Prisma schema for the WESMINCOM Tactical C2 Dashboard.
+// Prisma 7: the connection URL lives in prisma.config.ts, not in the datasource block.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  COMMAND
+  JTF_COMMANDER
+  JTF_STAFF
+  VIEWER
+}
+
+enum ThreatCategory {
+  CTG
+  LTG
+  CBC
+}
+
+enum NeutralizationType {
+  CAPTURED
+  KILLED
+  APPREHENDED
+  SURRENDERED
+}
+
+enum ForceStatus {
+  PSR
+  NPSR
+}
+
+model User {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  passwordHash String
+  role         Role
+  jtfId        String?
+  jtf          JTF?       @relation(fields: [jtfId], references: [id])
+  createdAt    DateTime   @default(now())
+  auditLogs    AuditLog[]
+
+  @@index([jtfId])
+}
+
+model JTF {
+  id              String                  @id @default(cuid())
+  name            String                  @unique
+  areaOfOps       String?
+  users           User[]
+  units           Unit[]
+  deployments     TroopDeployment[]
+  incidents       Incident[]
+  accomplishments AccomplishmentRecord[]
+  rido            RidoSettlement[]
+  electionAreas   ElectionArea[]
+}
+
+model Unit {
+  id            String         @id @default(cuid())
+  jtfId         String
+  jtf           JTF            @relation(fields: [jtfId], references: [id])
+  name          String
+  brigade       String?
+  province      String?
+  electionAreas ElectionArea[]
+
+  @@index([jtfId])
+}
+
+// --- Accomplishments domain (CTG / LTG / CBC) ---
+
+model Indicator {
+  id       String                  @id @default(cuid())
+  category ThreatCategory
+  name     String
+  subgroup String?
+  targetYE Int?
+  records  AccomplishmentRecord[]
+}
+
+model AccomplishmentRecord {
+  id                 String              @id @default(cuid())
+  indicatorId        String
+  indicator          Indicator           @relation(fields: [indicatorId], references: [id])
+  jtfId              String?
+  jtf                JTF?                @relation(fields: [jtfId], references: [id])
+  quarter            String
+  neutralizationType NeutralizationType?
+  forceStatus        ForceStatus?
+  count              Int
+  createdById        String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@unique([indicatorId, jtfId, quarter, forceStatus, neutralizationType])
+  @@index([jtfId])
+  @@index([quarter])
+}
+
+model HviLogEntry {
+  id        String         @id @default(cuid())
+  category  ThreatCategory
+  name      String
+  role      String?
+  outcome   String
+  date      DateTime
+  location  String?
+  narrative String
+  createdAt DateTime       @default(now())
+}
+
+model RidoSettlement {
+  id        String   @id @default(cuid())
+  jtfId     String
+  jtf       JTF      @relation(fields: [jtfId], references: [id])
+  quarter   String
+  involving String
+  count     Int
+
+  @@unique([jtfId, quarter, involving])
+  @@index([jtfId])
+}
+
+// --- BPE 2026 election-ops domain ---
+
+model ElectionArea {
+  id               String              @id @default(cuid())
+  jtfId            String
+  jtf              JTF                 @relation(fields: [jtfId], references: [id])
+  unitId           String?
+  unit             Unit?               @relation(fields: [unitId], references: [id])
+  region           String?
+  province         String
+  city             String?
+  municipality     String?
+  barangay         String?
+  hotspotCategory  String?
+  hotspotReason    String?
+  numPrecincts     Int?
+  numCenters       Int?
+  registeredVoters Int?
+  lat              Float?
+  lng              Float?
+  deployments      TroopDeployment[]
+  incidents        Incident[]
+  opsStatus        ElectionOpsStatus?
+
+  @@index([jtfId])
+  @@index([unitId])
+}
+
+model TroopDeployment {
+  id                String        @id @default(cuid())
+  jtfId             String
+  jtf               JTF           @relation(fields: [jtfId], references: [id])
+  electionAreaId    String?
+  electionArea      ElectionArea? @relation(fields: [electionAreaId], references: [id])
+  unitLabel         String?
+  deployedToPolling Int           @default(0)
+  qrf               Int           @default(0)
+  afpOfficers       Int           @default(0)
+  afpEnlisted       Int           @default(0)
+  caa               Int           @default(0)
+  wavsTav           Int           @default(0)
+  pnpOfficers       Int           @default(0)
+  pnpEnlisted       Int           @default(0)
+  checkpointOps     Int           @default(0)
+  reportedAt        DateTime      @default(now())
+
+  @@index([jtfId])
+  @@index([electionAreaId])
+}
+
+model Incident {
+  id             String        @id @default(cuid())
+  jtfId          String
+  jtf            JTF           @relation(fields: [jtfId], references: [id])
+  electionAreaId String?
+  electionArea   ElectionArea? @relation(fields: [electionAreaId], references: [id])
+  date           DateTime
+  type           String
+  result         String?
+  createdById    String
+  createdAt      DateTime      @default(now())
+
+  @@index([jtfId])
+  @@index([electionAreaId])
+  @@index([date])
+}
+
+model ElectionOpsStatus {
+  id                       String       @id @default(cuid())
+  electionAreaId           String       @unique
+  electionArea             ElectionArea @relation(fields: [electionAreaId], references: [id])
+  paraphTotalTreasurer     Int?
+  paraphDeliveredTreasurer Int?
+  paraphTotalPrecinct      Int?
+  paraphDeliveredPrecinct  Int?
+  acmTestedSealed          Boolean      @default(false)
+  votingStarted            Boolean      @default(false)
+  votingClosed             Boolean      @default(false)
+  transmissionStatus       String?
+  municipalCanvassPct      Float?
+  municipalProclaimed      Boolean      @default(false)
+  provincialCanvassPct     Float?
+  provincialProclaimed     Boolean      @default(false)
+  updatedAt                DateTime     @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String
+  diff      Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity, entityId])
+}
