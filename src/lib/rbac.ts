@@ -77,17 +77,33 @@ export function assertCanModifyEntry(
 }
 
 /**
+ * JTF_COMMANDER's read scope is "own JTF full detail, other JTFs
+ * rollup-only" (SPEC.md §6) — a JTF_COMMANDER may see aggregate/summary
+ * data across every JTF, but not other JTFs' row-level detail (individual
+ * incidents, named HVI entries, etc). Callers decide per query whether what
+ * they're returning is aggregate-only (pass allowRollup: true to
+ * scopeJtfFilter) or row-level detail (leave it strict).
+ */
+export function canReadRollup(user: SessionUser): boolean {
+  return user.jtfId === null || user.role === "JTF_COMMANDER";
+}
+
+/**
  * Prisma `where.jtfId` value implementing a GET route's read scope, given an
  * optional explicit `?jtfId=` query param (caller must have already checked
- * that param with assertCanReadJtf). `undefined` means "no filter" — Prisma
- * omits undefined where-keys, so this naturally means "read everything" for
- * an unscoped user. Never returns `null`, which would instead filter for
- * rows where jtfId IS NULL.
+ * that param with assertCanReadJtf) and whether this particular query is
+ * aggregate-only (see canReadRollup above). `undefined` means "no filter" —
+ * Prisma omits undefined where-keys, so this naturally means "read
+ * everything" for an unscoped (or rollup-eligible, on an aggregate query)
+ * user. Never returns `null`, which would instead filter for rows where
+ * jtfId IS NULL.
  */
 export function scopeJtfFilter(
   user: SessionUser,
-  explicitJtfId?: string | null
+  explicitJtfId?: string | null,
+  options?: { allowRollup?: boolean }
 ): string | undefined {
   if (explicitJtfId) return explicitJtfId;
+  if (options?.allowRollup && canReadRollup(user)) return undefined;
   return user.jtfId ?? undefined;
 }

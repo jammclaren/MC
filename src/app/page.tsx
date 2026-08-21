@@ -1,69 +1,160 @@
-import Image from "next/image";
+import { redirect } from "next/navigation";
+import { getSessionUser } from "@/lib/session";
+import { getOverviewData } from "@/lib/queries/overview";
+import { safePercent } from "@/lib/percentages";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { DeploymentBarChart } from "@/components/charts/deployment-bar-chart";
 
-export default function Home() {
+const CATEGORY_LABELS: Record<string, string> = {
+  CTG: "CTG (Communist Terrorist Group)",
+  LTG: "LTG (Local Terrorist Groups)",
+  CBC: "CBC (Community-Based Conflict / RIDO)",
+};
+
+function formatPct(pct: number | null): string {
+  return pct === null ? "—" : `${pct.toFixed(0)}%`;
+}
+
+export default async function OverviewPage() {
+  const user = await getSessionUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  const data = await getOverviewData(user);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className="flex flex-col gap-8">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Command Overview</h1>
+        <p className="text-sm text-muted-foreground">
+          Recapitulation of troop deployment and threat-category accomplishments.
+        </p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Troop Deployment Recapitulation</CardTitle>
+          <CardDescription>
+            {data.totalDeployed.toLocaleString()} deployed to polling ·{" "}
+            {data.totalQrf.toLocaleString()} QRF
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-6">
+          <DeploymentBarChart data={data.jtfDeployments} />
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>JTF</TableHead>
+                <TableHead className="text-right">Deployed to Polling</TableHead>
+                <TableHead className="text-right">QRF</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.jtfDeployments.map((row) => (
+                <TableRow key={row.jtfId}>
+                  <TableCell>{row.jtfName}</TableCell>
+                  <TableCell className="text-right">
+                    {row.deployedToPolling.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="text-right">{row.qrf.toLocaleString()}</TableCell>
+                </TableRow>
+              ))}
+              {data.jtfDeployments.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center text-muted-foreground">
+                    No deployment data yet.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {data.categorySummaries.map((summary) => {
+          const pct = safePercent(summary.actual, summary.targetYE);
+          return (
+            <Card key={summary.category}>
+              <CardHeader>
+                <CardTitle className="text-base">
+                  {CATEGORY_LABELS[summary.category]}
+                </CardTitle>
+                <CardDescription>Year-end target vs. actual</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-semibold">{summary.actual}</span>
+                  <span className="text-sm text-muted-foreground">
+                    / {summary.targetYE || "—"}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {formatPct(pct)} of year-end target
+                </p>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Incidents</CardTitle>
+          <CardDescription>Last 10 reported, most recent first.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>JTF</TableHead>
+                <TableHead>Area</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Result</TableHead>
+                <TableHead>Priority</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.recentIncidents.map((incident) => (
+                <TableRow key={incident.id}>
+                  <TableCell>{incident.date.toLocaleDateString()}</TableCell>
+                  <TableCell>{incident.jtfName}</TableCell>
+                  <TableCell>{incident.areaLabel ?? "—"}</TableCell>
+                  <TableCell>{incident.type}</TableCell>
+                  <TableCell>{incident.result ?? "—"}</TableCell>
+                  <TableCell>
+                    {incident.isPriority && <Badge variant="destructive">Priority</Badge>}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {data.recentIncidents.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    No incidents reported yet.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

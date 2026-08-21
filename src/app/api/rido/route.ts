@@ -24,7 +24,9 @@ export async function GET(request: NextRequest) {
       assertCanReadJtf(user, jtfId);
     }
 
-    const scopeJtfId = scopeJtfFilter(user, jtfId);
+    // Per-quarter settlement counts, not case-level detail — a rollup view
+    // JTF_COMMANDER may see command-wide (SPEC.md §6).
+    const scopeJtfId = scopeJtfFilter(user, jtfId, { allowRollup: true });
 
     const settlements = await prisma.ridoSettlement.findMany({
       where: {

@@ -29,7 +29,9 @@ export async function GET(request: NextRequest) {
       assertCanReadJtf(user, jtfId);
     }
 
-    const scopeJtfId = scopeJtfFilter(user, jtfId);
+    // Aggregate counts per quarter/indicator, not row-level detail — a
+    // rollup view JTF_COMMANDER may see command-wide (SPEC.md §6).
+    const scopeJtfId = scopeJtfFilter(user, jtfId, { allowRollup: true });
 
     const records = await prisma.accomplishmentRecord.findMany({
       where: {
