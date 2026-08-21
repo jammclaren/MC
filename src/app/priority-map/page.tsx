@@ -1,0 +1,126 @@
+import { redirect } from "next/navigation";
+import { getSessionUser } from "@/lib/session";
+import { getScoredAreas } from "@/lib/queries/priority-areas";
+import { PriorityMapLoader } from "@/components/priority-map-loader";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+
+const HOTSPOT_BADGE_VARIANT: Record<string, "destructive" | "secondary" | "default"> = {
+  Red: "destructive",
+  Yellow: "secondary",
+  Green: "default",
+};
+
+export default async function PriorityMapPage() {
+  const user = await getSessionUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  const areas = await getScoredAreas(user);
+  const top10 = areas.slice(0, 10);
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Hotspot / Priority Map</h1>
+        <p className="text-sm text-muted-foreground">
+          Areas of operation color-coded by hotspot category and computed priority
+          score. Click a marker for detail.
+        </p>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          <PriorityMapLoader areas={areas} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Priority Areas (Top 10)</CardTitle>
+          <CardDescription>
+            Ranked by priority score — see{" "}
+            <code className="rounded bg-muted px-1 py-0.5 text-xs">
+              computePriorityScore
+            </code>{" "}
+            for the exact, editable formula.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Area</TableHead>
+                <TableHead>Hotspot</TableHead>
+                <TableHead className="text-right">Registered Voters</TableHead>
+                <TableHead className="text-right">Deployed</TableHead>
+                <TableHead className="text-right">Recent Incidents (30d)</TableHead>
+                <TableHead className="text-right">Priority Score</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {top10.map((area) => {
+                const label =
+                  [area.barangay, area.municipality, area.province]
+                    .filter(Boolean)
+                    .join(", ") || area.province;
+                return (
+                  <TableRow key={area.id}>
+                    <TableCell>{label}</TableCell>
+                    <TableCell>
+                      {area.hotspotCategory ? (
+                        <Badge
+                          variant={
+                            HOTSPOT_BADGE_VARIANT[area.hotspotCategory] ?? "outline"
+                          }
+                        >
+                          {area.hotspotCategory}
+                        </Badge>
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {area.registeredVoters?.toLocaleString() ?? "—"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {area.deployedToPolling.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {area.recentIncidentCount}
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {area.priorityScore.toFixed(1)}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+              {top10.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    No election areas recorded yet.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
