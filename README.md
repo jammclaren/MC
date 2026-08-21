@@ -19,15 +19,30 @@ RBAC layer, Leaflet for mapping (no online tile dependency — see
 ## Prerequisites
 
 - Node.js 20.9+ (this project was built against Node 24)
-- Docker Desktop (with its WSL2 backend, on Windows) — for local Postgres and
-  for the production Docker Compose deployment
+- A Postgres database — either local via Docker Desktop (WSL2 backend on
+  Windows), or a hosted instance (e.g. Supabase — see below)
 - A `.env` file (copy `.env.example`)
+
+## Database: local Docker vs. hosted (e.g. Supabase)
+
+`docker-compose.yml`'s `db` service is the default for fully air-gapped/on-prem
+deployment (SPEC.md's target environment). For development or a non-air-gapped
+deployment, `DATABASE_URL` can point at any Postgres instance instead,
+including a hosted one like Supabase — Prisma doesn't care which.
+
+If pointing at Supabase specifically: use the **Session pooler** connection
+string (Project Settings → Database → Connection string → Session pooler,
+port 5432), not the direct `db.<ref>.supabase.co` host. That direct host only
+resolves to an IPv6 address unless the project has the (paid) dedicated IPv4
+add-on, and most local networks/ISPs can't reach it — you'll see `P1001:
+Can't reach database server`. The pooler host resolves to IPv4 and works from
+anywhere.
 
 ## Local development setup
 
 ```bash
 npm install
-docker compose up -d db          # starts just Postgres, not the app
+docker compose up -d db          # only if using local Postgres, not Supabase
 npm run db:migrate                # creates the schema
 npm run db:seed                   # seeds JTFs, indicator taxonomy, admin user
 npm run dev
