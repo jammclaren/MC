@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUser } from "@/lib/session";
+import { scopeJtfFilter } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import {
   computePriorityScore,
@@ -10,8 +11,7 @@ import {
 export async function GET(request: NextRequest) {
   try {
     const user = await requireSessionUser();
-    const isCommandLevel = user.role === "ADMIN" || user.role === "COMMAND";
-    const scopeJtfId = isCommandLevel ? undefined : (user.jtfId ?? "__none__");
+    const scopeJtfId = scopeJtfFilter(user);
 
     const windowStart = new Date(
       Date.now() - RECENT_INCIDENT_WINDOW_DAYS * 24 * 60 * 60 * 1000

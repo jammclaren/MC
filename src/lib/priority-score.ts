@@ -12,6 +12,11 @@ export const HOTSPOT_WEIGHTS: Record<string, number> = {
   Green: 1,
 };
 
+/** Threshold above which an area/incident is flagged as a priority in list
+ * views — set equal to a plain Red hotspot with nothing else going on, so
+ * "flagged" means "at least as urgent as a bare Red hotspot." */
+export const PRIORITY_FLAG_THRESHOLD = HOTSPOT_WEIGHTS.Red;
+
 /**
  * Per-incident-type severity weights. Unlisted types fall back to
  * DEFAULT_INCIDENT_WEIGHT. Keys are matched case-insensitively. Edit this map

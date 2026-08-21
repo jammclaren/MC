@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUser } from "@/lib/session";
-import { assertCanReadJtf, assertCanWriteJtf, ForbiddenError } from "@/lib/rbac";
+import { assertCanReadJtf, assertCanWriteJtf, scopeJtfFilter, ForbiddenError } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import { withAudit } from "@/lib/audit";
 
@@ -29,16 +29,12 @@ export async function GET(request: NextRequest) {
       assertCanReadJtf(user, jtfId);
     }
 
-    const isCommandLevel = user.role === "ADMIN" || user.role === "COMMAND";
-    const scopeJtfId = jtfId ?? (isCommandLevel ? undefined : user.jtfId);
+    const scopeJtfId = scopeJtfFilter(user, jtfId);
 
     const records = await prisma.accomplishmentRecord.findMany({
       where: {
         quarter: quarter ?? undefined,
-        // scopeJtfId undefined means "no filter" for command-level roles;
-        // for scoped roles it's their own jtfId (possibly null, meaning
-        // they see only command-wide records with no JTF attached).
-        ...(scopeJtfId !== undefined ? { jtfId: scopeJtfId } : {}),
+        jtfId: scopeJtfId,
         indicator: category ? { category: category as never } : undefined,
       },
       include: { indicator: true },

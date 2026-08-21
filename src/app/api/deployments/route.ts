@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUser } from "@/lib/session";
-import { assertCanReadJtf, assertCanWriteJtf } from "@/lib/rbac";
+import { assertCanReadJtf, assertCanWriteJtf, scopeJtfFilter } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import { withAudit } from "@/lib/audit";
 
@@ -32,8 +32,7 @@ export async function GET(request: NextRequest) {
       assertCanReadJtf(user, jtfId);
     }
 
-    const isCommandLevel = user.role === "ADMIN" || user.role === "COMMAND";
-    const scopeJtfId = jtfId ?? (isCommandLevel ? undefined : (user.jtfId ?? "__none__"));
+    const scopeJtfId = scopeJtfFilter(user, jtfId);
 
     const deployments = await prisma.troopDeployment.findMany({
       where: {

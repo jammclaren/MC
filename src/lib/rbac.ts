@@ -14,13 +14,13 @@ export class ForbiddenError extends Error {
 }
 
 /**
- * Command-wide records (targetJtfId === null, e.g. CTG rollups not tied to a
- * single JTF) are readable by any authenticated role. JTF-scoped records are
- * readable by ADMIN/COMMAND always, and by other roles only within their own
- * jtfId — matches the read-scope column of the RBAC table in SPEC.md §6.
+ * A user with no JTF scope (jtfId === null — always true for ADMIN/COMMAND,
+ * and optionally true for a "command-wide" VIEWER set up that way at account
+ * creation, per SPEC.md §6) reads everything. A JTF-scoped user reads their
+ * own JTF's records plus command-wide records (targetJtfId === null).
  */
 export function canReadJtf(user: SessionUser, targetJtfId: string | null): boolean {
-  if (user.role === "ADMIN" || user.role === "COMMAND") return true;
+  if (user.jtfId === null) return true;
   if (targetJtfId === null) return true;
   return user.jtfId === targetJtfId;
 }
@@ -74,4 +74,20 @@ export function assertCanModifyEntry(
   if (!canModifyEntry(user, targetJtfId, createdById)) {
     throw new ForbiddenError("Not authorized to modify this entry");
   }
+}
+
+/**
+ * Prisma `where.jtfId` value implementing a GET route's read scope, given an
+ * optional explicit `?jtfId=` query param (caller must have already checked
+ * that param with assertCanReadJtf). `undefined` means "no filter" — Prisma
+ * omits undefined where-keys, so this naturally means "read everything" for
+ * an unscoped user. Never returns `null`, which would instead filter for
+ * rows where jtfId IS NULL.
+ */
+export function scopeJtfFilter(
+  user: SessionUser,
+  explicitJtfId?: string | null
+): string | undefined {
+  if (explicitJtfId) return explicitJtfId;
+  return user.jtfId ?? undefined;
 }
