@@ -45,7 +45,7 @@ export default async function ElectionOpsPage({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Election Ops Status</h1>
+        <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Election Ops Status</h1>
         <p className="text-sm text-muted-foreground">
           Paraphernalia delivery, ACM sealing, voting, transmission, and canvassing per
           area.
@@ -111,9 +111,9 @@ export default async function ElectionOpsPage({
                     </TableCell>
                     <TableCell>
                       {s?.acmTestedSealed ? (
-                        <Badge>Sealed</Badge>
+                        <Badge variant="good">Sealed</Badge>
                       ) : (
-                        <Badge variant="outline">Pending</Badge>
+                        <Badge variant="warning">Pending</Badge>
                       )}
                     </TableCell>
                     <TableCell>

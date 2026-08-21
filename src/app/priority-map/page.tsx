@@ -19,10 +19,10 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
-const HOTSPOT_BADGE_VARIANT: Record<string, "destructive" | "secondary" | "default"> = {
-  Red: "destructive",
-  Yellow: "secondary",
-  Green: "default",
+const HOTSPOT_BADGE_VARIANT: Record<string, "critical" | "warning" | "good"> = {
+  Red: "critical",
+  Yellow: "warning",
+  Green: "good",
 };
 
 export default async function PriorityMapPage() {
@@ -37,7 +37,7 @@ export default async function PriorityMapPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Hotspot / Priority Map</h1>
+        <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Hotspot / Priority Map</h1>
         <p className="text-sm text-muted-foreground">
           Areas of operation color-coded by hotspot category and computed priority
           score. Click a marker for detail.

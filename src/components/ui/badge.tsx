@@ -19,6 +19,14 @@ const badgeVariants = cva(
         ghost:
           "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
+        // Status colors (SPEC.md hotspot/priority semantics) — reserved
+        // hues distinct from the chart categorical palette, always paired
+        // with a text label here, never color alone.
+        good: "bg-status-good/15 text-status-good border-status-good/30",
+        warning:
+          "bg-status-warning/15 text-status-warning border-status-warning/30",
+        critical:
+          "bg-status-critical/15 text-status-critical border-status-critical/30",
       },
     },
     defaultVariants: {

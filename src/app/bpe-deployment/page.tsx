@@ -18,6 +18,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { StatTile } from "@/components/stat-tile";
+import { Users, ShieldAlert } from "lucide-react";
 
 export default async function BpeDeploymentPage({
   searchParams,
@@ -38,7 +40,7 @@ export default async function BpeDeploymentPage({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <h1 className="font-display text-2xl font-bold tracking-wide uppercase">
           BPE 2026 — Deployment
         </h1>
         <p className="text-sm text-muted-foreground">
@@ -106,24 +108,19 @@ export default async function BpeDeploymentPage({
         )}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Recapitulation</CardTitle>
-          <CardDescription>Command-wide total, auto-computed from unit reports.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex gap-8 text-sm">
-          <div>
-            <div className="text-2xl font-semibold">
-              {data.totalDeployed.toLocaleString()}
-            </div>
-            <div className="text-muted-foreground">Deployed to Polling</div>
-          </div>
-          <div>
-            <div className="text-2xl font-semibold">{data.totalQrf.toLocaleString()}</div>
-            <div className="text-muted-foreground">QRF</div>
-          </div>
-        </CardContent>
-      </Card>
+      <div>
+        <h2 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+          Recapitulation — command-wide, auto-computed from unit reports
+        </h2>
+        <div className="grid grid-cols-2 gap-4 sm:max-w-md">
+          <StatTile
+            label="Deployed to Polling"
+            value={data.totalDeployed.toLocaleString()}
+            icon={Users}
+          />
+          <StatTile label="QRF" value={data.totalQrf.toLocaleString()} icon={ShieldAlert} />
+        </div>
+      </div>
 
       <Card>
         <CardHeader>

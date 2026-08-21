@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { getSessionUser } from "@/lib/session";
 import { SignOutButton } from "@/components/sign-out-button";
-import { cn } from "@/lib/utils";
+import { NavLinks } from "@/components/nav-links";
+import { LiveClock } from "@/components/live-clock";
 import { prisma } from "@/lib/prisma";
 
 const NAV_LINKS = [
@@ -29,39 +29,28 @@ export async function Nav() {
   const visibleAdminLinks = ADMIN_LINKS.filter((link) =>
     (link.roles as readonly string[]).includes(user.role)
   );
+  const allLinks = [
+    ...NAV_LINKS,
+    ...visibleAdminLinks.map((l) => ({ href: l.href, label: l.label })),
+  ];
 
   return (
-    <header className="border-b bg-background">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3">
-        <div className="flex items-center gap-6">
-          <span className="font-semibold tracking-tight">WESMINCOM C2</span>
-          <nav className="flex items-center gap-4 text-sm">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "text-muted-foreground transition-colors hover:text-foreground"
-                )}
-              >
-                {link.label}
-              </Link>
-            ))}
-            {visibleAdminLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-muted-foreground transition-colors hover:text-foreground"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
+    <header className="sticky top-0 z-40 border-b border-primary/20 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6">
+        <div className="flex items-center gap-8">
+          <div className="flex items-center gap-2 py-3">
+            <span className="flex size-2 rounded-full bg-status-good shadow-[0_0_6px_var(--status-good)]" />
+            <span className="font-display text-base font-bold tracking-widest uppercase">
+              WESMINCOM <span className="text-primary">C2</span>
+            </span>
+          </div>
+          <NavLinks links={allLinks} />
         </div>
-        <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <span>
+        <div className="flex items-center gap-4">
+          <LiveClock />
+          <span className="hidden font-mono text-xs text-muted-foreground sm:inline">
             {user.role}
-            {jtf ? ` · ${jtf.name}` : ""}
+            {jtf ? ` · ${jtf.name.toUpperCase()}` : ""}
           </span>
           <SignOutButton />
         </div>

@@ -9,7 +9,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-display);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -39,6 +39,10 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-status-good: var(--status-good);
+  --color-status-warning: var(--status-warning);
+  --color-status-serious: var(--status-serious);
+  --color-status-critical: var(--status-critical);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -48,73 +52,98 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/*
+ * Tactical C2 theme. This app is a dedicated internal ops console, not a
+ * general-purpose site, so it ships one deliberate dark "command center"
+ * look rather than a light/dark toggle. Colors follow NATO APP-6 symbology
+ * convention where it maps naturally: blue = friendly/command, red =
+ * critical/hostile, amber = caution/unknown, green = secure/good.
+ *
+ * Categorical + status hex values are the validated dark-mode steps from
+ * the design system's palette reference (CVD ΔE and contrast pre-checked
+ * against a #1a1a19 dark surface) — see the dataviz skill's palette.md.
+ * Don't hand-pick replacement hues without re-running that validator.
+ */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* @theme inline maps --font-sans -> var(--font-sans); the actual value
+   * has to be defined here, referencing the Geist variable next/font sets
+   * on <html>. Left circularly self-referential (its value from the
+   * original create-next-app/shadcn scaffold), it resolves to an empty
+   * custom property, which invalidates the whole font-family list wherever
+   * it's used as a fallback (including .font-display below). */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --background: #0d0d0d;
+  --foreground: #ffffff;
+  --card: #1a1a19;
+  --card-foreground: #ffffff;
+  --popover: #1a1a19;
+  --popover-foreground: #ffffff;
+  --primary: #3987e5;
+  --primary-foreground: #ffffff;
+  --secondary: #232322;
+  --secondary-foreground: #ffffff;
+  --muted: #202020;
+  --muted-foreground: #94a0ad;
+  --accent: #1c2a3a;
+  --accent-foreground: #ffffff;
+  --destructive: #e66767;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: #3987e5;
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-4: #c98500;
+  --chart-5: #9085e9;
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+  --gridline: #2c2c2a;
+  --axis-baseline: #383835;
+  --radius: 0.375rem;
+  --sidebar: #1a1a19;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #3987e5;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1c2a3a;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #3987e5;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #0d0d0d;
+  --foreground: #ffffff;
+  --card: #1a1a19;
+  --card-foreground: #ffffff;
+  --popover: #1a1a19;
+  --popover-foreground: #ffffff;
+  --primary: #3987e5;
+  --primary-foreground: #ffffff;
+  --secondary: #232322;
+  --secondary-foreground: #ffffff;
+  --muted: #202020;
+  --muted-foreground: #94a0ad;
+  --accent: #1c2a3a;
+  --accent-foreground: #ffffff;
+  --destructive: #e66767;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: #3987e5;
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-4: #c98500;
+  --chart-5: #9085e9;
+  --sidebar: #1a1a19;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #3987e5;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1c2a3a;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #3987e5;
 }
 
 @layer base {
@@ -123,8 +152,69 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-image:
+      linear-gradient(rgba(57, 135, 229, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(57, 135, 229, 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-attachment: fixed;
   }
   html {
     @apply font-sans;
   }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display), var(--font-sans);
+  }
+  .text-status-good {
+    color: var(--status-good);
+  }
+  .text-status-warning {
+    color: var(--status-warning);
+  }
+  .text-status-serious {
+    color: var(--status-serious);
+  }
+  .text-status-critical {
+    color: var(--status-critical);
+  }
+  .bg-status-good {
+    background-color: var(--status-good);
+  }
+  .bg-status-warning {
+    background-color: var(--status-warning);
+  }
+  .bg-status-serious {
+    background-color: var(--status-serious);
+  }
+  .bg-status-critical {
+    background-color: var(--status-critical);
+  }
+}
+
+/* Leaflet ships light-mode chrome by default; re-theme it to match the
+ * tactical dark console instead of leaving white zoom buttons/attribution. */
+.leaflet-container {
+  background: #0a0e14;
+}
+.leaflet-control-zoom a {
+  background-color: var(--card) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+.leaflet-control-zoom a:hover {
+  background-color: var(--accent) !important;
+}
+.leaflet-control-attribution {
+  background-color: rgba(26, 26, 25, 0.8) !important;
+  color: var(--muted-foreground) !important;
+}
+.leaflet-control-attribution a {
+  color: var(--primary) !important;
+}
+.leaflet-tooltip {
+  background-color: var(--card) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
 }

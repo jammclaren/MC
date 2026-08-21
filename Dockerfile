@@ -2,7 +2,10 @@
 FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+# --ignore-scripts: this stage doesn't have prisma/schema.prisma yet, so the
+# postinstall (`prisma generate`) would fail; the builder stage below runs
+# `prisma generate` explicitly once the full source is present.
+RUN npm ci --ignore-scripts
 
 # --- builder: generate Prisma client and build Next.js ---
 FROM node:22-alpine AS builder

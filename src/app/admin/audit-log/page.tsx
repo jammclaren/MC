@@ -60,7 +60,7 @@ export default async function AuditLogPage({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Audit Log</h1>
+        <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Audit Log</h1>
         <p className="text-sm text-muted-foreground">
           Every data change: who, what, when. Read-only.
         </p>

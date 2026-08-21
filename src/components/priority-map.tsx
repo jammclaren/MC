@@ -11,12 +11,14 @@ import type { ScoredArea } from "@/lib/queries/priority-areas";
 // overlay — add a <TileLayer> or <GeoJSON> child here; nothing else about
 // this component needs to change, keeping the map provider swappable.
 
+// Same validated status hex values as the Badge "good"/"warning"/"critical"
+// variants (src/app/globals.css), so map markers and badges never disagree.
 const HOTSPOT_COLORS: Record<string, string> = {
-  Red: "#dc2626",
-  Yellow: "#ca8a04",
-  Green: "#16a34a",
+  Red: "#d03b3b",
+  Yellow: "#fab219",
+  Green: "#0ca30c",
 };
-const DEFAULT_COLOR = "#6b7280";
+const DEFAULT_COLOR = "#94a0ad";
 
 // Rough BARMM/Western Mindanao center, used when no area coordinates exist.
 const DEFAULT_CENTER: [number, number] = [7.2, 124.2];

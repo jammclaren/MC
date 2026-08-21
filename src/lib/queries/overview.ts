@@ -5,6 +5,7 @@ import {
   PRIORITY_FLAG_THRESHOLD,
   RECENT_INCIDENT_WINDOW_DAYS,
 } from "@/lib/priority-score";
+import { getScoredAreas } from "@/lib/queries/priority-areas";
 
 export interface JtfDeploymentTotal {
   jtfId: string;
@@ -35,6 +36,8 @@ export interface OverviewData {
   totalQrf: number;
   categorySummaries: CategorySummary[];
   recentIncidents: RecentIncidentRow[];
+  recentIncidentCount30d: number;
+  priorityAreaCount: number;
 }
 
 export async function getOverviewData(user: SessionUser): Promise<OverviewData> {
@@ -47,7 +50,8 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     Date.now() - RECENT_INCIDENT_WINDOW_DAYS * 24 * 60 * 60 * 1000
   );
 
-  const [jtfs, deployments, indicators, recentIncidents] = await Promise.all([
+  const [jtfs, deployments, indicators, recentIncidents, recentIncidentCount30d, scoredAreas] =
+    await Promise.all([
     prisma.jTF.findMany({
       where: rollupScopeJtfId ? { id: rollupScopeJtfId } : undefined,
       orderBy: { name: "asc" },
@@ -78,7 +82,15 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
         },
       },
     }),
+    prisma.incident.count({
+      where: { jtfId: detailScopeJtfId, date: { gte: windowStart } },
+    }),
+    getScoredAreas(user),
   ]);
+
+  const priorityAreaCount = scoredAreas.filter(
+    (area) => area.priorityScore >= PRIORITY_FLAG_THRESHOLD
+  ).length;
 
   const jtfDeployments: JtfDeploymentTotal[] = jtfs.map((jtf) => {
     const rows = deployments.filter((d) => d.jtfId === jtf.id);
@@ -144,5 +156,7 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     totalQrf: jtfDeployments.reduce((sum, d) => sum + d.qrf, 0),
     categorySummaries,
     recentIncidents: recentIncidentRows,
+    recentIncidentCount30d,
+    priorityAreaCount,
   };
 }

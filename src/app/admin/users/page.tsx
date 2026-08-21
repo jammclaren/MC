@@ -50,7 +50,7 @@ export default async function AdminUsersPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">User Management</h1>
+          <h1 className="font-display text-2xl font-bold tracking-wide uppercase">User Management</h1>
           <p className="text-sm text-muted-foreground">
             Create accounts and assign role + JTF scope.
           </p>

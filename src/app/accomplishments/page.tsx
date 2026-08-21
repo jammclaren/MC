@@ -53,7 +53,7 @@ export default async function AccomplishmentsPage({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Accomplishments</h1>
+        <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Accomplishments</h1>
         <p className="text-sm text-muted-foreground">
           Quarterly counter-threat metrics tracked against annual targets.
         </p>

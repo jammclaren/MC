@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { DeploymentBarChart } from "@/components/charts/deployment-bar-chart";
+import { StatTile } from "@/components/stat-tile";
+import { Users, ShieldAlert, TriangleAlert, Crosshair } from "lucide-react";
 
 const CATEGORY_LABELS: Record<string, string> = {
   CTG: "CTG (Communist Terrorist Group)",
@@ -41,10 +43,32 @@ export default async function OverviewPage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Command Overview</h1>
+        <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Command Overview</h1>
         <p className="text-sm text-muted-foreground">
           Recapitulation of troop deployment and threat-category accomplishments.
         </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <StatTile
+          label="Deployed to Polling"
+          value={data.totalDeployed.toLocaleString()}
+          icon={Users}
+        />
+        <StatTile label="QRF" value={data.totalQrf.toLocaleString()} icon={ShieldAlert} />
+        <StatTile
+          label="Incidents (30d)"
+          value={data.recentIncidentCount30d.toLocaleString()}
+          icon={TriangleAlert}
+          tone={data.recentIncidentCount30d > 0 ? "warning" : "default"}
+        />
+        <StatTile
+          label="Priority Areas"
+          value={data.priorityAreaCount.toLocaleString()}
+          icon={Crosshair}
+          tone={data.priorityAreaCount > 0 ? "critical" : "good"}
+          hint="score ≥ Red-hotspot baseline"
+        />
       </div>
 
       <Card>
@@ -100,8 +124,10 @@ export default async function OverviewPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-semibold">{summary.actual}</span>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="font-mono text-3xl font-semibold tabular-nums text-primary">
+                    {summary.actual}
+                  </span>
+                  <span className="font-mono text-sm text-muted-foreground">
                     / {summary.targetYE || "—"}
                   </span>
                 </div>
@@ -140,7 +166,7 @@ export default async function OverviewPage() {
                   <TableCell>{incident.type}</TableCell>
                   <TableCell>{incident.result ?? "—"}</TableCell>
                   <TableCell>
-                    {incident.isPriority && <Badge variant="destructive">Priority</Badge>}
+                    {incident.isPriority && <Badge variant="critical">Priority</Badge>}
                   </TableCell>
                 </TableRow>
               ))}
