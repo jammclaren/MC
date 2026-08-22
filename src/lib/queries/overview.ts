@@ -60,16 +60,15 @@ export interface OverviewData {
   incidentsByDay: IncidentsByDay[];
   topPriorityAreas: PriorityAreaSummary[];
   bpe: {
-    startDate: string;
-    endDate: string;
-    daysRemaining: number | null; // null once the window has closed
-    hasStarted: boolean;
+    startDate: string; // ISO timestamp
+    endDate: string; // ISO timestamp
   };
 }
 
 // BPE 2026 election security operations window (SPEC.md §1).
 const BPE_START = new Date("2026-07-30T00:00:00Z");
-const BPE_END = new Date("2026-09-15T23:59:59Z");
+// 23:59:59 Asia/Manila (UTC+8) on 14 Sept 2026.
+const BPE_END = new Date("2026-09-14T15:59:59Z");
 const INCIDENTS_BY_DAY_WINDOW = 14;
 
 export async function getOverviewData(user: SessionUser): Promise<OverviewData> {
@@ -195,13 +194,6 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     priorityScore: area.priorityScore,
   }));
 
-  const now = new Date();
-  const hasStarted = now >= BPE_START;
-  const hasEnded = now > BPE_END;
-  const daysRemaining = hasEnded
-    ? null
-    : Math.max(0, Math.ceil((BPE_END.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)));
-
   const jtfDeployments: JtfDeploymentTotal[] = jtfs.map((jtf) => {
     const rows = deployments.filter((d) => d.jtfId === jtf.id);
     return {
@@ -273,10 +265,8 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     incidentsByDay,
     topPriorityAreas,
     bpe: {
-      startDate: BPE_START.toISOString().slice(0, 10),
-      endDate: BPE_END.toISOString().slice(0, 10),
-      daysRemaining,
-      hasStarted,
+      startDate: BPE_START.toISOString(),
+      endDate: BPE_END.toISOString(),
     },
   };
 }

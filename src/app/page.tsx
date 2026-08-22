@@ -24,7 +24,8 @@ import { StatTile } from "@/components/stat-tile";
 import { GaugeMeter } from "@/components/gauge-meter";
 import { FunnelPanel } from "@/components/funnel-panel";
 import { PriorityLeaderboard } from "@/components/priority-leaderboard";
-import { Users, ShieldAlert, TriangleAlert, Crosshair, CalendarClock } from "lucide-react";
+import { BpeCountdown } from "@/components/bpe-countdown";
+import { Users, ShieldAlert, TriangleAlert, Crosshair } from "lucide-react";
 
 const CATEGORY_LABELS: Record<string, string> = {
   CTG: "CTG (Communist Terrorist Group)",
@@ -34,6 +35,18 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 function formatPct(pct: number | null): string {
   return pct === null ? "—" : `${pct.toFixed(0)}%`;
+}
+
+/** "30 July 2026" — day-month-year, independent of locale part ordering. */
+function formatBpeDate(iso: string): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Manila",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).formatToParts(new Date(iso));
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  return `${get("day")} ${get("month")} ${get("year")}`;
 }
 
 export default async function OverviewPage() {
@@ -80,41 +93,11 @@ export default async function OverviewPage() {
           <CardHeader>
             <CardTitle>BPE 2026 Window</CardTitle>
             <CardDescription>
-              {data.bpe.startDate} – {data.bpe.endDate}
+              {formatBpeDate(data.bpe.startDate)} – {formatBpeDate(data.bpe.endDate)}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-6">
-            {data.bpe.daysRemaining === null ? (
-              <div className="text-center">
-                <div className="font-mono text-3xl font-semibold text-muted-foreground">
-                  Concluded
-                </div>
-                <div className="mt-1 text-xs text-muted-foreground">
-                  Election window has closed
-                </div>
-              </div>
-            ) : (
-              <div
-                className={
-                  "flex items-center gap-2 rounded-md px-4 py-2 " +
-                  (data.bpe.daysRemaining <= 7
-                    ? "bg-status-critical/15 text-status-critical"
-                    : data.bpe.daysRemaining <= 14
-                      ? "bg-status-warning/15 text-status-warning"
-                      : "bg-muted text-foreground")
-                }
-              >
-                <CalendarClock className="size-5" />
-                <div>
-                  <div className="font-mono text-2xl font-bold tabular-nums">
-                    {data.bpe.daysRemaining}
-                  </div>
-                  <div className="text-xs uppercase tracking-wide">
-                    days {data.bpe.hasStarted ? "remaining" : "until start"}
-                  </div>
-                </div>
-              </div>
-            )}
+            <BpeCountdown startDate={data.bpe.startDate} endDate={data.bpe.endDate} />
             <GaugeMeter
               value={safePercent(data.totalDeployed, data.totalRegisteredVoters) ?? 0}
               label="Voter Coverage"
