@@ -30,15 +30,47 @@ export interface RecentIncidentRow {
   isPriority: boolean;
 }
 
+export interface FunnelStage {
+  label: string;
+  count: number;
+}
+
+export interface IncidentsByDay {
+  date: string; // YYYY-MM-DD
+  count: number;
+}
+
+export interface PriorityAreaSummary {
+  id: string;
+  label: string;
+  hotspotCategory: string | null;
+  priorityScore: number;
+}
+
 export interface OverviewData {
   jtfDeployments: JtfDeploymentTotal[];
   totalDeployed: number;
   totalQrf: number;
+  totalRegisteredVoters: number;
   categorySummaries: CategorySummary[];
   recentIncidents: RecentIncidentRow[];
   recentIncidentCount30d: number;
   priorityAreaCount: number;
+  electionOpsFunnel: FunnelStage[];
+  incidentsByDay: IncidentsByDay[];
+  topPriorityAreas: PriorityAreaSummary[];
+  bpe: {
+    startDate: string;
+    endDate: string;
+    daysRemaining: number | null; // null once the window has closed
+    hasStarted: boolean;
+  };
 }
+
+// BPE 2026 election security operations window (SPEC.md §1).
+const BPE_START = new Date("2026-07-30T00:00:00Z");
+const BPE_END = new Date("2026-09-15T23:59:59Z");
+const INCIDENTS_BY_DAY_WINDOW = 14;
 
 export async function getOverviewData(user: SessionUser): Promise<OverviewData> {
   // Deployment totals and category sums are aggregate-only, so JTF_COMMANDER
@@ -50,8 +82,16 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     Date.now() - RECENT_INCIDENT_WINDOW_DAYS * 24 * 60 * 60 * 1000
   );
 
-  const [jtfs, deployments, indicators, recentIncidents, recentIncidentCount30d, scoredAreas] =
-    await Promise.all([
+  const [
+    jtfs,
+    deployments,
+    indicators,
+    recentIncidents,
+    recentIncidentCount30d,
+    scoredAreas,
+    electionAreasForRollup,
+    incidentsForDailyChart,
+  ] = await Promise.all([
     prisma.jTF.findMany({
       where: rollupScopeJtfId ? { id: rollupScopeJtfId } : undefined,
       orderBy: { name: "asc" },
@@ -86,11 +126,81 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
       where: { jtfId: detailScopeJtfId, date: { gte: windowStart } },
     }),
     getScoredAreas(user),
+    prisma.electionArea.findMany({
+      where: { jtfId: rollupScopeJtfId },
+      select: { registeredVoters: true, opsStatus: true },
+    }),
+    prisma.incident.findMany({
+      where: {
+        jtfId: detailScopeJtfId,
+        date: { gte: new Date(Date.now() - INCIDENTS_BY_DAY_WINDOW * 24 * 60 * 60 * 1000) },
+      },
+      select: { date: true },
+    }),
   ]);
 
   const priorityAreaCount = scoredAreas.filter(
     (area) => area.priorityScore >= PRIORITY_FLAG_THRESHOLD
   ).length;
+
+  const totalRegisteredVoters = electionAreasForRollup.reduce(
+    (sum, area) => sum + (area.registeredVoters ?? 0),
+    0
+  );
+
+  const totalAreas = electionAreasForRollup.length;
+  const countWhere = (predicate: (status: NonNullable<(typeof electionAreasForRollup)[number]["opsStatus"]>) => boolean) =>
+    electionAreasForRollup.filter((a) => a.opsStatus && predicate(a.opsStatus)).length;
+
+  const electionOpsFunnel: FunnelStage[] = [
+    { label: "Total Areas", count: totalAreas },
+    {
+      label: "Paraphernalia Delivered",
+      count: countWhere(
+        (s) =>
+          s.paraphTotalPrecinct != null &&
+          s.paraphTotalPrecinct > 0 &&
+          s.paraphDeliveredPrecinct === s.paraphTotalPrecinct
+      ),
+    },
+    { label: "ACM Tested & Sealed", count: countWhere((s) => s.acmTestedSealed) },
+    { label: "Voting Started", count: countWhere((s) => s.votingStarted) },
+    { label: "Voting Closed", count: countWhere((s) => s.votingClosed) },
+    { label: "Provincial Proclaimed", count: countWhere((s) => s.provincialProclaimed) },
+  ];
+
+  const incidentsByDayMap = new Map<string, number>();
+  const today = new Date();
+  for (let i = INCIDENTS_BY_DAY_WINDOW - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setUTCDate(d.getUTCDate() - i);
+    incidentsByDayMap.set(d.toISOString().slice(0, 10), 0);
+  }
+  for (const incident of incidentsForDailyChart) {
+    const key = incident.date.toISOString().slice(0, 10);
+    if (incidentsByDayMap.has(key)) {
+      incidentsByDayMap.set(key, (incidentsByDayMap.get(key) ?? 0) + 1);
+    }
+  }
+  const incidentsByDay: IncidentsByDay[] = Array.from(incidentsByDayMap.entries()).map(
+    ([date, count]) => ({ date, count })
+  );
+
+  const topPriorityAreas: PriorityAreaSummary[] = scoredAreas.slice(0, 5).map((area) => ({
+    id: area.id,
+    label:
+      [area.barangay, area.municipality, area.province].filter(Boolean).join(", ") ||
+      area.province,
+    hotspotCategory: area.hotspotCategory,
+    priorityScore: area.priorityScore,
+  }));
+
+  const now = new Date();
+  const hasStarted = now >= BPE_START;
+  const hasEnded = now > BPE_END;
+  const daysRemaining = hasEnded
+    ? null
+    : Math.max(0, Math.ceil((BPE_END.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)));
 
   const jtfDeployments: JtfDeploymentTotal[] = jtfs.map((jtf) => {
     const rows = deployments.filter((d) => d.jtfId === jtf.id);
@@ -154,9 +264,19 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     jtfDeployments,
     totalDeployed: jtfDeployments.reduce((sum, d) => sum + d.deployedToPolling, 0),
     totalQrf: jtfDeployments.reduce((sum, d) => sum + d.qrf, 0),
+    totalRegisteredVoters,
     categorySummaries,
     recentIncidents: recentIncidentRows,
     recentIncidentCount30d,
     priorityAreaCount,
+    electionOpsFunnel,
+    incidentsByDay,
+    topPriorityAreas,
+    bpe: {
+      startDate: BPE_START.toISOString().slice(0, 10),
+      endDate: BPE_END.toISOString().slice(0, 10),
+      daysRemaining,
+      hasStarted,
+    },
   };
 }
