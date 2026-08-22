@@ -1,0 +1,10 @@
+# Never upload local secrets to Vercel's deployment source — production
+# config is managed entirely via `vercel env` / the dashboard instead.
+.env
+.env.local
+.env*.local
+
+# Local-only artifacts that don't belong in the deployment bundle.
+.git
+.next
+node_modules
