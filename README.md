@@ -116,20 +116,28 @@ separately if needed (`docker compose exec app npx prisma db seed`).
 
 ## Mapping
 
-The Priority/Hotspot Map (`/priority-map`) uses Leaflet with vector
-`CircleMarker`s, deliberately **without** an online tile layer, since the
-intended deployment is air-gapped with no internet egress. Markers are
-color-coded by `hotspotCategory` and sized by the computed priority score;
-clicking one shows precinct count, registered voters, deployment, and recent
-incident count.
+The Priority/Hotspot Map (`/priority-map`) uses Leaflet, deliberately
+**without** an online tile layer, since the intended deployment is
+air-gapped with no internet egress. Instead it loads a static province
+outline from `public/barmm-provinces.geojson` — BARMM's 6 provinces
+(Basilan, Lanao del Sur, Maguindanao del Norte, Maguindanao del Sur, Sulu,
+Tawi-Tawi) plus the Cotabato City/Isabela City special geographic area,
+sourced from [faeldon/philippines-json-maps](https://github.com/faeldon/philippines-json-maps)
+(MIT licensed; PSGC 2023 boundaries, lowres/simplified for a small embedded
+widget). The map fits to this outline's bounds on load. `ElectionArea`
+records are plotted on top as `CircleMarker`s, color-coded by
+`hotspotCategory` and sized by the computed priority score; clicking one
+shows precinct count, registered voters, deployment, and recent incident
+count.
 
-No basemap tiles or an actual Mindanao/BARMM GeoJSON boundary file were
-available when this was built. To add a basemap later:
+To swap in a different basemap later:
 
 - **Self-hosted raster/vector tiles**: add a `<TileLayer url="...">` inside
   `src/components/priority-map.tsx`.
-- **Static GeoJSON boundary overlay**: drop the file in `public/`, load it
-  with `fetch`/`import`, and render it with react-leaflet's `<GeoJSON>`.
+- **A different/updated GeoJSON**: replace
+  `public/barmm-provinces.geojson` — the fetch and `<GeoJSON>` render logic
+  don't care about the specific boundaries, only that features have an
+  `adm2_en` property for the tooltip label.
 
 Nothing else about the component needs to change either way — the map
 provider is intentionally swappable.
