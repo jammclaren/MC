@@ -38,6 +38,30 @@ add-on, and most local networks/ISPs can't reach it — you'll see `P1001:
 Can't reach database server`. The pooler host resolves to IPv4 and works from
 anywhere.
 
+**On a serverless host (Vercel, etc.) use the Transaction pooler instead**
+(same dashboard page, port 6543, add `?pgbouncer=true`). Session mode caps
+concurrent clients low (Supabase's free tier: 15) and each serverless
+invocation can open its own connection — a handful of concurrent page loads
+is enough to hit `(EMAXCONNSESSION) max clients reached in session mode`.
+Transaction mode multiplexes many client connections over few actual
+Postgres connections and is what Supabase recommends for exactly this
+"many short-lived serverless connections" pattern. Keep using the Session
+pooler for one long-running process (local dev, Docker/on-prem).
+
+## Deploying to Vercel
+
+```bash
+npx vercel link                                  # first time only
+npx vercel env add DATABASE_URL production       # Transaction pooler string, see above
+npx vercel env add NEXTAUTH_SECRET production    # openssl rand -base64 32
+npx vercel env add NEXTAUTH_URL production        # https://<your-project>.vercel.app
+npx vercel --prod
+```
+
+Migrations aren't run automatically on deploy — apply them from a machine
+that can reach the database (`npm run db:migrate`, or `db:deploy` in CI)
+before or after pushing schema changes, same as any other environment.
+
 ## Local development setup
 
 ```bash
