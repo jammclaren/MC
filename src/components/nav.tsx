@@ -51,6 +51,9 @@ export async function Nav() {
           <span className="hidden font-mono text-xs text-muted-foreground sm:inline">
             {user.role}
             {jtf ? ` · ${jtf.name.toUpperCase()}` : ""}
+            {user.warfightingFunction
+              ? ` · ${user.warfightingFunction.replaceAll("_", " ")}`
+              : ""}
           </span>
           <SignOutButton />
         </div>

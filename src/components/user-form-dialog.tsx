@@ -22,8 +22,34 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const ROLES = ["ADMIN", "COMMAND", "JTF_COMMANDER", "JTF_STAFF", "VIEWER"] as const;
+const ROLES = [
+  "ADMIN",
+  "COMMAND",
+  "JTF_COMMANDER",
+  "JTF_STAFF",
+  "VIEWER",
+  "WFC_STAFF",
+] as const;
 type Role = (typeof ROLES)[number];
+
+const WARFIGHTING_FUNCTIONS = [
+  "COMMAND_CONTROL",
+  "INTELLIGENCE",
+  "FIRES",
+  "MANEUVER",
+  "PROTECTION",
+  "SUSTAINMENT",
+] as const;
+type WarfightingFunction = (typeof WARFIGHTING_FUNCTIONS)[number];
+
+const WFC_LABELS: Record<WarfightingFunction, string> = {
+  COMMAND_CONTROL: "Command & Control",
+  INTELLIGENCE: "Intelligence",
+  FIRES: "Fires",
+  MANEUVER: "Maneuver",
+  PROTECTION: "Protection",
+  SUSTAINMENT: "Sustainment",
+};
 
 export interface JtfOption {
   id: string;
@@ -35,6 +61,7 @@ export interface UserFormInitial {
   name: string;
   role: Role;
   jtfId: string | null;
+  warfightingFunction: WarfightingFunction | null;
 }
 
 export function UserFormDialog({
@@ -55,13 +82,21 @@ export function UserFormDialog({
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<Role>(initial?.role ?? "JTF_STAFF");
   const [jtfId, setJtfId] = useState<string>(initial?.jtfId ?? "");
+  const [warfightingFunction, setWarfightingFunction] = useState<WarfightingFunction | "">(
+    initial?.warfightingFunction ?? ""
+  );
 
   const needsJtf = role === "JTF_COMMANDER" || role === "JTF_STAFF" || role === "VIEWER";
+  const needsWfc = role === "WFC_STAFF";
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (needsJtf && !jtfId) {
       toast.error("Select a JTF for this role");
+      return;
+    }
+    if (needsWfc && !warfightingFunction) {
+      toast.error("Select a warfighting function for this role");
       return;
     }
     setSubmitting(true);
@@ -73,9 +108,17 @@ export function UserFormDialog({
             name,
             role,
             jtfId: needsJtf ? jtfId : null,
+            warfightingFunction: needsWfc ? warfightingFunction : null,
             ...(password ? { password } : {}),
           }
-        : { name, email, password, role, jtfId: needsJtf ? jtfId : undefined };
+        : {
+            name,
+            email,
+            password,
+            role,
+            jtfId: needsJtf ? jtfId : undefined,
+            warfightingFunction: needsWfc ? warfightingFunction : undefined,
+          };
 
       const res = await fetch(url, {
         method,
@@ -160,6 +203,28 @@ export function UserFormDialog({
                     {jtfOptions.map((jtf) => (
                       <SelectItem key={jtf.id} value={jtf.id}>
                         {jtf.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {needsWfc && (
+              <div className="flex flex-col gap-2">
+                <Label>Warfighting Function</Label>
+                <Select
+                  value={warfightingFunction}
+                  onValueChange={(v: string | null) =>
+                    setWarfightingFunction((v as WarfightingFunction) ?? "")
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select function" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {WARFIGHTING_FUNCTIONS.map((fn) => (
+                      <SelectItem key={fn} value={fn}>
+                        {WFC_LABELS[fn]}
                       </SelectItem>
                     ))}
                   </SelectContent>

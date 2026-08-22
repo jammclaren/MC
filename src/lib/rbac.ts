@@ -1,9 +1,10 @@
-import type { Role } from "@/generated/prisma/client";
+import type { Role, WarfightingFunction } from "@/generated/prisma/client";
 
 export type SessionUser = {
   id: string;
   role: Role;
   jtfId: string | null;
+  warfightingFunction: WarfightingFunction | null;
 };
 
 export class ForbiddenError extends Error {

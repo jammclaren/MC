@@ -38,6 +38,7 @@ export default async function AdminUsersPage() {
         role: true,
         jtfId: true,
         jtf: { select: { name: true } },
+        warfightingFunction: true,
         createdAt: true,
       },
       orderBy: { name: "asc" },
@@ -70,7 +71,7 @@ export default async function AdminUsersPage() {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
-                <TableHead>JTF</TableHead>
+                <TableHead>JTF / Function</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -81,7 +82,9 @@ export default async function AdminUsersPage() {
                   <TableCell>{row.name}</TableCell>
                   <TableCell>{row.email}</TableCell>
                   <TableCell>{row.role}</TableCell>
-                  <TableCell>{row.jtf?.name ?? "—"}</TableCell>
+                  <TableCell>
+                    {row.jtf?.name ?? row.warfightingFunction?.replaceAll("_", " ") ?? "—"}
+                  </TableCell>
                   <TableCell>{row.createdAt.toLocaleDateString()}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
@@ -92,6 +95,7 @@ export default async function AdminUsersPage() {
                           name: row.name,
                           role: row.role,
                           jtfId: row.jtfId,
+                          warfightingFunction: row.warfightingFunction,
                         }}
                         trigger={
                           <Button variant="ghost" size="sm">

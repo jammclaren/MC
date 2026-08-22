@@ -13,6 +13,16 @@ const roleSchema = z.enum([
   "JTF_COMMANDER",
   "JTF_STAFF",
   "VIEWER",
+  "WFC_STAFF",
+]);
+
+const warfightingFunctionSchema = z.enum([
+  "COMMAND_CONTROL",
+  "INTELLIGENCE",
+  "FIRES",
+  "MANEUVER",
+  "PROTECTION",
+  "SUSTAINMENT",
 ]);
 
 const createUserSchema = z
@@ -22,11 +32,16 @@ const createUserSchema = z
     password: z.string().min(8),
     role: roleSchema,
     jtfId: z.string().optional(),
+    warfightingFunction: warfightingFunctionSchema.optional(),
   })
   .refine(
-    (data) => data.role === "ADMIN" || data.role === "COMMAND" || !!data.jtfId,
+    (data) => data.role === "ADMIN" || data.role === "COMMAND" || data.role === "WFC_STAFF" || !!data.jtfId,
     { message: "jtfId is required for JTF_COMMANDER, JTF_STAFF, and VIEWER roles", path: ["jtfId"] }
-  );
+  )
+  .refine((data) => data.role !== "WFC_STAFF" || !!data.warfightingFunction, {
+    message: "warfightingFunction is required for WFC_STAFF",
+    path: ["warfightingFunction"],
+  });
 
 export async function GET() {
   try {
@@ -41,6 +56,7 @@ export async function GET() {
         role: true,
         jtfId: true,
         jtf: { select: { name: true } },
+        warfightingFunction: true,
         createdAt: true,
       },
       orderBy: { name: "asc" },
@@ -68,15 +84,29 @@ export async function POST(request: NextRequest) {
             passwordHash,
             role: body.role,
             jtfId: body.jtfId,
+            warfightingFunction: body.warfightingFunction,
           },
-          select: { id: true, name: true, email: true, role: true, jtfId: true },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            jtfId: true,
+            warfightingFunction: true,
+          },
         }),
       {
         userId: user.id,
         action: "CREATE",
         entity: "User",
         entityId: (result) => result.id,
-        diff: { name: body.name, email: body.email, role: body.role, jtfId: body.jtfId },
+        diff: {
+          name: body.name,
+          email: body.email,
+          role: body.role,
+          jtfId: body.jtfId,
+          warfightingFunction: body.warfightingFunction,
+        },
       }
     );
 

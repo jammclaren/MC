@@ -21,6 +21,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ElectionOpsStatusDialog } from "@/components/election-ops-status-dialog";
+import { ElectionAreaFormDialog } from "@/components/election-area-form-dialog";
+import { DeleteButton } from "@/components/delete-button";
 
 function pctLabel(pct: number | null): string {
   return pct === null ? "—" : `${pct.toFixed(0)}%`;
@@ -134,28 +136,56 @@ export default async function ElectionOpsPage({
                     </TableCell>
                     <TableCell className="text-right">
                       {canEdit && (
-                        <ElectionOpsStatusDialog
-                          electionAreaId={area.id}
-                          areaLabel={area.label}
-                          initial={
-                            s
-                              ? {
-                                  paraphTotalTreasurer: s.paraphTotalTreasurer,
-                                  paraphDeliveredTreasurer: s.paraphDeliveredTreasurer,
-                                  paraphTotalPrecinct: s.paraphTotalPrecinct,
-                                  paraphDeliveredPrecinct: s.paraphDeliveredPrecinct,
-                                  acmTestedSealed: s.acmTestedSealed,
-                                  votingStarted: s.votingStarted,
-                                  votingClosed: s.votingClosed,
-                                  transmissionStatus: s.transmissionStatus,
-                                  municipalCanvassPct: s.municipalCanvassPct,
-                                  municipalProclaimed: s.municipalProclaimed,
-                                  provincialCanvassPct: s.provincialCanvassPct,
-                                  provincialProclaimed: s.provincialProclaimed,
-                                }
-                              : null
-                          }
-                        />
+                        <div className="flex justify-end gap-1">
+                          <ElectionOpsStatusDialog
+                            electionAreaId={area.id}
+                            areaLabel={area.label}
+                            initial={
+                              s
+                                ? {
+                                    paraphTotalTreasurer: s.paraphTotalTreasurer,
+                                    paraphDeliveredTreasurer: s.paraphDeliveredTreasurer,
+                                    paraphTotalPrecinct: s.paraphTotalPrecinct,
+                                    paraphDeliveredPrecinct: s.paraphDeliveredPrecinct,
+                                    acmTestedSealed: s.acmTestedSealed,
+                                    votingStarted: s.votingStarted,
+                                    votingClosed: s.votingClosed,
+                                    transmissionStatus: s.transmissionStatus,
+                                    municipalCanvassPct: s.municipalCanvassPct,
+                                    municipalProclaimed: s.municipalProclaimed,
+                                    provincialCanvassPct: s.provincialCanvassPct,
+                                    provincialProclaimed: s.provincialProclaimed,
+                                  }
+                                : null
+                            }
+                          />
+                          <ElectionAreaFormDialog
+                            jtfOptions={jtfs.map((j) => ({ id: j.id, name: j.name }))}
+                            initial={{
+                              id: area.id,
+                              jtfId: area.jtfId,
+                              province: area.province,
+                              municipality: area.municipality ?? "",
+                              barangay: area.barangay ?? "",
+                              hotspotCategory: area.hotspotCategory ?? "",
+                              hotspotReason: area.hotspotReason ?? "",
+                              numPrecincts: area.numPrecincts?.toString() ?? "",
+                              numCenters: area.numCenters?.toString() ?? "",
+                              registeredVoters: area.registeredVoters?.toString() ?? "",
+                              lat: area.lat?.toString() ?? "",
+                              lng: area.lng?.toString() ?? "",
+                            }}
+                            trigger={
+                              <Button variant="ghost" size="sm">
+                                Edit
+                              </Button>
+                            }
+                          />
+                          <DeleteButton
+                            url={`/api/election-areas/${area.id}`}
+                            confirmMessage="Delete this election area? This cannot be undone."
+                          />
+                        </div>
                       )}
                     </TableCell>
                   </TableRow>

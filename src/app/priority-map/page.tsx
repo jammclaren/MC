@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
+import { prisma } from "@/lib/prisma";
 import { getScoredAreas } from "@/lib/queries/priority-areas";
+import { canWriteJtf } from "@/lib/rbac";
 import { PriorityMapLoader } from "@/components/priority-map-loader";
 import {
   Card,
@@ -18,6 +20,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ElectionAreaFormDialog } from "@/components/election-area-form-dialog";
 
 const HOTSPOT_BADGE_VARIANT: Record<string, "critical" | "warning" | "good"> = {
   Red: "critical",
@@ -31,17 +35,37 @@ export default async function PriorityMapPage() {
     redirect("/login");
   }
 
-  const areas = await getScoredAreas(user);
+  const [areas, jtfs] = await Promise.all([
+    getScoredAreas(user),
+    prisma.jTF.findMany({ orderBy: { name: "asc" } }),
+  ]);
   const top10 = areas.slice(0, 10);
+  const jtfOptions = jtfs.map((jtf) => ({ id: jtf.id, name: jtf.name }));
+  const writableJtfId =
+    user.role === "ADMIN"
+      ? undefined
+      : user.jtfId && canWriteJtf(user, user.jtfId)
+        ? user.jtfId
+        : undefined;
+  const canCreate = user.role === "ADMIN" || (!!user.jtfId && canWriteJtf(user, user.jtfId));
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Hotspot / Priority Map</h1>
-        <p className="text-sm text-muted-foreground">
-          Areas of operation color-coded by hotspot category and computed priority
-          score. Click a marker for detail.
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Hotspot / Priority Map</h1>
+          <p className="text-sm text-muted-foreground">
+            Areas of operation color-coded by hotspot category and computed priority
+            score. Click a marker for detail.
+          </p>
+        </div>
+        {canCreate && (
+          <ElectionAreaFormDialog
+            jtfOptions={jtfOptions}
+            lockJtfId={writableJtfId}
+            trigger={<Button>Add Area</Button>}
+          />
+        )}
       </div>
 
       <Card>

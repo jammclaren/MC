@@ -2,12 +2,13 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import type { Role } from "@/generated/prisma/client";
+import type { Role, WarfightingFunction } from "@/generated/prisma/client";
 
 declare module "next-auth" {
   interface User {
     role: Role;
     jtfId: string | null;
+    warfightingFunction: WarfightingFunction | null;
   }
   interface Session {
     user: {
@@ -16,6 +17,7 @@ declare module "next-auth" {
       email: string;
       role: Role;
       jtfId: string | null;
+      warfightingFunction: WarfightingFunction | null;
     };
   }
 }
@@ -25,6 +27,7 @@ declare module "@auth/core/jwt" {
     id: string;
     role: Role;
     jtfId: string | null;
+    warfightingFunction: WarfightingFunction | null;
   }
 }
 
@@ -61,6 +64,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email,
           role: user.role,
           jtfId: user.jtfId,
+          warfightingFunction: user.warfightingFunction,
         };
       },
     }),
@@ -73,6 +77,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id as string;
         token.role = user.role;
         token.jtfId = user.jtfId;
+        token.warfightingFunction = user.warfightingFunction;
       }
       return token;
     },
@@ -80,6 +85,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.user.id = token.id;
       session.user.role = token.role;
       session.user.jtfId = token.jtfId;
+      session.user.warfightingFunction = token.warfightingFunction;
       return session;
     },
   },

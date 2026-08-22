@@ -13,12 +13,23 @@ const roleSchema = z.enum([
   "JTF_COMMANDER",
   "JTF_STAFF",
   "VIEWER",
+  "WFC_STAFF",
+]);
+
+const warfightingFunctionSchema = z.enum([
+  "COMMAND_CONTROL",
+  "INTELLIGENCE",
+  "FIRES",
+  "MANEUVER",
+  "PROTECTION",
+  "SUSTAINMENT",
 ]);
 
 const updateUserSchema = z.object({
   name: z.string().min(1).optional(),
   role: roleSchema.optional(),
   jtfId: z.string().nullable().optional(),
+  warfightingFunction: warfightingFunctionSchema.nullable().optional(),
   password: z.string().min(8).optional(),
 });
 
@@ -40,7 +51,14 @@ export async function PATCH(
         tx.user.update({
           where: { id },
           data: { ...rest, ...(passwordHash ? { passwordHash } : {}) },
-          select: { id: true, name: true, email: true, role: true, jtfId: true },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            jtfId: true,
+            warfightingFunction: true,
+          },
         }),
       {
         userId: user.id,

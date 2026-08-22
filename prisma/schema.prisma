@@ -16,6 +16,19 @@ enum Role {
   JTF_COMMANDER
   JTF_STAFF
   VIEWER
+  WFC_STAFF // Warfighting Function Cell staff — cross-JTF, functional (not
+  // JTF) scope. Read-only, command-wide, same as COMMAND; see rbac.ts.
+}
+
+// AFP/joint staff warfighting function cells (command-level, cut across
+// JTFs — distinct from JTF-based organization elsewhere in this schema).
+enum WarfightingFunction {
+  COMMAND_CONTROL
+  INTELLIGENCE
+  FIRES
+  MANEUVER
+  PROTECTION
+  SUSTAINMENT
 }
 
 enum ThreatCategory {
@@ -37,15 +50,16 @@ enum ForceStatus {
 }
 
 model User {
-  id           String     @id @default(cuid())
-  name         String
-  email        String     @unique
-  passwordHash String
-  role         Role
-  jtfId        String?
-  jtf          JTF?       @relation(fields: [jtfId], references: [id])
-  createdAt    DateTime   @default(now())
-  auditLogs    AuditLog[]
+  id                  String               @id @default(cuid())
+  name                String
+  email               String               @unique
+  passwordHash        String
+  role                Role
+  jtfId               String?
+  jtf                 JTF?                 @relation(fields: [jtfId], references: [id])
+  warfightingFunction WarfightingFunction? // set for WFC_STAFF, null otherwise
+  createdAt           DateTime             @default(now())
+  auditLogs           AuditLog[]
 
   @@index([jtfId])
 }

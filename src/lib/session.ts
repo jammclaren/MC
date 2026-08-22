@@ -8,6 +8,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     id: session.user.id,
     role: session.user.role,
     jtfId: session.user.jtfId,
+    warfightingFunction: session.user.warfightingFunction,
   };
 }
 

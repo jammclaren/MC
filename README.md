@@ -122,9 +122,20 @@ client) via `src/lib/rbac.ts`. Summary:
 | JTF_COMMANDER | own JTF full detail, other JTFs **rollup-only** | own JTF                               |
 | JTF_STAFF     | own JTF                                        | own JTF, own entries only (edit/delete) |
 | VIEWER        | whatever scope assigned at account creation    | none                                   |
+| WFC_STAFF     | everything (command-wide, like COMMAND)        | none (read-only)                      |
 
 "Rollup-only" means aggregate/summary data (deployment totals, accomplishment
 sums) — not row-level detail like individual incidents or named HVI entries.
+
+**WFC_STAFF** ("Warfighting Function Cell" staff — command-level staff
+organized by function rather than by JTF: Command & Control, Intelligence,
+Fires, Maneuver, Protection, Sustainment) has `jtfId = null` and a
+`warfightingFunction` set instead. Read scope falls out of the existing
+"unscoped user reads everything" rule (`rbac.ts`'s `canReadJtf`/`canReadRollup`
+key off `jtfId === null`) with zero special-casing; write access is denied by
+the existing role allow-list in `canWriteJtf`/`canModifyEntry`, which already
+excludes any role it doesn't explicitly name. Assigned/edited from Admin →
+Users, same as any other account.
 
 Every mutation goes through `src/lib/audit.ts`'s `withAudit()`, which writes
 the change and its `AuditLog` row in the same database transaction.

@@ -12,7 +12,9 @@ export interface JtfDeploymentCard {
 
 export interface DeploymentRow {
   id: string;
+  jtfId: string;
   jtfName: string;
+  electionAreaId: string | null;
   unitLabel: string | null;
   areaLabel: string | null;
   deployedToPolling: number;
@@ -79,7 +81,9 @@ export async function getDeploymentData(
 
   const rows: DeploymentRow[] = rowDeployments.map((d) => ({
     id: d.id,
+    jtfId: d.jtfId,
     jtfName: d.jtf.name,
+    electionAreaId: d.electionAreaId,
     unitLabel: d.unitLabel,
     areaLabel: d.electionArea
       ? [d.electionArea.barangay, d.electionArea.municipality]

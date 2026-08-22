@@ -20,6 +20,16 @@ export async function listElectionOpsAreas(user: SessionUser, jtfId?: string) {
       label:
         [area.barangay, area.municipality, area.province].filter(Boolean).join(", ") ||
         area.province,
+      province: area.province,
+      municipality: area.municipality,
+      barangay: area.barangay,
+      hotspotCategory: area.hotspotCategory,
+      hotspotReason: area.hotspotReason,
+      numPrecincts: area.numPrecincts,
+      numCenters: area.numCenters,
+      registeredVoters: area.registeredVoters,
+      lat: area.lat,
+      lng: area.lng,
       status: status
         ? {
             paraphTotalTreasurer: status.paraphTotalTreasurer,

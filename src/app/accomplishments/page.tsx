@@ -3,10 +3,11 @@ import Link from "next/link";
 import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { getIndicatorTable, getRidoTable } from "@/lib/queries/accomplishments";
-import type { SessionUser } from "@/lib/rbac";
+import { canWriteJtf, type SessionUser } from "@/lib/rbac";
 import { cn } from "@/lib/utils";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -20,6 +21,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { AccomplishmentFormDialog } from "@/components/accomplishment-form-dialog";
+import { RidoFormDialog } from "@/components/rido-form-dialog";
+import { HviLogFormDialog } from "@/components/hvi-log-form-dialog";
+import { DeleteButton } from "@/components/delete-button";
 
 const CATEGORIES = ["CTG", "LTG", "CBC"] as const;
 type Category = (typeof CATEGORIES)[number];
@@ -48,7 +54,28 @@ export default async function AccomplishmentsPage({
   const category: Category = isCategory(params.category) ? params.category : "CTG";
   const jtfId = params.jtfId || undefined;
 
-  const jtfs = await prisma.jTF.findMany({ orderBy: { name: "asc" } });
+  const [jtfs, indicators] = await Promise.all([
+    prisma.jTF.findMany({ orderBy: { name: "asc" } }),
+    category !== "CBC"
+      ? prisma.indicator.findMany({
+          where: { category },
+          orderBy: [{ subgroup: "asc" }, { name: "asc" }],
+        })
+      : Promise.resolve([]),
+  ]);
+  const jtfOptions = jtfs.map((jtf) => ({ id: jtf.id, name: jtf.name }));
+  const indicatorOptions = indicators.map((ind) => ({
+    id: ind.id,
+    name: ind.name,
+    subgroup: ind.subgroup,
+  }));
+  const writableJtfId =
+    user.role === "ADMIN"
+      ? undefined
+      : user.jtfId && canWriteJtf(user, user.jtfId)
+        ? user.jtfId
+        : undefined;
+  const canCreate = user.role === "ADMIN" || (!!user.jtfId && canWriteJtf(user, user.jtfId));
 
   return (
     <div className="flex flex-col gap-6">
@@ -109,6 +136,25 @@ export default async function AccomplishmentsPage({
               ? "RIDO settlements per quarter"
               : "Target (YE) vs. actual, cumulative, PSR/NPSR split"}
           </CardDescription>
+          {canCreate && (
+            <CardAction>
+              {category === "CBC" ? (
+                <RidoFormDialog
+                  jtfOptions={jtfOptions}
+                  lockJtfId={writableJtfId}
+                  trigger={<Button size="sm">Log Settlement</Button>}
+                />
+              ) : (
+                <AccomplishmentFormDialog
+                  indicatorOptions={indicatorOptions}
+                  jtfOptions={jtfOptions}
+                  lockJtfId={writableJtfId}
+                  isAdmin={user.role === "ADMIN"}
+                  trigger={<Button size="sm">Log Accomplishment</Button>}
+                />
+              )}
+            </CardAction>
+          )}
         </CardHeader>
         <CardContent>
           {category === "CBC" ? (
@@ -119,7 +165,13 @@ export default async function AccomplishmentsPage({
         </CardContent>
       </Card>
 
-      {category !== "CBC" && <HviLogSection category={category} />}
+      {category !== "CBC" && (
+        <HviLogSection
+          category={category}
+          canCreate={canCreate}
+          isAdmin={user.role === "ADMIN"}
+        />
+      )}
     </div>
   );
 }
@@ -223,7 +275,15 @@ async function CbcTable({ jtfId, user }: { jtfId?: string; user: SessionUser }) 
   );
 }
 
-async function HviLogSection({ category }: { category: "CTG" | "LTG" }) {
+async function HviLogSection({
+  category,
+  canCreate,
+  isAdmin,
+}: {
+  category: "CTG" | "LTG";
+  canCreate: boolean;
+  isAdmin: boolean;
+}) {
   const entries = await prisma.hviLogEntry.findMany({
     where: { category },
     orderBy: { date: "desc" },
@@ -234,15 +294,47 @@ async function HviLogSection({ category }: { category: "CTG" | "LTG" }) {
       <CardHeader>
         <CardTitle>HVI Neutralization Log</CardTitle>
         <CardDescription>Most recent first.</CardDescription>
+        {canCreate && (
+          <CardAction>
+            <HviLogFormDialog category={category} trigger={<Button size="sm">Add Entry</Button>} />
+          </CardAction>
+        )}
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {entries.map((entry) => (
           <div key={entry.id} className="border-b pb-3 last:border-b-0 last:pb-0">
             <div className="flex items-baseline justify-between gap-4">
               <span className="font-medium">{entry.name}</span>
-              <span className="text-sm text-muted-foreground">
-                {entry.date.toLocaleDateString()}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {entry.date.toLocaleDateString()}
+                </span>
+                {isAdmin && (
+                  <div className="flex gap-1">
+                    <HviLogFormDialog
+                      category={category}
+                      initial={{
+                        id: entry.id,
+                        name: entry.name,
+                        role: entry.role ?? "",
+                        outcome: entry.outcome,
+                        date: entry.date.toISOString().slice(0, 10),
+                        location: entry.location ?? "",
+                        narrative: entry.narrative,
+                      }}
+                      trigger={
+                        <Button variant="ghost" size="sm">
+                          Edit
+                        </Button>
+                      }
+                    />
+                    <DeleteButton
+                      url={`/api/hvi-log/${entry.id}`}
+                      confirmMessage="Delete this HVI log entry? This cannot be undone."
+                    />
+                  </div>
+                )}
+              </div>
             </div>
             <p className="text-sm text-muted-foreground">
               {entry.role ? `${entry.role} · ` : ""}
