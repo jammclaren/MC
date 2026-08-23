@@ -49,6 +49,17 @@ const SATELLITE_TILE_URL =
 const SATELLITE_ATTRIBUTION =
   "Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community";
 
+// Esri "Light Gray Canvas" — a muted, minimal basemap meant not to compete
+// visually with thematic overlays (like our threat-categorization fills).
+// Two stacked services: a plain base + a reference layer carrying labels
+// (roads/place names), same free/no-API-key tier as World Imagery above.
+const LIGHT_CANVAS_BASE_URL =
+  "https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}";
+const LIGHT_CANVAS_REFERENCE_URL =
+  "https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}";
+const LIGHT_CANVAS_ATTRIBUTION =
+  "Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors, and the GIS User Community";
+
 // Same validated status hex values as the Badge good/warning/serious/critical
 // variants (src/app/globals.css) and the Green/Yellow/Orange/Red source
 // categorization, so map fills and badges never disagree.
@@ -352,6 +363,12 @@ export function PriorityMap({
           </LayersControl.BaseLayer>
           <LayersControl.BaseLayer name="Satellite">
             <TileLayer attribution={SATELLITE_ATTRIBUTION} url={SATELLITE_TILE_URL} />
+          </LayersControl.BaseLayer>
+          <LayersControl.BaseLayer name="Light Canvas">
+            <LayerGroup>
+              <TileLayer attribution={LIGHT_CANVAS_ATTRIBUTION} url={LIGHT_CANVAS_BASE_URL} />
+              <TileLayer url={LIGHT_CANVAS_REFERENCE_URL} />
+            </LayerGroup>
           </LayersControl.BaseLayer>
           <LayersControl.BaseLayer name="Tactical Grid (Offline)">
             <LayerGroup />

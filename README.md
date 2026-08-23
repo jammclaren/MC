@@ -126,6 +126,9 @@ switcher (bottom of the zoom control, top-left) with two choices:
 
 - **OpenStreetMap** (default) — a live online tile layer.
 - **Satellite** — Esri World Imagery, also free/no API key.
+- **Light Canvas** — Esri's muted "Light Gray Canvas" basemap (base +
+  reference/label tiles stacked), meant not to compete visually with the
+  threat-categorization fills on top of it.
 - **Tactical Grid (Offline)** — no tiles at all, just the CSS HUD grid
   behind the vector overlays, for anyone who does deploy this on an
   isolated network.
