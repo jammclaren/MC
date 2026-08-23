@@ -9,12 +9,22 @@ import {
   MapContainer,
   CircleMarker,
   GeoJSON,
+  Marker,
   Polygon,
+  Popup,
   TileLayer,
   Tooltip,
   useMap,
 } from "react-leaflet";
 import type { ScoredArea } from "@/lib/queries/priority-areas";
+import type { IncidentMarker } from "@/lib/queries/incident-markers";
+import {
+  IncidentMarkerFormDialog,
+  type ElectionAreaOption,
+  type JtfOption,
+} from "@/components/incident-marker-form-dialog";
+import { Button } from "@/components/ui/button";
+import { MapPin } from "lucide-react";
 
 // The base-layer switcher (bottom-left, under the zoom control) offers a
 // live OpenStreetMap tile layer alongside an offline "Tactical Grid" option
@@ -30,6 +40,13 @@ import type { ScoredArea } from "@/lib/queries/priority-areas";
 const OSM_TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 const OSM_ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+// Esri World Imagery — free, no API key required for standard basemap
+// display (standard Esri attribution below).
+const SATELLITE_TILE_URL =
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+const SATELLITE_ATTRIBUTION =
+  "Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community";
 
 // Same validated status hex values as the Badge good/warning/serious/critical
 // variants (src/app/globals.css) and the Green/Yellow/Orange/Red source
@@ -190,7 +207,35 @@ function Legend({ counts, total }: { counts: Record<string, number>; total: numb
   );
 }
 
-export function PriorityMap({ areas }: { areas: ScoredArea[] }) {
+/** Small animated dot icon for an incident marker — the animation class
+ * (blink/pulse) is applied to the inner span, never the outer Leaflet
+ * positioning wrapper, so it never fights Leaflet's own transform. */
+function buildIncidentIcon(style: IncidentMarker["markerStyle"]): L.DivIcon {
+  const animClass =
+    style === "BLINK" ? "incident-marker-blink" : style === "PULSE" ? "incident-marker-pulse" : "";
+  return L.divIcon({
+    className: "incident-marker-icon",
+    html: `<span style="display:block;width:14px;height:14px;border-radius:9999px;background:var(--status-critical);border:2px solid #fff;box-shadow:0 0 6px rgba(0,0,0,0.7);" class="${animClass}"></span>`,
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+  });
+}
+
+export function PriorityMap({
+  areas,
+  markers,
+  jtfOptions,
+  areaOptions,
+  lockJtfId,
+  canCreateMarker,
+}: {
+  areas: ScoredArea[];
+  markers: IncidentMarker[];
+  jtfOptions: JtfOption[];
+  areaOptions: ElectionAreaOption[];
+  lockJtfId?: string;
+  canCreateMarker: boolean;
+}) {
   const [provinces, setProvinces] = useState<GeoJSON.FeatureCollection | null>(null);
   const [barangays, setBarangays] = useState<GeoJSON.FeatureCollection | null>(null);
 
@@ -299,6 +344,9 @@ export function PriorityMap({ areas }: { areas: ScoredArea[] }) {
           <LayersControl.BaseLayer checked name="OpenStreetMap">
             <TileLayer attribution={OSM_ATTRIBUTION} url={OSM_TILE_URL} />
           </LayersControl.BaseLayer>
+          <LayersControl.BaseLayer name="Satellite">
+            <TileLayer attribution={SATELLITE_ATTRIBUTION} url={SATELLITE_TILE_URL} />
+          </LayersControl.BaseLayer>
           <LayersControl.BaseLayer name="Tactical Grid (Offline)">
             <LayerGroup />
           </LayersControl.BaseLayer>
@@ -359,11 +407,48 @@ export function PriorityMap({ areas }: { areas: ScoredArea[] }) {
               </LayerGroup>
             </LayersControl.Overlay>
           )}
+          {markers.length > 0 && (
+            <LayersControl.Overlay checked name="Incident Markers">
+              <LayerGroup>
+                {markers.map((marker) => (
+                  <Marker
+                    key={marker.id}
+                    position={[marker.lat, marker.lng]}
+                    icon={buildIncidentIcon(marker.markerStyle)}
+                  >
+                    <Popup>
+                      <div className="text-xs">
+                        <div className="font-medium">{marker.type}</div>
+                        <div>{new Date(marker.date).toLocaleDateString()}</div>
+                        {marker.areaLabel && <div>{marker.areaLabel}</div>}
+                        {marker.result && <div>Result: {marker.result}</div>}
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+              </LayerGroup>
+            </LayersControl.Overlay>
+          )}
         </LayersControl>
         {provinces && <FitToBounds data={provinces} />}
       </MapContainer>
       <HudFrame />
       <Legend counts={categoryCounts} total={areas.length} />
+      {canCreateMarker && (
+        <div className="absolute bottom-3 left-3 z-[900]">
+          <IncidentMarkerFormDialog
+            jtfOptions={jtfOptions}
+            areaOptions={areaOptions}
+            lockJtfId={lockJtfId}
+            trigger={
+              <Button size="sm" className="shadow-lg">
+                <MapPin className="size-4" />
+                Add Marker
+              </Button>
+            }
+          />
+        </div>
+      )}
     </div>
   );
 }

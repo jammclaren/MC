@@ -261,3 +261,35 @@
 .leaflet-control-layers-expanded {
   color: var(--foreground) !important;
 }
+
+/* Incident marker animation options (priority map "Add Marker" dialog) —
+ * purely visual emphasis for faster identification, no operational
+ * meaning of their own. */
+@keyframes marker-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.15;
+  }
+}
+@keyframes marker-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.6);
+  }
+}
+.incident-marker-blink {
+  animation: marker-blink 1.1s ease-in-out infinite;
+}
+.incident-marker-pulse {
+  animation: marker-pulse 1.1s ease-in-out infinite;
+}
+.incident-marker-icon {
+  background: transparent !important;
+  border: none !important;
+}

@@ -125,6 +125,7 @@ Supabase (cloud-hosted, not air-gapped), so it now offers a base-layer
 switcher (bottom of the zoom control, top-left) with two choices:
 
 - **OpenStreetMap** (default) — a live online tile layer.
+- **Satellite** — Esri World Imagery, also free/no API key.
 - **Tactical Grid (Offline)** — no tiles at all, just the CSS HUD grid
   behind the vector overlays, for anyone who does deploy this on an
   isolated network.
@@ -154,6 +155,21 @@ Norte/Sur, Cotabato City, SGA-BARMM, and Tawi-Tawi) was bulk-imported from
 a threat-categorization spreadsheet (color-fill-encoded, not text) —
 see git history for the one-time import script; it isn't kept in the repo
 since it's a one-shot data load, not a reusable tool.
+
+### Incident markers
+
+The "Add Marker" button (bottom-left of the map) logs an `Incident` with
+precise coordinates, entered as an **MGRS grid reference** rather than raw
+lat/lng — converted client-side via the [`mgrs`](https://www.npmjs.com/package/mgrs)
+package (`toPoint`), which is what actually gets persisted; the MGRS
+string itself isn't stored, since it's derivable and every other map layer
+already consumes lat/lng. Each marker has an animation option
+(`Incident.markerStyle`: `NONE`/`BLINK`/`PULSE`) for faster visual
+identification — CSS-only (`.incident-marker-blink`/`-pulse` in
+`globals.css`), applied to the marker's inner element so it never fights
+Leaflet's own positioning transform on the outer icon. Incidents are
+row-level detail (SPEC.md §6), so this layer is strictly scoped to the
+viewer's own JTF — unlike the command-wide hotspot/priority rollup.
 
 To swap in a different basemap later:
 

@@ -12,6 +12,9 @@ const createIncidentSchema = z.object({
   date: z.coerce.date(),
   type: z.string().min(1),
   result: z.string().optional(),
+  lat: z.number().min(-90).max(90).optional(),
+  lng: z.number().min(-180).max(180).optional(),
+  markerStyle: z.enum(["NONE", "BLINK", "PULSE"]).optional(),
 });
 
 export async function GET(request: NextRequest) {

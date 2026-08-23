@@ -11,6 +11,9 @@ const updateIncidentSchema = z.object({
   date: z.coerce.date().optional(),
   type: z.string().min(1).optional(),
   result: z.string().nullable().optional(),
+  lat: z.number().min(-90).max(90).nullable().optional(),
+  lng: z.number().min(-180).max(180).nullable().optional(),
+  markerStyle: z.enum(["NONE", "BLINK", "PULSE"]).optional(),
 });
 
 async function loadIncidentOrThrow(id: string) {

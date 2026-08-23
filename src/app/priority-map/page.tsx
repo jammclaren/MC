@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { getScoredAreas } from "@/lib/queries/priority-areas";
+import { getIncidentMarkers } from "@/lib/queries/incident-markers";
 import { canWriteJtf } from "@/lib/rbac";
 import { PriorityMapLoader } from "@/components/priority-map-loader";
 import {
@@ -36,12 +37,21 @@ export default async function PriorityMapPage() {
     redirect("/login");
   }
 
-  const [areas, jtfs] = await Promise.all([
+  const [areas, jtfs, markers, electionAreas] = await Promise.all([
     getScoredAreas(user),
     prisma.jTF.findMany({ orderBy: { name: "asc" } }),
+    getIncidentMarkers(user),
+    prisma.electionArea.findMany({
+      select: { id: true, jtfId: true, barangay: true, municipality: true, province: true },
+    }),
   ]);
   const top10 = areas.slice(0, 10);
   const jtfOptions = jtfs.map((jtf) => ({ id: jtf.id, name: jtf.name }));
+  const areaOptions = electionAreas.map((area) => ({
+    id: area.id,
+    jtfId: area.jtfId,
+    label: [area.barangay, area.municipality, area.province].filter(Boolean).join(", "),
+  }));
   const writableJtfId =
     user.role === "ADMIN"
       ? undefined
@@ -71,7 +81,14 @@ export default async function PriorityMapPage() {
 
       <Card>
         <CardContent className="pt-6">
-          <PriorityMapLoader areas={areas} />
+          <PriorityMapLoader
+            areas={areas}
+            markers={markers}
+            jtfOptions={jtfOptions}
+            areaOptions={areaOptions}
+            lockJtfId={writableJtfId}
+            canCreateMarker={canCreate}
+          />
         </CardContent>
       </Card>
 

@@ -2,6 +2,8 @@
 
 import dynamic from "next/dynamic";
 import type { ScoredArea } from "@/lib/queries/priority-areas";
+import type { IncidentMarker } from "@/lib/queries/incident-markers";
+import type { ElectionAreaOption, JtfOption } from "@/components/incident-marker-form-dialog";
 
 // Leaflet touches window/document at load time, so it can't be
 // server-rendered — load it client-only from behind this "use client"
@@ -16,6 +18,29 @@ const PriorityMap = dynamic(
   }
 );
 
-export function PriorityMapLoader({ areas }: { areas: ScoredArea[] }) {
-  return <PriorityMap areas={areas} />;
+export function PriorityMapLoader({
+  areas,
+  markers,
+  jtfOptions,
+  areaOptions,
+  lockJtfId,
+  canCreateMarker,
+}: {
+  areas: ScoredArea[];
+  markers: IncidentMarker[];
+  jtfOptions: JtfOption[];
+  areaOptions: ElectionAreaOption[];
+  lockJtfId?: string;
+  canCreateMarker: boolean;
+}) {
+  return (
+    <PriorityMap
+      areas={areas}
+      markers={markers}
+      jtfOptions={jtfOptions}
+      areaOptions={areaOptions}
+      lockJtfId={lockJtfId}
+      canCreateMarker={canCreateMarker}
+    />
+  );
 }

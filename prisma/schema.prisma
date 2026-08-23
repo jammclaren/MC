@@ -37,6 +37,15 @@ enum ThreatCategory {
   CBC
 }
 
+/** Visual emphasis for an incident's map marker — purely a display
+ * preference for faster identification on the priority map, no
+ * operational meaning of its own. */
+enum MarkerAnimation {
+  NONE
+  BLINK
+  PULSE
+}
+
 enum NeutralizationType {
   CAPTURED
   KILLED
@@ -195,16 +204,23 @@ model TroopDeployment {
 }
 
 model Incident {
-  id             String        @id @default(cuid())
+  id             String          @id @default(cuid())
   jtfId          String
-  jtf            JTF           @relation(fields: [jtfId], references: [id])
+  jtf            JTF             @relation(fields: [jtfId], references: [id])
   electionAreaId String?
-  electionArea   ElectionArea? @relation(fields: [electionAreaId], references: [id])
+  electionArea   ElectionArea?   @relation(fields: [electionAreaId], references: [id])
   date           DateTime
   type           String
   result         String?
+  // Precise map placement, set when logged via the priority map's "Add
+  // Marker" flow (entered as MGRS, converted to lat/lng at write time —
+  // MGRS itself isn't stored since it's derivable and lat/lng is what
+  // every map layer already consumes).
+  lat            Float?
+  lng            Float?
+  markerStyle    MarkerAnimation @default(NONE)
   createdById    String
-  createdAt      DateTime      @default(now())
+  createdAt      DateTime        @default(now())
 
   @@index([jtfId])
   @@index([electionAreaId])
