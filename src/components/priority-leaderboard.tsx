@@ -7,8 +7,9 @@ export interface LeaderboardEntry {
   priorityScore: number;
 }
 
-const HOTSPOT_BADGE_VARIANT: Record<string, "critical" | "warning" | "good"> = {
+const HOTSPOT_BADGE_VARIANT: Record<string, "critical" | "serious" | "warning" | "good"> = {
   Red: "critical",
+  Orange: "serious",
   Yellow: "warning",
   Green: "good",
 };

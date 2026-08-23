@@ -23,8 +23,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ElectionAreaFormDialog } from "@/components/election-area-form-dialog";
 
-const HOTSPOT_BADGE_VARIANT: Record<string, "critical" | "warning" | "good"> = {
+const HOTSPOT_BADGE_VARIANT: Record<string, "critical" | "serious" | "warning" | "good"> = {
   Red: "critical",
+  Orange: "serious",
   Yellow: "warning",
   Green: "good",
 };

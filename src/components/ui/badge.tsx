@@ -25,6 +25,8 @@ const badgeVariants = cva(
         good: "bg-status-good/15 text-status-good border-status-good/30",
         warning:
           "bg-status-warning/15 text-status-warning border-status-warning/30",
+        serious:
+          "bg-status-serious/15 text-status-serious border-status-serious/30",
         critical:
           "bg-status-critical/15 text-status-critical border-status-critical/30",
       },

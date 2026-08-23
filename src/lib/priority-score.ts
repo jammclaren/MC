@@ -8,6 +8,7 @@
 
 export const HOTSPOT_WEIGHTS: Record<string, number> = {
   Red: 3,
+  Orange: 2.5,
   Yellow: 2,
   Green: 1,
 };

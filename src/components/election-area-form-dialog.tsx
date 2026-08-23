@@ -42,7 +42,7 @@ export interface ElectionAreaFormInitial {
   lng: string;
 }
 
-const HOTSPOT_CATEGORIES = ["Red", "Yellow", "Green"] as const;
+const HOTSPOT_CATEGORIES = ["Red", "Orange", "Yellow", "Green"] as const;
 
 function numOrUndefined(value: string): number | undefined {
   if (value.trim() === "") return undefined;

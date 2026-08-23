@@ -125,8 +125,12 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
       where: { jtfId: detailScopeJtfId, date: { gte: windowStart } },
     }),
     getScoredAreas(user),
+    // Scoped to areas actively tracked for BPE polling ops (they have an
+    // ElectionOpsStatus row) — excludes barangay-level threat-categorization
+    // entries that exist purely for the hotspot/priority map, so those don't
+    // inflate "Total Areas" in the funnel below.
     prisma.electionArea.findMany({
-      where: { jtfId: rollupScopeJtfId },
+      where: { jtfId: rollupScopeJtfId, opsStatus: { isNot: null } },
       select: { registeredVoters: true, opsStatus: true },
     }),
     prisma.incident.findMany({
