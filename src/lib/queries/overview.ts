@@ -14,12 +14,6 @@ export interface JtfDeploymentTotal {
   qrf: number;
 }
 
-export interface CategorySummary {
-  category: "CTG" | "LTG" | "CBC";
-  targetYE: number;
-  actual: number;
-}
-
 export interface RecentIncidentRow {
   id: string;
   date: Date;
@@ -52,7 +46,6 @@ export interface OverviewData {
   totalDeployed: number;
   totalQrf: number;
   totalRegisteredVoters: number;
-  categorySummaries: CategorySummary[];
   recentIncidents: RecentIncidentRow[];
   recentIncidentCount30d: number;
   priorityAreaCount: number;
@@ -84,7 +77,6 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
   const [
     jtfs,
     deployments,
-    indicators,
     recentIncidents,
     recentIncidentCount30d,
     scoredAreas,
@@ -98,11 +90,6 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     prisma.troopDeployment.findMany({
       where: { jtfId: rollupScopeJtfId },
       select: { jtfId: true, deployedToPolling: true, qrf: true },
-    }),
-    prisma.indicator.findMany({
-      include: {
-        records: { where: { jtfId: rollupScopeJtfId } },
-      },
     }),
     prisma.incident.findMany({
       where: { jtfId: detailScopeJtfId },
@@ -208,20 +195,6 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     };
   });
 
-  const categorySummaries: CategorySummary[] = (["CTG", "LTG", "CBC"] as const).map(
-    (category) => {
-      const categoryIndicators = indicators.filter((i) => i.category === category);
-      return {
-        category,
-        targetYE: categoryIndicators.reduce((sum, i) => sum + (i.targetYE ?? 0), 0),
-        actual: categoryIndicators.reduce(
-          (sum, i) => sum + i.records.reduce((s, r) => s + r.count, 0),
-          0
-        ),
-      };
-    }
-  );
-
   const recentIncidentRows: RecentIncidentRow[] = recentIncidents.map((incident) => {
     let isPriority = false;
     if (incident.electionArea) {
@@ -261,7 +234,6 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     totalDeployed: jtfDeployments.reduce((sum, d) => sum + d.deployedToPolling, 0),
     totalQrf: jtfDeployments.reduce((sum, d) => sum + d.qrf, 0),
     totalRegisteredVoters,
-    categorySummaries,
     recentIncidents: recentIncidentRows,
     recentIncidentCount30d,
     priorityAreaCount,

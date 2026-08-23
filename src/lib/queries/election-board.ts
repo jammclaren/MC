@@ -43,6 +43,7 @@ export interface ElectionBoardData {
   partyLabelCount: number;
   votesEncoded: number;
   reportingPct: number;
+  registeredVoters: number;
   leaderboard: BoardCandidate[];
   parties: BoardParty[];
   candidates: BoardCandidate[];
@@ -68,11 +69,21 @@ export async function getElectionBoardData(
 ): Promise<ElectionBoardData> {
   const scopeJtfId = scopeJtfFilter(user, undefined, { allowRollup: true });
 
-  const candidates = await prisma.candidate.findMany({
-    where: { jtfId: scopeJtfId, province },
-    include: { party: true },
-    orderBy: [{ votesEncoded: "desc" }, { nameOnBallot: "asc" }],
-  });
+  const [candidates, registeredVotersAgg] = await Promise.all([
+    prisma.candidate.findMany({
+      where: { jtfId: scopeJtfId, province },
+      include: { party: true },
+      orderBy: [{ votesEncoded: "desc" }, { nameOnBallot: "asc" }],
+    }),
+    // Same scoping as Overview's BARMM-wide total: areas actively tracked
+    // for BPE polling ops (they have an ElectionOpsStatus row), so the
+    // barangay-level threat-categorization import (no registeredVoters
+    // data anyway) can't skew this.
+    prisma.electionArea.aggregate({
+      where: { jtfId: scopeJtfId, province, opsStatus: { isNot: null } },
+      _sum: { registeredVoters: true },
+    }),
+  ]);
 
   const votesEncoded = candidates.reduce((sum, c) => sum + c.votesEncoded, 0);
 
@@ -120,6 +131,7 @@ export async function getElectionBoardData(
     partyLabelCount: partyMap.size,
     votesEncoded,
     reportingPct,
+    registeredVoters: registeredVotersAgg._sum.registeredVoters ?? 0,
     leaderboard: candidates.map(toBoardCandidate),
     parties,
     candidates: candidates

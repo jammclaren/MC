@@ -63,7 +63,7 @@ export default async function ElectionBoardPage({
       <div className="flex flex-col gap-6">
         <div>
           <h1 className="font-display text-2xl font-bold tracking-wide uppercase">
-            Election Data Board
+            BARMM Parliamentary Election Profile
           </h1>
           <p className="text-sm text-muted-foreground">
             2026 BARMM Parliamentary Election — Sept 14, 2026.
@@ -89,12 +89,12 @@ export default async function ElectionBoardPage({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold tracking-wide uppercase">
-            Election Data Board
+            BARMM Parliamentary Election Profile
           </h1>
           <p className="text-sm text-muted-foreground">
-            2026 BARMM Parliamentary Election — Sept 14, 2026. Candidate roster from
-            published COC-filer reporting; vote counts are manually encoded as results
-            come in.
+            2026 BARMM Parliamentary Election — Sept 14, 2026. Per-province candidate
+            roster from published COC-filer reporting; vote counts are manually encoded
+            as results come in.
           </p>
         </div>
         {canWrite && provinceJtfId && (
@@ -126,14 +126,19 @@ export default async function ElectionBoardPage({
       <Card className="border-primary/30">
         <CardHeader>
           <p className="font-display text-xs font-semibold tracking-widest text-primary uppercase">
-            Election Data Board // {provinceAbbreviation(province)}
+            Election Profile // {provinceAbbreviation(province)}
           </p>
           <CardTitle className="text-2xl">{province} Electoral Picture</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             <StatTile label="Contestants" value={board.contestantCount} icon={Users} />
             <StatTile label="Party Labels" value={board.partyLabelCount} icon={Flag} />
+            <StatTile
+              label="Registered Voters"
+              value={board.registeredVoters.toLocaleString()}
+              icon={Users}
+            />
             <StatTile
               label="Votes Encoded"
               value={board.votesEncoded.toLocaleString()}

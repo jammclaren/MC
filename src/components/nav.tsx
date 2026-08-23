@@ -6,12 +6,11 @@ import { prisma } from "@/lib/prisma";
 
 const NAV_LINKS = [
   { href: "/", label: "Overview" },
-  { href: "/accomplishments", label: "Accomplishments" },
-  { href: "/bpe-deployment", label: "BPE Deployment" },
-  { href: "/priority-map", label: "Priority Map" },
-  { href: "/incidents", label: "Incidents" },
-  { href: "/election-ops", label: "Election Ops" },
-  { href: "/election-board", label: "Election Board" },
+  { href: "/bpe-deployment", label: "Deployment" },
+  { href: "/priority-map", label: "Situation Map" },
+  { href: "/incidents", label: "Monitored Incidents" },
+  { href: "/election-ops", label: "Election Status" },
+  { href: "/election-board", label: "Election Profile" },
 ] as const;
 
 const ADMIN_LINKS = [
@@ -36,7 +35,7 @@ export async function Nav() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-primary/20 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
+    <header className="sticky top-0 z-40 border-b border-primary/30 bg-background/95 shadow-[0_1px_16px_-4px_var(--primary)] backdrop-blur supports-backdrop-filter:bg-background/80">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6">
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-2.5 py-3">

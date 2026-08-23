@@ -293,3 +293,82 @@
   background: transparent !important;
   border: none !important;
 }
+
+/* ---------------------------------------------------------------------
+ * Futuristic command-center viewport chrome — a persistent HUD frame and
+ * a slow ambient scan-line sweep, both purely decorative (pointer-events
+ * disabled) and fixed to the viewport rather than any one page, so every
+ * screen in the app reads as the same console rather than a website.
+ * ------------------------------------------------------------------- */
+.hud-viewport-frame {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+}
+.hud-viewport-frame span {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  opacity: 0.55;
+}
+.hud-viewport-frame span::before,
+.hud-viewport-frame span::after {
+  content: "";
+  position: absolute;
+  background: var(--primary);
+  box-shadow: 0 0 6px 0 var(--primary);
+}
+.hud-viewport-frame span::before {
+  width: 100%;
+  height: 2px;
+}
+.hud-viewport-frame span::after {
+  width: 2px;
+  height: 100%;
+}
+.hud-corner-tl {
+  top: 10px;
+  left: 10px;
+}
+.hud-corner-tr {
+  top: 10px;
+  right: 10px;
+}
+.hud-corner-tr::before,
+.hud-corner-tr::after {
+  right: 0;
+}
+.hud-corner-bl {
+  bottom: 10px;
+  left: 10px;
+}
+.hud-corner-bl::before,
+.hud-corner-bl::after {
+  bottom: 0;
+}
+.hud-corner-br {
+  bottom: 10px;
+  right: 10px;
+}
+.hud-corner-br::before,
+.hud-corner-br::after {
+  bottom: 0;
+  right: 0;
+}
+
+/* Console-panel corner notches on every Card, plus a soft glow riding the
+ * existing top accent border — the same visual language as the priority
+ * map's HudFrame, applied app-wide. */
+[data-slot="card"] {
+  clip-path: polygon(
+    12px 0,
+    100% 0,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    0 100%,
+    0 12px
+  );
+  box-shadow: 0 0 0 1px rgba(57, 135, 229, 0.12) inset,
+    0 -1px 12px -2px rgba(57, 135, 229, 0.5);
+}

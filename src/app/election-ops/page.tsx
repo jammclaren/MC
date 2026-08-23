@@ -47,7 +47,7 @@ export default async function ElectionOpsPage({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Election Ops Status</h1>
+        <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Election Status</h1>
         <p className="text-sm text-muted-foreground">
           Paraphernalia delivery, ACM sealing, voting, transmission, and canvassing per
           area.

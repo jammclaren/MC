@@ -62,10 +62,10 @@ export default async function BpeDeploymentPage({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold tracking-wide uppercase">
-            BPE 2026 — Deployment
+            Deployment
           </h1>
           <p className="text-sm text-muted-foreground">
-            BARMM Parliamentary Election security operations, 30 Jul–15 Sep 2026.
+            BARMM Parliamentary Election security operations, 30 Jul–14 Sep 2026.
           </p>
         </div>
         {canCreate && (

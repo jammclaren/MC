@@ -25,17 +25,7 @@ import { GaugeMeter } from "@/components/gauge-meter";
 import { FunnelPanel } from "@/components/funnel-panel";
 import { PriorityLeaderboard } from "@/components/priority-leaderboard";
 import { BpeCountdown } from "@/components/bpe-countdown";
-import { Users, ShieldAlert, TriangleAlert, Crosshair } from "lucide-react";
-
-const CATEGORY_LABELS: Record<string, string> = {
-  CTG: "CTG (Communist Terrorist Group)",
-  LTG: "LTG (Local Terrorist Groups)",
-  CBC: "CBC (Community-Based Conflict / RIDO)",
-};
-
-function formatPct(pct: number | null): string {
-  return pct === null ? "—" : `${pct.toFixed(0)}%`;
-}
+import { Users, ShieldAlert, TriangleAlert, Crosshair, Vote } from "lucide-react";
 
 /** "30 July 2026" — day-month-year, independent of locale part ordering. */
 function formatBpeDate(iso: string): string {
@@ -62,11 +52,16 @@ export default async function OverviewPage() {
       <div>
         <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Command Overview</h1>
         <p className="text-sm text-muted-foreground">
-          Recapitulation of troop deployment and threat-category accomplishments.
+          Recapitulation of troop deployment and election-security operations.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <StatTile
+          label="Registered Voters (BARMM)"
+          value={data.totalRegisteredVoters.toLocaleString()}
+          icon={Vote}
+        />
         <StatTile
           label="Deployed to Polling"
           value={data.totalDeployed.toLocaleString()}
@@ -176,35 +171,6 @@ export default async function OverviewPage() {
           </Table>
         </CardContent>
       </Card>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        {data.categorySummaries.map((summary) => {
-          const pct = safePercent(summary.actual, summary.targetYE);
-          return (
-            <Card key={summary.category}>
-              <CardHeader>
-                <CardTitle className="text-base">
-                  {CATEGORY_LABELS[summary.category]}
-                </CardTitle>
-                <CardDescription>Year-end target vs. actual</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-baseline gap-2">
-                  <span className="font-mono text-3xl font-semibold tabular-nums text-primary">
-                    {summary.actual}
-                  </span>
-                  <span className="font-mono text-sm text-muted-foreground">
-                    / {summary.targetYE || "—"}
-                  </span>
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {formatPct(pct)} of year-end target
-                </p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
 
       <Card>
         <CardHeader>

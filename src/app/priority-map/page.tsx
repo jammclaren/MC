@@ -64,7 +64,7 @@ export default async function PriorityMapPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Hotspot / Priority Map</h1>
+          <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Situation Map</h1>
           <p className="text-sm text-muted-foreground">
             Areas of operation color-coded by hotspot category and computed priority
             score. Click a marker for detail.
