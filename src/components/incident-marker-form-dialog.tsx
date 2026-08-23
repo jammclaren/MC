@@ -128,7 +128,7 @@ export function IncidentMarkerFormDialog({
           <DialogHeader>
             <DialogTitle>Add Incident Marker</DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col gap-4 py-4">
+          <div className="flex max-h-[60vh] flex-col gap-4 overflow-y-auto py-4">
             {!lockJtfId && (
               <div className="flex flex-col gap-2">
                 <Label>JTF</Label>
