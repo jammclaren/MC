@@ -39,10 +39,18 @@ export async function Nav() {
     <header className="sticky top-0 z-40 border-b border-primary/20 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6">
         <div className="flex items-center gap-8">
-          <div className="flex items-center gap-2 py-3">
+          <div className="flex items-center gap-2.5 py-3">
+            {/* eslint-disable-next-line @next/next/no-img-element -- small
+                static header mark; not worth next/image's optimization
+                pipeline for a 22KB, always-visible icon. */}
+            <img
+              src="/wesmincom-seal.png"
+              alt="Western Mindanao Command seal"
+              className="size-8"
+            />
             <span className="flex size-2 rounded-full bg-status-good shadow-[0_0_6px_var(--status-good)]" />
             <span className="font-display text-base font-bold tracking-widest uppercase">
-              WESMINCOM <span className="text-primary">C2</span>
+              WESMINCOM <span className="text-primary">DASHBOARD</span>
             </span>
           </div>
           <NavLinks links={allLinks} />
