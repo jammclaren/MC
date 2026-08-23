@@ -65,8 +65,8 @@ model User {
 }
 
 model JTF {
-  id              String                  @id @default(cuid())
-  name            String                  @unique
+  id              String                 @id @default(cuid())
+  name            String                 @unique
   areaOfOps       String?
   users           User[]
   units           Unit[]
@@ -75,6 +75,7 @@ model JTF {
   accomplishments AccomplishmentRecord[]
   rido            RidoSettlement[]
   electionAreas   ElectionArea[]
+  candidates      Candidate[]
 }
 
 model Unit {
@@ -92,7 +93,7 @@ model Unit {
 // --- Accomplishments domain (CTG / LTG / CBC) ---
 
 model Indicator {
-  id       String                  @id @default(cuid())
+  id       String                 @id @default(cuid())
   category ThreatCategory
   name     String
   subgroup String?
@@ -132,9 +133,9 @@ model HviLogEntry {
 }
 
 model RidoSettlement {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
   jtfId     String
-  jtf       JTF      @relation(fields: [jtfId], references: [id])
+  jtf       JTF    @relation(fields: [jtfId], references: [id])
   quarter   String
   involving String
   count     Int
@@ -146,11 +147,11 @@ model RidoSettlement {
 // --- BPE 2026 election-ops domain ---
 
 model ElectionArea {
-  id               String              @id @default(cuid())
+  id               String             @id @default(cuid())
   jtfId            String
-  jtf              JTF                 @relation(fields: [jtfId], references: [id])
+  jtf              JTF                @relation(fields: [jtfId], references: [id])
   unitId           String?
-  unit             Unit?               @relation(fields: [unitId], references: [id])
+  unit             Unit?              @relation(fields: [unitId], references: [id])
   region           String?
   province         String
   city             String?
@@ -227,6 +228,42 @@ model ElectionOpsStatus {
   provincialCanvassPct     Float?
   provincialProclaimed     Boolean      @default(false)
   updatedAt                DateTime     @updatedAt
+}
+
+// --- 2026 BARMM Parliamentary Election (Sept 14, 2026 — same date as the
+// BPE 2026 window tracked elsewhere in this app) candidate/party roster.
+// Vote counts are manually encoded by staff as results come in, same
+// convention as every other figure in this app — never fabricated,
+// starting at 0 pre-election.
+
+model Party {
+  id           String      @id @default(cuid())
+  abbreviation String      @unique
+  name         String
+  candidates   Candidate[]
+}
+
+model Candidate {
+  id           String   @id @default(cuid())
+  jtfId        String
+  jtf          JTF      @relation(fields: [jtfId], references: [id])
+  province     String
+  district     String?
+  nameOnBallot String
+  partyId      String?
+  party        Party?   @relation(fields: [partyId], references: [id])
+  isCocFiler   Boolean  @default(true)
+  votesEncoded Int      @default(0)
+  // Provenance for this row's data, e.g. a news source or "COMELEC CLC
+  // (Regional), May 13 2026" — not operational OPSEC, just a citation.
+  sourceNote   String?
+  createdById  String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([jtfId])
+  @@index([province])
+  @@index([partyId])
 }
 
 model AuditLog {

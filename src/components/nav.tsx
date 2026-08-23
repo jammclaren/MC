@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: "/priority-map", label: "Priority Map" },
   { href: "/incidents", label: "Incidents" },
   { href: "/election-ops", label: "Election Ops" },
+  { href: "/election-board", label: "Election Board" },
 ] as const;
 
 const ADMIN_LINKS = [

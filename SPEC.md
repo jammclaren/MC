@@ -419,3 +419,18 @@ the text above, so the reasoning isn't lost.
   RIDO settlement sums, priority-map scoring) are visible command-wide,
   while row-level detail (individual incidents, named HVI log entries) stays
   strictly scoped to their own JTF. See `canReadRollup` in `src/lib/rbac.ts`.
+- **Election Data Board** (`/election-board`, not in the original spec) —
+  added on request, a per-province "Electoral Picture" for the 2026 BARMM
+  Parliamentary Election (Sept 14, 2026 — the same date as the BPE 2026
+  window): Leaderboard/Parties/Candidates tabs, stat tiles, modeled on a
+  reference screenshot the user provided. New `Candidate`/`Party` models.
+  The seeded candidate roster (50 names across all 7 tracked provinces) is
+  real, sourced from public COMELEC-adjacent news coverage and one official
+  COMELEC "Certified List of Candidates (Regional)" PDF, each row carrying
+  a `sourceNote` citation — it is **partial**, not the full ~176-candidate
+  roster, since a complete structured district-by-district list wasn't
+  findable at research time. Nothing was fabricated to fill gaps; missing
+  candidates/parties can be added later via the same manual-entry pattern
+  as every other figure in this app. Vote counts start at 0 (pre-election)
+  and are meant to be encoded manually as results come in — there is no
+  live COMELEC results feed.
