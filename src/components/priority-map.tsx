@@ -3,17 +3,33 @@
 import "leaflet/dist/leaflet.css";
 import { useEffect, useMemo, useState } from "react";
 import L from "leaflet";
-import { MapContainer, CircleMarker, GeoJSON, Polygon, Tooltip, useMap } from "react-leaflet";
+import {
+  LayerGroup,
+  LayersControl,
+  MapContainer,
+  CircleMarker,
+  GeoJSON,
+  Polygon,
+  TileLayer,
+  Tooltip,
+  useMap,
+} from "react-leaflet";
 import type { ScoredArea } from "@/lib/queries/priority-areas";
 
-// No TileLayer is configured: this deployment target is air-gapped, so we
-// don't depend on an online tile provider (SPEC.md §4). The province outline
-// and barangay fills are static local GeoJSON files instead of online tiles
-// — see public/barmm-provinces.geojson and public/barmm-barangays.geojson
-// (source: faeldon/philippines-json-maps, MIT licensed). To swap in a
-// different basemap later (self-hosted raster/vector tiles), add a
-// <TileLayer> here instead; nothing else about this component would need
-// to change.
+// The base-layer switcher (bottom-left, under the zoom control) offers a
+// live OpenStreetMap tile layer alongside an offline "Tactical Grid" option
+// (no tiles at all — just the CSS HUD grid behind the vector overlays).
+// SPEC.md originally ruled out any online tile provider for a fully
+// air-gapped deployment; this app has since moved to Vercel + Supabase
+// (cloud-hosted, not air-gapped), so OSM tiles are online-egress-only, not
+// a hard requirement — the offline option stays for anyone who does deploy
+// this on an isolated network. The province outline and barangay fills
+// remain static local GeoJSON either way — see public/barmm-provinces.geojson
+// and public/barmm-barangays.geojson (source: faeldon/philippines-json-maps,
+// MIT licensed).
+const OSM_TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+const OSM_ATTRIBUTION =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
 // Same validated status hex values as the Badge good/warning/serious/critical
 // variants (src/app/globals.css) and the Green/Yellow/Orange/Red source
@@ -279,51 +295,72 @@ export function PriorityMap({ areas }: { areas: ScoredArea[] }) {
         className="h-[650px] w-full rounded-md border bg-muted"
         scrollWheelZoom
       >
-        {provinces && (
-          <>
-            <GeoJSON data={provinces} style={PROVINCE_STYLE} onEachFeature={ProvinceLabel} />
-            <ContourRings data={provinces} />
-            <FitToBounds data={provinces} />
-          </>
-        )}
-        {barangays && (
-          <GeoJSON
-            key={areas.length}
-            data={barangays}
-            style={styleBarangay}
-            onEachFeature={onEachBarangay}
-          />
-        )}
-        {unmatchedPlottable.map((area) => {
-          const color = area.hotspotCategory
-            ? (HOTSPOT_COLORS[area.hotspotCategory] ?? DEFAULT_COLOR)
-            : DEFAULT_COLOR;
-          const radius = 6 + Math.max(0, area.priorityScore) * 2;
-          const label = [area.barangay, area.municipality, area.province]
-            .filter(Boolean)
-            .join(", ");
+        <LayersControl position="topleft">
+          <LayersControl.BaseLayer checked name="OpenStreetMap">
+            <TileLayer attribution={OSM_ATTRIBUTION} url={OSM_TILE_URL} />
+          </LayersControl.BaseLayer>
+          <LayersControl.BaseLayer name="Tactical Grid (Offline)">
+            <LayerGroup />
+          </LayersControl.BaseLayer>
 
-          return (
-            <CircleMarker
-              key={area.id}
-              center={[area.lat, area.lng]}
-              radius={radius}
-              pathOptions={{ color, fillColor: color, fillOpacity: 0.6 }}
-            >
-              <Tooltip>
-                <div className="text-xs">
-                  <div className="font-medium">{label}</div>
-                  <div>Hotspot: {area.hotspotCategory ?? "unclassified"}</div>
-                  <div>Priority score: {area.priorityScore.toFixed(1)}</div>
-                  <div>Precincts: {area.numPrecincts ?? "—"}</div>
-                  <div>Registered voters: {area.registeredVoters ?? "—"}</div>
-                  <div>Deployed: {area.deployedToPolling}</div>
-                  <div>Recent incidents (30d): {area.recentIncidentCount}</div>
-                </div>
-              </Tooltip>
-            </CircleMarker>
-          );
-        })}
+          {provinces && (
+            <LayersControl.Overlay checked name="Province Outline">
+              <LayerGroup>
+                <GeoJSON data={provinces} style={PROVINCE_STYLE} onEachFeature={ProvinceLabel} />
+              </LayerGroup>
+            </LayersControl.Overlay>
+          )}
+          {provinces && (
+            <LayersControl.Overlay checked name="Contour Rings">
+              <LayerGroup>
+                <ContourRings data={provinces} />
+              </LayerGroup>
+            </LayersControl.Overlay>
+          )}
+          {barangays && (
+            <LayersControl.Overlay checked name="Threat Categorization">
+              <LayerGroup>
+                <GeoJSON
+                  key={areas.length}
+                  data={barangays}
+                  style={styleBarangay}
+                  onEachFeature={onEachBarangay}
+                />
+                {unmatchedPlottable.map((area) => {
+                  const color = area.hotspotCategory
+                    ? (HOTSPOT_COLORS[area.hotspotCategory] ?? DEFAULT_COLOR)
+                    : DEFAULT_COLOR;
+                  const radius = 6 + Math.max(0, area.priorityScore) * 2;
+                  const label = [area.barangay, area.municipality, area.province]
+                    .filter(Boolean)
+                    .join(", ");
+
+                  return (
+                    <CircleMarker
+                      key={area.id}
+                      center={[area.lat, area.lng]}
+                      radius={radius}
+                      pathOptions={{ color, fillColor: color, fillOpacity: 0.6 }}
+                    >
+                      <Tooltip>
+                        <div className="text-xs">
+                          <div className="font-medium">{label}</div>
+                          <div>Hotspot: {area.hotspotCategory ?? "unclassified"}</div>
+                          <div>Priority score: {area.priorityScore.toFixed(1)}</div>
+                          <div>Precincts: {area.numPrecincts ?? "—"}</div>
+                          <div>Registered voters: {area.registeredVoters ?? "—"}</div>
+                          <div>Deployed: {area.deployedToPolling}</div>
+                          <div>Recent incidents (30d): {area.recentIncidentCount}</div>
+                        </div>
+                      </Tooltip>
+                    </CircleMarker>
+                  );
+                })}
+              </LayerGroup>
+            </LayersControl.Overlay>
+          )}
+        </LayersControl>
+        {provinces && <FitToBounds data={provinces} />}
       </MapContainer>
       <HudFrame />
       <Legend counts={categoryCounts} total={areas.length} />

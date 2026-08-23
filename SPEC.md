@@ -407,8 +407,13 @@ the text above, so the reasoning isn't lost.
   fields in its own model definition just above that note, so the tuple as
   written doesn't apply to it. `AccomplishmentRecord` uses the exact tuple
   given.
-- **Deployment: air-gapped**, confirmed with the user — the priority map has
-  no online tile layer (see README § Mapping).
+- **Deployment: air-gapped**, confirmed with the user at the time — the
+  priority map originally had no online tile layer for that reason. The app
+  has since moved to Vercel + Supabase (cloud-hosted, not air-gapped), and
+  the user asked for an OpenStreetMap base layer; the map now offers OSM as
+  the default base layer plus an offline "Tactical Grid (Offline)" option
+  (a base-layer switcher, bottom of the zoom control) for anyone who does
+  deploy this on an isolated network (see README § Mapping).
 - **JTF_COMMANDER "rollup-only" access to other JTFs** (§6) is implemented
   as: aggregate/summary queries (deployment totals, accomplishment sums,
   RIDO settlement sums, priority-map scoring) are visible command-wide,

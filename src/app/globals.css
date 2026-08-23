@@ -247,3 +247,17 @@
   color: var(--foreground) !important;
   border-color: var(--border) !important;
 }
+.leaflet-control-layers {
+  background-color: var(--card) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--border) !important;
+}
+.leaflet-control-layers-toggle {
+  filter: invert(1) hue-rotate(180deg);
+}
+.leaflet-control-layers-separator {
+  border-top: 1px solid var(--border) !important;
+}
+.leaflet-control-layers-expanded {
+  color: var(--foreground) !important;
+}

@@ -116,31 +116,56 @@ separately if needed (`docker compose exec app npx prisma db seed`).
 
 ## Mapping
 
-The Priority/Hotspot Map (`/priority-map`) uses Leaflet, deliberately
-**without** an online tile layer, since the intended deployment is
-air-gapped with no internet egress. Instead it loads a static province
-outline from `public/barmm-provinces.geojson` — BARMM's 6 provinces
-(Basilan, Lanao del Sur, Maguindanao del Norte, Maguindanao del Sur, Sulu,
-Tawi-Tawi) plus the Cotabato City/Isabela City special geographic area,
-sourced from [faeldon/philippines-json-maps](https://github.com/faeldon/philippines-json-maps)
-(MIT licensed; PSGC 2023 boundaries, lowres/simplified for a small embedded
-widget). The map fits to this outline's bounds on load. `ElectionArea`
-records are plotted on top as `CircleMarker`s, color-coded by
-`hotspotCategory` and sized by the computed priority score; clicking one
-shows precinct count, registered voters, deployment, and recent incident
-count.
+The Priority/Hotspot Map (`/priority-map`) uses Leaflet, styled as a blue
+"Blue Force Tracking" HUD (grid background, glassy province fill,
+decorative contour rings, corner-bracket framing). It originally shipped
+**without** an online tile layer, since the intended deployment was
+air-gapped with no internet egress — the app has since moved to Vercel +
+Supabase (cloud-hosted, not air-gapped), so it now offers a base-layer
+switcher (bottom of the zoom control, top-left) with two choices:
+
+- **OpenStreetMap** (default) — a live online tile layer.
+- **Tactical Grid (Offline)** — no tiles at all, just the CSS HUD grid
+  behind the vector overlays, for anyone who does deploy this on an
+  isolated network.
+
+Two static local GeoJSON files provide the vector data, both sourced from
+[faeldon/philippines-json-maps](https://github.com/faeldon/philippines-json-maps)
+(MIT licensed; PSGC 2023 boundaries, lowres/simplified):
+
+- `public/barmm-provinces.geojson` — BARMM's 6 provinces (Basilan, Lanao
+  del Sur, Maguindanao del Norte, Maguindanao del Sur, Sulu, Tawi-Tawi) plus
+  the Cotabato City/Isabela City special geographic area. The map fits to
+  this outline's bounds on load.
+- `public/barmm-barangays.geojson` — ~1,963 barangay boundary polygons
+  (of 2,093 imported `ElectionArea` records — see below), filled by
+  `hotspotCategory` (Red/Orange/Yellow/Green). `ElectionArea` records
+  without a matching polygon (no lat/lng centroid either) still fall back
+  to a `CircleMarker`, so nothing with coordinates silently disappears.
+
+Both the province outline, the contour rings, and the barangay
+categorization layer are independently toggleable overlays in the same
+layers control. Clicking/hovering a barangay shows its hotspot category,
+computed priority score, recent incident count, and deployment.
+
+The barangay-level data (`hotspotCategory`/`hotspotReason` on 2,093
+`ElectionArea` rows across Basilan, Lanao del Sur, Maguindanao del
+Norte/Sur, Cotabato City, SGA-BARMM, and Tawi-Tawi) was bulk-imported from
+a threat-categorization spreadsheet (color-fill-encoded, not text) —
+see git history for the one-time import script; it isn't kept in the repo
+since it's a one-shot data load, not a reusable tool.
 
 To swap in a different basemap later:
 
-- **Self-hosted raster/vector tiles**: add a `<TileLayer url="...">` inside
+- **Self-hosted raster/vector tiles**: add another
+  `<LayersControl.BaseLayer>` with a `<TileLayer url="...">` inside
   `src/components/priority-map.tsx`.
-- **A different/updated GeoJSON**: replace
-  `public/barmm-provinces.geojson` — the fetch and `<GeoJSON>` render logic
-  don't care about the specific boundaries, only that features have an
-  `adm2_en` property for the tooltip label.
-
-Nothing else about the component needs to change either way — the map
-provider is intentionally swappable.
+- **A different/updated GeoJSON**: replace the relevant `public/*.geojson`
+  file — the fetch and `<GeoJSON>` render logic don't care about the
+  specific boundaries, only that province features have an `adm2_en`
+  property (tooltip label) and barangay features have `province`/
+  `municipality`/`barangay` properties (joined against `ElectionArea` rows
+  by those three fields).
 
 ## RBAC
 
