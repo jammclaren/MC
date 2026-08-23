@@ -196,7 +196,36 @@
 /* Leaflet ships light-mode chrome by default; re-theme it to match the
  * tactical dark console instead of leaving white zoom buttons/attribution. */
 .leaflet-container {
-  background: #0a0e14;
+  background-color: #060b14 !important;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgba(57, 135, 229, 0.07) 0px,
+      rgba(57, 135, 229, 0.07) 1px,
+      transparent 1px,
+      transparent 22px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(57, 135, 229, 0.07) 0px,
+      rgba(57, 135, 229, 0.07) 1px,
+      transparent 1px,
+      transparent 22px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(57, 135, 229, 0.16) 0px,
+      rgba(57, 135, 229, 0.16) 1px,
+      transparent 1px,
+      transparent 132px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(57, 135, 229, 0.16) 0px,
+      rgba(57, 135, 229, 0.16) 1px,
+      transparent 1px,
+      transparent 132px
+    ) !important;
 }
 .leaflet-control-zoom a {
   background-color: var(--card) !important;

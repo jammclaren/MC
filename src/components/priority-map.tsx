@@ -3,7 +3,7 @@
 import "leaflet/dist/leaflet.css";
 import { useEffect, useMemo, useState } from "react";
 import L from "leaflet";
-import { MapContainer, CircleMarker, GeoJSON, Tooltip, useMap } from "react-leaflet";
+import { MapContainer, CircleMarker, GeoJSON, Polygon, Tooltip, useMap } from "react-leaflet";
 import type { ScoredArea } from "@/lib/queries/priority-areas";
 
 // No TileLayer is configured: this deployment target is air-gapped, so we
@@ -34,10 +34,89 @@ const DEFAULT_ZOOM = 8;
 const PROVINCE_STYLE: L.PathOptions = {
   color: "#3987e5",
   weight: 1.5,
-  fillColor: "transparent",
-  fillOpacity: 0,
+  fillColor: "#123a5c",
+  fillOpacity: 0.3,
   interactive: false,
 };
+
+// Decorative topographic-style contour rings, not real elevation data —
+// each province outline scaled inward toward its own centroid a few times,
+// for the "hologram terrain" read of a Blue Force Tracking display.
+const CONTOUR_SCALES = [0.93, 0.85, 0.77, 0.69];
+type LatLngPair = [number, number];
+
+function ringCentroid(ring: number[][]): [number, number] {
+  let x = 0;
+  let y = 0;
+  for (const [lng, lat] of ring) {
+    x += lng;
+    y += lat;
+  }
+  return [x / ring.length, y / ring.length];
+}
+
+function scaleRing(ring: number[][], center: [number, number], scale: number): LatLngPair[] {
+  const [cx, cy] = center;
+  return ring.map(([lng, lat]) => [cy + (lat - cy) * scale, cx + (lng - cx) * scale]);
+}
+
+function buildContourRings(fc: GeoJSON.FeatureCollection): LatLngPair[][] {
+  const rings: LatLngPair[][] = [];
+  for (const feature of fc.features) {
+    const geom = feature.geometry;
+    if (!geom) continue;
+    const polygons: number[][][][] =
+      geom.type === "Polygon"
+        ? [geom.coordinates as number[][][]]
+        : geom.type === "MultiPolygon"
+          ? (geom.coordinates as number[][][][])
+          : [];
+    for (const poly of polygons) {
+      const outer = poly[0];
+      if (!outer || outer.length < 4) continue;
+      const center = ringCentroid(outer);
+      for (const scale of CONTOUR_SCALES) {
+        rings.push(scaleRing(outer, center, scale));
+      }
+    }
+  }
+  return rings;
+}
+
+function ContourRings({ data }: { data: GeoJSON.FeatureCollection }) {
+  const rings = useMemo(() => buildContourRings(data), [data]);
+  return (
+    <>
+      {rings.map((positions, i) => (
+        <Polygon
+          key={i}
+          positions={positions}
+          pathOptions={{
+            color: "#3987e5",
+            weight: 1,
+            opacity: 0.2,
+            fill: false,
+            interactive: false,
+          }}
+        />
+      ))}
+    </>
+  );
+}
+
+/** Corner-bracket + reticle framing, purely decorative HUD chrome — sits
+ * above the map but below the Legend panel. */
+function HudFrame() {
+  const corner = "absolute size-5 border-primary/40";
+  return (
+    <div className="pointer-events-none absolute inset-0 z-[900]">
+      <span className={`${corner} top-2 left-2 border-t-2 border-l-2`} />
+      <span className={`${corner} top-2 right-2 border-t-2 border-r-2`} />
+      <span className={`${corner} bottom-2 left-2 border-b-2 border-l-2`} />
+      <span className={`${corner} right-2 bottom-2 border-r-2 border-b-2`} />
+    </div>
+  );
+}
 
 function areaKey(
   province: string | null | undefined,
@@ -74,7 +153,7 @@ const CATEGORY_ORDER = ["Red", "Orange", "Yellow", "Green"] as const;
  * map rather than pushed into the surrounding page layout. */
 function Legend({ counts, total }: { counts: Record<string, number>; total: number }) {
   return (
-    <div className="pointer-events-none absolute top-2 right-2 z-[1000] flex flex-col gap-1 rounded-md border border-border/60 bg-card/90 px-3 py-2 shadow-lg backdrop-blur-sm">
+    <div className="pointer-events-none absolute top-2 right-2 z-[1000] flex flex-col gap-1 rounded-md border border-primary/30 bg-card/90 px-3 py-2 shadow-[0_0_16px_-4px_var(--primary)] backdrop-blur-sm">
       <div className="font-display text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
         Threat Categorization
       </div>
@@ -203,6 +282,7 @@ export function PriorityMap({ areas }: { areas: ScoredArea[] }) {
         {provinces && (
           <>
             <GeoJSON data={provinces} style={PROVINCE_STYLE} onEachFeature={ProvinceLabel} />
+            <ContourRings data={provinces} />
             <FitToBounds data={provinces} />
           </>
         )}
@@ -245,6 +325,7 @@ export function PriorityMap({ areas }: { areas: ScoredArea[] }) {
           );
         })}
       </MapContainer>
+      <HudFrame />
       <Legend counts={categoryCounts} total={areas.length} />
     </div>
   );
