@@ -333,7 +333,12 @@ export function PriorityMap({
   );
 
   return (
-    <div className="relative">
+    // `isolate` scopes Leaflet's internal pane z-indices (tiles/tooltips/
+    // popups go up to z-index 700) into their own stacking context, so
+    // they can never out-rank the Add Marker dialog — a React portal
+    // rendered at document.body with only z-50 — in the page's root
+    // stacking order.
+    <div className="relative isolate">
       <MapContainer
         center={DEFAULT_CENTER}
         zoom={DEFAULT_ZOOM}
