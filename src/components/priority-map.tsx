@@ -24,6 +24,7 @@ import {
   type JtfOption,
 } from "@/components/incident-marker-form-dialog";
 import { Button } from "@/components/ui/button";
+import { DeleteButton } from "@/components/delete-button";
 import { MapPin } from "lucide-react";
 
 // The base-layer switcher (bottom-left, under the zoom control) offers a
@@ -427,6 +428,34 @@ export function PriorityMap({
                         <div>{new Date(marker.date).toLocaleDateString()}</div>
                         {marker.areaLabel && <div>{marker.areaLabel}</div>}
                         {marker.result && <div>Result: {marker.result}</div>}
+                        {marker.canModify && (
+                          <div className="mt-2 flex gap-1 border-t border-border pt-2">
+                            <IncidentMarkerFormDialog
+                              jtfOptions={jtfOptions}
+                              areaOptions={areaOptions}
+                              lockJtfId={marker.jtfId}
+                              initial={{
+                                id: marker.id,
+                                electionAreaId: marker.electionAreaId ?? undefined,
+                                lat: marker.lat,
+                                lng: marker.lng,
+                                date: marker.date.slice(0, 10),
+                                type: marker.type,
+                                result: marker.result ?? "",
+                                markerStyle: marker.markerStyle,
+                              }}
+                              trigger={
+                                <Button variant="ghost" size="sm">
+                                  Edit
+                                </Button>
+                              }
+                            />
+                            <DeleteButton
+                              url={`/api/incidents/${marker.id}`}
+                              confirmMessage="Delete this incident marker? This cannot be undone."
+                            />
+                          </div>
+                        )}
                       </div>
                     </Popup>
                   </Marker>

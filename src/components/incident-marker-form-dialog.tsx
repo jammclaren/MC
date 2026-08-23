@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toPoint } from "mgrs";
+import { forward, toPoint } from "mgrs";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,17 @@ export interface ElectionAreaOption {
   label: string;
 }
 
+export interface IncidentMarkerFormInitial {
+  id: string;
+  electionAreaId?: string;
+  lat: number;
+  lng: number;
+  date: string;
+  type: string;
+  result: string;
+  markerStyle: string;
+}
+
 const NO_AREA_VALUE = "__none__";
 
 const ANIMATION_OPTIONS = [
@@ -60,23 +71,30 @@ export function IncidentMarkerFormDialog({
   jtfOptions,
   areaOptions,
   lockJtfId,
+  initial,
   trigger,
 }: {
   jtfOptions: JtfOption[];
   areaOptions: ElectionAreaOption[];
   lockJtfId?: string;
+  initial?: IncidentMarkerFormInitial;
   trigger: React.ReactElement;
 }) {
   const router = useRouter();
+  const isEdit = !!initial;
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [jtfId, setJtfId] = useState(lockJtfId ?? jtfOptions[0]?.id ?? "");
-  const [electionAreaId, setElectionAreaId] = useState<string | undefined>(undefined);
-  const [mgrsInput, setMgrsInput] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [type, setType] = useState("");
-  const [result, setResult] = useState("");
-  const [markerStyle, setMarkerStyle] = useState<string>("PULSE");
+  const [electionAreaId, setElectionAreaId] = useState<string | undefined>(
+    initial?.electionAreaId
+  );
+  const [mgrsInput, setMgrsInput] = useState(
+    initial ? forward([initial.lng, initial.lat]) : ""
+  );
+  const [date, setDate] = useState(initial?.date ?? new Date().toISOString().slice(0, 10));
+  const [type, setType] = useState(initial?.type ?? "");
+  const [result, setResult] = useState(initial?.result ?? "");
+  const [markerStyle, setMarkerStyle] = useState<string>(initial?.markerStyle ?? "PULSE");
 
   const parsed = useMemo(() => parseMgrs(mgrsInput), [mgrsInput]);
   const visibleAreas = areaOptions.filter((a) => a.jtfId === jtfId);
@@ -89,29 +107,47 @@ export function IncidentMarkerFormDialog({
     }
     setSubmitting(true);
     try {
-      const res = await fetch("/api/incidents", {
-        method: "POST",
+      const url = isEdit ? `/api/incidents/${initial!.id}` : "/api/incidents";
+      const method = isEdit ? "PATCH" : "POST";
+      // POST's schema wants undefined for "not set" (no electionArea/result);
+      // PATCH's wants null so it can explicitly clear a previously-set value.
+      const body = isEdit
+        ? {
+            electionAreaId: electionAreaId || null,
+            date,
+            type,
+            result: result || null,
+            lat: parsed.lat,
+            lng: parsed.lng,
+            markerStyle,
+          }
+        : {
+            jtfId,
+            electionAreaId: electionAreaId || undefined,
+            date,
+            type,
+            result: result || undefined,
+            lat: parsed.lat,
+            lng: parsed.lng,
+            markerStyle,
+          };
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jtfId,
-          electionAreaId: electionAreaId || undefined,
-          date,
-          type,
-          result: result || undefined,
-          lat: parsed.lat,
-          lng: parsed.lng,
-          markerStyle,
-        }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? "Request failed");
       }
-      toast.success("Marker placed");
+      toast.success(isEdit ? "Marker updated" : "Marker placed");
       setOpen(false);
-      setMgrsInput("");
-      setType("");
-      setResult("");
+      if (!isEdit) {
+        setMgrsInput("");
+        setType("");
+        setResult("");
+      }
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Something went wrong");
@@ -126,10 +162,10 @@ export function IncidentMarkerFormDialog({
       <DialogContent>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Add Incident Marker</DialogTitle>
+            <DialogTitle>{isEdit ? "Edit Incident Marker" : "Add Incident Marker"}</DialogTitle>
           </DialogHeader>
           <div className="flex max-h-[60vh] flex-col gap-4 overflow-y-auto py-4">
-            {!lockJtfId && (
+            {!isEdit && !lockJtfId && (
               <div className="flex flex-col gap-2">
                 <Label>JTF</Label>
                 <Select
@@ -237,7 +273,7 @@ export function IncidentMarkerFormDialog({
           </div>
           <DialogFooter>
             <Button type="submit" disabled={submitting}>
-              {submitting ? "Placing..." : "Add marker"}
+              {submitting ? "Saving..." : isEdit ? "Save changes" : "Add marker"}
             </Button>
           </DialogFooter>
         </form>

@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/prisma";
-import { scopeJtfFilter, type SessionUser } from "@/lib/rbac";
+import { canModifyEntry, scopeJtfFilter, type SessionUser } from "@/lib/rbac";
 
 export interface IncidentMarker {
   id: string;
   jtfId: string;
+  electionAreaId: string | null;
   type: string;
   result: string | null;
   date: string;
@@ -11,6 +12,10 @@ export interface IncidentMarker {
   lng: number;
   markerStyle: "NONE" | "BLINK" | "PULSE";
   areaLabel: string | null;
+  /** Whether the current user may edit/delete this marker
+   * (`canModifyEntry`) — resolved server-side rather than shipping
+   * `createdById` to the client. */
+  canModify: boolean;
 }
 
 /** Individual incidents are row-level detail (SPEC.md §6 rollup note) —
@@ -28,6 +33,8 @@ export async function getIncidentMarkers(user: SessionUser): Promise<IncidentMar
   return incidents.map((incident) => ({
     id: incident.id,
     jtfId: incident.jtfId,
+    electionAreaId: incident.electionAreaId,
+    canModify: canModifyEntry(user, incident.jtfId, incident.createdById),
     type: incident.type,
     result: incident.result,
     date: incident.date.toISOString(),
