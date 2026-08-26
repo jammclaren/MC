@@ -75,12 +75,12 @@ export async function getElectionBoardData(
       include: { party: true },
       orderBy: [{ votesEncoded: "desc" }, { nameOnBallot: "asc" }],
     }),
-    // Same scoping as Overview's BARMM-wide total: areas actively tracked
-    // for BPE polling ops (they have an ElectionOpsStatus row), so the
-    // barangay-level threat-categorization import (no registeredVoters
-    // data anyway) can't skew this.
+    // Sums every ElectionArea in the province with a figure on file — not
+    // gated on ops-status tracking, since voter rolls are entered
+    // independently of paraphernalia/canvassing status (same as Overview's
+    // BARMM-wide total).
     prisma.electionArea.aggregate({
-      where: { jtfId: scopeJtfId, province, opsStatus: { isNot: null } },
+      where: { jtfId: scopeJtfId, province },
       _sum: { registeredVoters: true },
     }),
   ]);

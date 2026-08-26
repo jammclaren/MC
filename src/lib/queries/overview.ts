@@ -81,6 +81,7 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     recentIncidentCount30d,
     scoredAreas,
     electionAreasForRollup,
+    registeredVotersAgg,
     incidentsForDailyChart,
   ] = await Promise.all([
     prisma.jTF.findMany({
@@ -118,7 +119,15 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     // inflate "Total Areas" in the funnel below.
     prisma.electionArea.findMany({
       where: { jtfId: rollupScopeJtfId, opsStatus: { isNot: null } },
-      select: { registeredVoters: true, opsStatus: true },
+      select: { opsStatus: true },
+    }),
+    // Registered voters are entered independently of ops-status tracking
+    // (staff may log a barangay's voter roll before anyone has touched its
+    // paraphernalia/canvassing status), so this sums every ElectionArea
+    // with a figure on file rather than only opsStatus-tracked ones.
+    prisma.electionArea.aggregate({
+      where: { jtfId: rollupScopeJtfId },
+      _sum: { registeredVoters: true },
     }),
     prisma.incident.findMany({
       where: {
@@ -133,10 +142,7 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     (area) => area.priorityScore >= PRIORITY_FLAG_THRESHOLD
   ).length;
 
-  const totalRegisteredVoters = electionAreasForRollup.reduce(
-    (sum, area) => sum + (area.registeredVoters ?? 0),
-    0
-  );
+  const totalRegisteredVoters = registeredVotersAgg._sum.registeredVoters ?? 0;
 
   const totalAreas = electionAreasForRollup.length;
   const countWhere = (predicate: (status: NonNullable<(typeof electionAreasForRollup)[number]["opsStatus"]>) => boolean) =>

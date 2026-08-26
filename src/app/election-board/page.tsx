@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StatTile } from "@/components/stat-tile";
 import { CandidateFormDialog } from "@/components/candidate-form-dialog";
+import { RegisteredVotersFormDialog } from "@/components/registered-voters-form-dialog";
 import { Users, Flag, Vote, Radio } from "lucide-react";
 
 function provinceAbbreviation(province: string): string {
@@ -98,12 +99,19 @@ export default async function ElectionBoardPage({
           </p>
         </div>
         {canWrite && provinceJtfId && (
-          <CandidateFormDialog
-            jtfId={provinceJtfId}
-            province={province}
-            partyOptions={partyOptions}
-            trigger={<Button>Add Candidate</Button>}
-          />
+          <div className="flex gap-2">
+            <RegisteredVotersFormDialog
+              jtfId={provinceJtfId}
+              province={province}
+              trigger={<Button variant="outline">Add Registered Voters</Button>}
+            />
+            <CandidateFormDialog
+              jtfId={provinceJtfId}
+              province={province}
+              partyOptions={partyOptions}
+              trigger={<Button>Add Candidate</Button>}
+            />
+          </div>
         )}
       </div>
 
