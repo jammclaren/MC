@@ -11,19 +11,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { StatTile } from "@/components/stat-tile";
 import { Users, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DeploymentFormDialog } from "@/components/deployment-form-dialog";
-import { DeleteButton } from "@/components/delete-button";
+import { DeploymentRowsAccordion } from "@/components/deployment-rows-accordion";
 
 export default async function BpeDeploymentPage({
   searchParams,
@@ -155,92 +147,16 @@ export default async function BpeDeploymentPage({
       <Card>
         <CardHeader>
           <CardTitle>Unit-Level Breakdown</CardTitle>
-          <CardDescription>Most recently reported first.</CardDescription>
+          <CardDescription>
+            Most recently reported first. Click a JTF to show its units.
+          </CardDescription>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Unit</TableHead>
-                <TableHead>JTF</TableHead>
-                <TableHead>Area</TableHead>
-                <TableHead className="text-right">Polling</TableHead>
-                <TableHead className="text-right">QRF</TableHead>
-                <TableHead className="text-right">AFP Off.</TableHead>
-                <TableHead className="text-right">AFP Enl.</TableHead>
-                <TableHead className="text-right">CAA</TableHead>
-                <TableHead className="text-right">WAVs/TAV</TableHead>
-                <TableHead className="text-right">PNP Off.</TableHead>
-                <TableHead className="text-right">PNP Enl.</TableHead>
-                <TableHead className="text-right">Checkpoints</TableHead>
-                <TableHead>Reported</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.rows.map((row) => {
-                const canEdit = canWriteJtf(user, row.jtfId);
-                return (
-                  <TableRow key={row.id}>
-                    <TableCell>{row.unitLabel ?? "—"}</TableCell>
-                    <TableCell>{row.jtfName}</TableCell>
-                    <TableCell>{row.areaLabel ?? "—"}</TableCell>
-                    <TableCell className="text-right">{row.deployedToPolling}</TableCell>
-                    <TableCell className="text-right">{row.qrf}</TableCell>
-                    <TableCell className="text-right">{row.afpOfficers}</TableCell>
-                    <TableCell className="text-right">{row.afpEnlisted}</TableCell>
-                    <TableCell className="text-right">{row.caa}</TableCell>
-                    <TableCell className="text-right">{row.wavsTav}</TableCell>
-                    <TableCell className="text-right">{row.pnpOfficers}</TableCell>
-                    <TableCell className="text-right">{row.pnpEnlisted}</TableCell>
-                    <TableCell className="text-right">{row.checkpointOps}</TableCell>
-                    <TableCell>{row.reportedAt.toLocaleDateString()}</TableCell>
-                    <TableCell className="text-right">
-                      {canEdit && (
-                        <div className="flex justify-end gap-1">
-                          <DeploymentFormDialog
-                            jtfOptions={jtfOptions}
-                            areaOptions={areaOptions}
-                            initial={{
-                              id: row.id,
-                              jtfId: row.jtfId,
-                              electionAreaId: row.electionAreaId ?? undefined,
-                              unitLabel: row.unitLabel ?? "",
-                              deployedToPolling: row.deployedToPolling,
-                              qrf: row.qrf,
-                              afpOfficers: row.afpOfficers,
-                              afpEnlisted: row.afpEnlisted,
-                              caa: row.caa,
-                              wavsTav: row.wavsTav,
-                              pnpOfficers: row.pnpOfficers,
-                              pnpEnlisted: row.pnpEnlisted,
-                              checkpointOps: row.checkpointOps,
-                            }}
-                            trigger={
-                              <Button variant="ghost" size="sm">
-                                Edit
-                              </Button>
-                            }
-                          />
-                          <DeleteButton
-                            url={`/api/deployments/${row.id}`}
-                            confirmMessage="Delete this deployment report? This cannot be undone."
-                          />
-                        </div>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              {data.rows.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={14} className="text-center text-muted-foreground">
-                    No deployment reports yet.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+        <CardContent>
+          <DeploymentRowsAccordion
+            rows={data.rows.map((row) => ({ ...row, canEdit: canWriteJtf(user, row.jtfId) }))}
+            jtfOptions={jtfOptions}
+            areaOptions={areaOptions}
+          />
         </CardContent>
       </Card>
     </div>
