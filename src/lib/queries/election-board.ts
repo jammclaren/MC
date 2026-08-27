@@ -22,6 +22,7 @@ export interface BoardCandidate {
   id: string;
   district: string | null;
   nameOnBallot: string;
+  partyId: string | null;
   partyAbbreviation: string | null;
   partyName: string | null;
   isCocFiler: boolean;
@@ -31,6 +32,7 @@ export interface BoardCandidate {
 }
 
 export interface BoardParty {
+  id: string;
   abbreviation: string;
   name: string;
   candidateCount: number;
@@ -69,12 +71,17 @@ export async function getElectionBoardData(
 ): Promise<ElectionBoardData> {
   const scopeJtfId = scopeJtfFilter(user, undefined, { allowRollup: true });
 
-  const [candidates, registeredVotersAgg] = await Promise.all([
+  const [candidates, allParties, registeredVotersAgg] = await Promise.all([
     prisma.candidate.findMany({
       where: { jtfId: scopeJtfId, province },
       include: { party: true },
       orderBy: [{ votesEncoded: "desc" }, { nameOnBallot: "asc" }],
     }),
+    // The full party taxonomy, not just parties already fielding a
+    // candidate here — so a newly added party shows up (with zero
+    // candidates/votes for this province) immediately, not only once
+    // someone links a candidate to it.
+    prisma.party.findMany({ orderBy: { abbreviation: "asc" } }),
     // Sums every ElectionArea in the province with a figure on file — not
     // gated on ops-status tracking, since voter rolls are entered
     // independently of paraphernalia/canvassing status (same as Overview's
@@ -91,6 +98,7 @@ export async function getElectionBoardData(
     id: c.id,
     district: c.district,
     nameOnBallot: c.nameOnBallot,
+    partyId: c.partyId,
     partyAbbreviation: c.party?.abbreviation ?? null,
     partyName: c.party?.name ?? null,
     isCocFiler: c.isCocFiler,
@@ -99,25 +107,29 @@ export async function getElectionBoardData(
     sourceNote: c.sourceNote,
   });
 
-  const partyMap = new Map<string, BoardParty>();
+  const statsByPartyId = new Map<string, { candidateCount: number; votesEncoded: number }>();
   for (const c of candidates) {
-    if (!c.party) continue;
-    const existing = partyMap.get(c.party.abbreviation);
+    if (!c.partyId) continue;
+    const existing = statsByPartyId.get(c.partyId);
     if (existing) {
       existing.candidateCount += 1;
       existing.votesEncoded += c.votesEncoded;
     } else {
-      partyMap.set(c.party.abbreviation, {
-        abbreviation: c.party.abbreviation,
-        name: c.party.name,
-        candidateCount: 1,
-        votesEncoded: c.votesEncoded,
-      });
+      statsByPartyId.set(c.partyId, { candidateCount: 1, votesEncoded: c.votesEncoded });
     }
   }
-  const parties = Array.from(partyMap.values()).sort(
-    (a, b) => b.candidateCount - a.candidateCount
-  );
+  const parties: BoardParty[] = allParties
+    .map((p) => {
+      const stats = statsByPartyId.get(p.id);
+      return {
+        id: p.id,
+        abbreviation: p.abbreviation,
+        name: p.name,
+        candidateCount: stats?.candidateCount ?? 0,
+        votesEncoded: stats?.votesEncoded ?? 0,
+      };
+    })
+    .sort((a, b) => b.candidateCount - a.candidateCount);
 
   // Reporting-percentage infrastructure (per-precinct results submission)
   // doesn't exist yet — 0 until votes are actually encoded, same as the
@@ -128,7 +140,7 @@ export async function getElectionBoardData(
   return {
     province,
     contestantCount: candidates.length,
-    partyLabelCount: partyMap.size,
+    partyLabelCount: statsByPartyId.size,
     votesEncoded,
     reportingPct,
     registeredVoters: registeredVotersAgg._sum.registeredVoters ?? 0,

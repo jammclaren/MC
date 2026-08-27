@@ -22,6 +22,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StatTile } from "@/components/stat-tile";
 import { CandidateFormDialog } from "@/components/candidate-form-dialog";
+import { PartyFormDialog } from "@/components/party-form-dialog";
+import { DeleteButton } from "@/components/delete-button";
 import { Users, Flag, Vote, Radio } from "lucide-react";
 
 function provinceAbbreviation(province: string): string {
@@ -97,13 +99,18 @@ export default async function ElectionBoardPage({
             as results come in.
           </p>
         </div>
-        {canWrite && provinceJtfId && (
-          <CandidateFormDialog
-            jtfId={provinceJtfId}
-            province={province}
-            partyOptions={partyOptions}
-            trigger={<Button>Add Candidate</Button>}
-          />
+        {canWrite && (
+          <div className="flex gap-2">
+            <PartyFormDialog trigger={<Button variant="outline">Add Party</Button>} />
+            {provinceJtfId && (
+              <CandidateFormDialog
+                jtfId={provinceJtfId}
+                province={province}
+                partyOptions={partyOptions}
+                trigger={<Button>Add Candidate</Button>}
+              />
+            )}
+          </div>
         )}
       </div>
 
@@ -203,11 +210,12 @@ export default async function ElectionBoardPage({
                     <TableHead>Party</TableHead>
                     <TableHead className="text-right">Candidates Fielded</TableHead>
                     <TableHead className="text-right">Votes Encoded</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {board.parties.map((p) => (
-                    <TableRow key={p.abbreviation}>
+                    <TableRow key={p.id}>
                       <TableCell>
                         <Badge variant="outline">{p.abbreviation}</Badge>{" "}
                         <span className="text-muted-foreground">{p.name}</span>
@@ -218,12 +226,30 @@ export default async function ElectionBoardPage({
                       <TableCell className="text-right font-mono tabular-nums">
                         {p.votesEncoded.toLocaleString()}
                       </TableCell>
+                      <TableCell className="text-right">
+                        {canWrite && (
+                          <div className="flex justify-end gap-1">
+                            <PartyFormDialog
+                              initial={{ id: p.id, abbreviation: p.abbreviation, name: p.name }}
+                              trigger={
+                                <Button variant="ghost" size="sm">
+                                  Edit
+                                </Button>
+                              }
+                            />
+                            <DeleteButton
+                              url={`/api/parties/${p.id}`}
+                              confirmMessage="Delete this party? This cannot be undone."
+                            />
+                          </div>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                   {board.parties.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={3} className="text-center text-muted-foreground">
-                        No party-affiliated candidates on file yet.
+                      <TableCell colSpan={4} className="text-center text-muted-foreground">
+                        No parties on file yet.
                       </TableCell>
                     </TableRow>
                   )}
@@ -239,6 +265,7 @@ export default async function ElectionBoardPage({
                     <TableHead>District</TableHead>
                     <TableHead>Party</TableHead>
                     <TableHead>COC Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -254,11 +281,40 @@ export default async function ElectionBoardPage({
                           <Badge variant="outline">Unconfirmed</Badge>
                         )}
                       </TableCell>
+                      <TableCell className="text-right">
+                        {canWrite && provinceJtfId && (
+                          <div className="flex justify-end gap-1">
+                            <CandidateFormDialog
+                              jtfId={provinceJtfId}
+                              province={province}
+                              partyOptions={partyOptions}
+                              initial={{
+                                id: c.id,
+                                district: c.district ?? "",
+                                nameOnBallot: c.nameOnBallot,
+                                partyId: c.partyId ?? "",
+                                isCocFiler: c.isCocFiler,
+                                votesEncoded: c.votesEncoded.toString(),
+                                sourceNote: c.sourceNote ?? "",
+                              }}
+                              trigger={
+                                <Button variant="ghost" size="sm">
+                                  Edit
+                                </Button>
+                              }
+                            />
+                            <DeleteButton
+                              url={`/api/candidates/${c.id}`}
+                              confirmMessage="Delete this candidate? This cannot be undone."
+                            />
+                          </div>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                   {board.candidates.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground">
+                      <TableCell colSpan={5} className="text-center text-muted-foreground">
                         No candidates on file for this province yet.
                       </TableCell>
                     </TableRow>
