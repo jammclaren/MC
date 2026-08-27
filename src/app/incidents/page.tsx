@@ -189,6 +189,8 @@ export default async function IncidentsPage({
                               date: incident.date.toISOString().slice(0, 10),
                               type: incident.type,
                               result: incident.result ?? "",
+                              lat: incident.lat ?? undefined,
+                              lng: incident.lng ?? undefined,
                             }}
                             trigger={
                               <Button variant="ghost" size="sm">

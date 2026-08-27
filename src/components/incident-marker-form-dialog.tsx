@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { forward, toPoint } from "mgrs";
+import { forward } from "mgrs";
 import { toast } from "sonner";
+import { parseMgrs } from "@/lib/mgrs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,20 +53,6 @@ const ANIMATION_OPTIONS = [
   { value: "BLINK", label: "Blink — fades in/out" },
   { value: "PULSE", label: "Pulse — grows/shrinks" },
 ] as const;
-
-/** Parses an MGRS string into a [lat, lng] pair, or returns an error
- * message. `mgrs.toPoint` throws on malformed input, so this wraps that in
- * a result the form can render inline instead of a thrown exception. */
-function parseMgrs(raw: string): { lat: number; lng: number } | { error: string } {
-  const trimmed = raw.trim().toUpperCase().replaceAll(" ", "");
-  if (!trimmed) return { error: "Enter an MGRS grid reference" };
-  try {
-    const [lng, lat] = toPoint(trimmed);
-    return { lat, lng };
-  } catch {
-    return { error: "Not a valid MGRS reference (e.g. 51NUA6789054321)" };
-  }
-}
 
 export function IncidentMarkerFormDialog({
   jtfOptions,

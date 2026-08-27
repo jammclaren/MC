@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { forward } from "mgrs";
 import { toast } from "sonner";
+import { parseMgrs } from "@/lib/mgrs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,6 +42,8 @@ export interface IncidentFormValues {
   date: string;
   type: string;
   result?: string;
+  lat?: number;
+  lng?: number;
 }
 
 export function IncidentFormDialog({
@@ -70,18 +74,36 @@ export function IncidentFormDialog({
     }
   );
 
+  const [mgrsInput, setMgrsInput] = useState(
+    initial?.lat != null && initial?.lng != null ? forward([initial.lng, initial.lat]) : ""
+  );
+
   const isEdit = !!initial?.id;
   const visibleAreas = areaOptions.filter((a) => a.jtfId === values.jtfId);
+  const parsedMgrs = useMemo(() => (mgrsInput.trim() ? parseMgrs(mgrsInput) : null), [mgrsInput]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (parsedMgrs && "error" in parsedMgrs) {
+      toast.error(parsedMgrs.error);
+      return;
+    }
+    const coords =
+      parsedMgrs && !("error" in parsedMgrs) ? { lat: parsedMgrs.lat, lng: parsedMgrs.lng } : {};
     setSubmitting(true);
     try {
       const url = isEdit ? `/api/incidents/${initial!.id}` : "/api/incidents";
       const method = isEdit ? "PATCH" : "POST";
       const body = isEdit
-        ? { date: values.date, type: values.type, result: values.result || null, electionAreaId: values.electionAreaId || null }
-        : { ...values, result: values.result || undefined };
+        ? {
+            date: values.date,
+            type: values.type,
+            result: values.result || null,
+            electionAreaId: values.electionAreaId || null,
+            lat: parsedMgrs ? coords.lat : null,
+            lng: parsedMgrs ? coords.lng : null,
+          }
+        : { ...values, result: values.result || undefined, ...coords };
 
       const res = await fetch(url, {
         method,
@@ -146,6 +168,26 @@ export function IncidentFormDialog({
                 )}
               </div>
             )}
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="mgrs">MGRS Grid Reference (optional)</Label>
+              <Input
+                id="mgrs"
+                placeholder="e.g. 51NUA6789054321"
+                className="font-mono uppercase"
+                value={mgrsInput}
+                onChange={(e) => setMgrsInput(e.target.value)}
+              />
+              {parsedMgrs && (
+                <p className="text-xs text-muted-foreground">
+                  {"error" in parsedMgrs ? (
+                    <span className="text-status-critical">{parsedMgrs.error}</span>
+                  ) : (
+                    `${parsedMgrs.lat.toFixed(5)}, ${parsedMgrs.lng.toFixed(5)}`
+                  )}
+                </p>
+              )}
+            </div>
 
             <div className="flex flex-col gap-2">
               <Label>Area (optional)</Label>
