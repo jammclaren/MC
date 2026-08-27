@@ -37,6 +37,7 @@ export interface IncidentsByDay {
 export interface PriorityAreaSummary {
   id: string;
   label: string;
+  province: string;
   hotspotCategory: string | null;
   priorityScore: number;
 }
@@ -187,6 +188,7 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     label:
       [area.barangay, area.municipality, area.province].filter(Boolean).join(", ") ||
       area.province,
+    province: area.province,
     hotspotCategory: area.hotspotCategory,
     priorityScore: area.priorityScore,
   }));

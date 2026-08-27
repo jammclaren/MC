@@ -25,6 +25,7 @@ import { GaugeMeter } from "@/components/gauge-meter";
 import { FunnelPanel } from "@/components/funnel-panel";
 import { PriorityLeaderboard } from "@/components/priority-leaderboard";
 import { BpeCountdown } from "@/components/bpe-countdown";
+import { DailyAssessmentPanel } from "@/components/daily-assessment-panel";
 import { Users, ShieldAlert, TriangleAlert, Crosshair, Vote } from "lucide-react";
 
 /** "30 July 2026" — day-month-year, independent of locale part ordering. */
@@ -213,6 +214,8 @@ export default async function OverviewPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <DailyAssessmentPanel />
     </div>
   );
 }
