@@ -233,6 +233,68 @@ function buildIncidentIcon(style: IncidentMarker["markerStyle"]): L.DivIcon {
   });
 }
 
+/** Shared marker rendering for both the "Incident Markers" (map-placed) and
+ * "Logged Incidents" (plain Log Incident form) overlays — same popup/edit/
+ * delete behavior either way, just filtered to a different `source`. */
+function IncidentMarkerItems({
+  markers,
+  jtfOptions,
+  areaOptions,
+}: {
+  markers: IncidentMarker[];
+  jtfOptions: JtfOption[];
+  areaOptions: ElectionAreaOption[];
+}) {
+  return (
+    <>
+      {markers.map((marker) => (
+        <Marker
+          key={marker.id}
+          position={[marker.lat, marker.lng]}
+          icon={buildIncidentIcon(marker.markerStyle)}
+        >
+          <Popup>
+            <div className="text-xs">
+              <div className="font-medium">{marker.type}</div>
+              <div>{new Date(marker.date).toLocaleDateString()}</div>
+              {marker.areaLabel && <div>{marker.areaLabel}</div>}
+              {marker.result && <div>Result: {marker.result}</div>}
+              {marker.canModify && (
+                <div className="mt-2 flex gap-1 border-t border-border pt-2">
+                  <IncidentMarkerFormDialog
+                    jtfOptions={jtfOptions}
+                    areaOptions={areaOptions}
+                    lockJtfId={marker.jtfId}
+                    initial={{
+                      id: marker.id,
+                      electionAreaId: marker.electionAreaId ?? undefined,
+                      lat: marker.lat,
+                      lng: marker.lng,
+                      date: marker.date.slice(0, 10),
+                      type: marker.type,
+                      result: marker.result ?? "",
+                      markerStyle: marker.markerStyle,
+                    }}
+                    trigger={
+                      <Button variant="ghost" size="sm">
+                        Edit
+                      </Button>
+                    }
+                  />
+                  <DeleteButton
+                    url={`/api/incidents/${marker.id}`}
+                    confirmMessage="Delete this incident marker? This cannot be undone."
+                  />
+                </div>
+              )}
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+    </>
+  );
+}
+
 export function PriorityMap({
   areas,
   markers,
@@ -261,6 +323,15 @@ export function PriorityMap({
       .then(setBarangays)
       .catch(() => setBarangays(null));
   }, []);
+
+  const mapPlacedMarkers = useMemo(
+    () => markers.filter((m) => m.source === "MAP_MARKER"),
+    [markers]
+  );
+  const loggedIncidentMarkers = useMemo(
+    () => markers.filter((m) => m.source === "LOGGED"),
+    [markers]
+  );
 
   const areaByKey = useMemo(() => {
     const map = new Map<string, ScoredArea>();
@@ -430,53 +501,25 @@ export function PriorityMap({
               </LayerGroup>
             </LayersControl.Overlay>
           )}
-          {markers.length > 0 && (
+          {loggedIncidentMarkers.length > 0 && (
+            <LayersControl.Overlay name="Logged Incidents">
+              <LayerGroup>
+                <IncidentMarkerItems
+                  markers={loggedIncidentMarkers}
+                  jtfOptions={jtfOptions}
+                  areaOptions={areaOptions}
+                />
+              </LayerGroup>
+            </LayersControl.Overlay>
+          )}
+          {mapPlacedMarkers.length > 0 && (
             <LayersControl.Overlay checked name="Incident Markers">
               <LayerGroup>
-                {markers.map((marker) => (
-                  <Marker
-                    key={marker.id}
-                    position={[marker.lat, marker.lng]}
-                    icon={buildIncidentIcon(marker.markerStyle)}
-                  >
-                    <Popup>
-                      <div className="text-xs">
-                        <div className="font-medium">{marker.type}</div>
-                        <div>{new Date(marker.date).toLocaleDateString()}</div>
-                        {marker.areaLabel && <div>{marker.areaLabel}</div>}
-                        {marker.result && <div>Result: {marker.result}</div>}
-                        {marker.canModify && (
-                          <div className="mt-2 flex gap-1 border-t border-border pt-2">
-                            <IncidentMarkerFormDialog
-                              jtfOptions={jtfOptions}
-                              areaOptions={areaOptions}
-                              lockJtfId={marker.jtfId}
-                              initial={{
-                                id: marker.id,
-                                electionAreaId: marker.electionAreaId ?? undefined,
-                                lat: marker.lat,
-                                lng: marker.lng,
-                                date: marker.date.slice(0, 10),
-                                type: marker.type,
-                                result: marker.result ?? "",
-                                markerStyle: marker.markerStyle,
-                              }}
-                              trigger={
-                                <Button variant="ghost" size="sm">
-                                  Edit
-                                </Button>
-                              }
-                            />
-                            <DeleteButton
-                              url={`/api/incidents/${marker.id}`}
-                              confirmMessage="Delete this incident marker? This cannot be undone."
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </Popup>
-                  </Marker>
-                ))}
+                <IncidentMarkerItems
+                  markers={mapPlacedMarkers}
+                  jtfOptions={jtfOptions}
+                  areaOptions={areaOptions}
+                />
               </LayerGroup>
             </LayersControl.Overlay>
           )}

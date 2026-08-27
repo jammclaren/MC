@@ -46,6 +46,15 @@ enum MarkerAnimation {
   PULSE
 }
 
+/** Which workflow gave an incident its lat/lng — lets the priority map
+ * offer "Incident Markers" (deliberately placed via the map's own "Add
+ * Marker" flow) and "Logged Incidents" (an MGRS reference entered on the
+ * plain Log Incident form) as separate, independently toggleable layers. */
+enum IncidentSource {
+  LOGGED
+  MAP_MARKER
+}
+
 enum NeutralizationType {
   CAPTURED
   KILLED
@@ -212,13 +221,14 @@ model Incident {
   date           DateTime
   type           String
   result         String?
-  // Precise map placement, set when logged via the priority map's "Add
-  // Marker" flow (entered as MGRS, converted to lat/lng at write time —
-  // MGRS itself isn't stored since it's derivable and lat/lng is what
-  // every map layer already consumes).
+  // Precise map placement, entered as MGRS (either on the priority map's
+  // "Add Marker" flow or the plain Log Incident form) and converted to
+  // lat/lng at write time — MGRS itself isn't stored since it's derivable
+  // and lat/lng is what every map layer already consumes.
   lat            Float?
   lng            Float?
   markerStyle    MarkerAnimation @default(NONE)
+  source         IncidentSource  @default(LOGGED)
   createdById    String
   createdAt      DateTime        @default(now())
 

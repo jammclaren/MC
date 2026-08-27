@@ -15,6 +15,7 @@ const createIncidentSchema = z.object({
   lat: z.number().min(-90).max(90).optional(),
   lng: z.number().min(-180).max(180).optional(),
   markerStyle: z.enum(["NONE", "BLINK", "PULSE"]).optional(),
+  source: z.enum(["LOGGED", "MAP_MARKER"]).optional(),
 });
 
 export async function GET(request: NextRequest) {

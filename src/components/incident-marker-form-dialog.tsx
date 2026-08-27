@@ -117,6 +117,7 @@ export function IncidentMarkerFormDialog({
             lat: parsed.lat,
             lng: parsed.lng,
             markerStyle,
+            source: "MAP_MARKER",
           };
 
       const res = await fetch(url, {

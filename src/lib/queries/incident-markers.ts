@@ -11,6 +11,7 @@ export interface IncidentMarker {
   lat: number;
   lng: number;
   markerStyle: "NONE" | "BLINK" | "PULSE";
+  source: "LOGGED" | "MAP_MARKER";
   areaLabel: string | null;
   /** Whether the current user may edit/delete this marker
    * (`canModifyEntry`) — resolved server-side rather than shipping
@@ -41,6 +42,7 @@ export async function getIncidentMarkers(user: SessionUser): Promise<IncidentMar
     lat: incident.lat!,
     lng: incident.lng!,
     markerStyle: incident.markerStyle,
+    source: incident.source,
     areaLabel: incident.electionArea
       ? [incident.electionArea.barangay, incident.electionArea.municipality, incident.electionArea.province]
           .filter(Boolean)
