@@ -332,6 +332,15 @@ export function PriorityMap({
     () => markers.filter((m) => m.source === "LOGGED"),
     [markers]
   );
+  const loggedIncidentsByJtf = useMemo(() => {
+    const map = new Map<string, IncidentMarker[]>();
+    for (const marker of loggedIncidentMarkers) {
+      const list = map.get(marker.jtfId) ?? [];
+      list.push(marker);
+      map.set(marker.jtfId, list);
+    }
+    return map;
+  }, [loggedIncidentMarkers]);
 
   const areaByKey = useMemo(() => {
     const map = new Map<string, ScoredArea>();
@@ -501,17 +510,21 @@ export function PriorityMap({
               </LayerGroup>
             </LayersControl.Overlay>
           )}
-          {loggedIncidentMarkers.length > 0 && (
-            <LayersControl.Overlay name="Logged Incidents">
-              <LayerGroup>
-                <IncidentMarkerItems
-                  markers={loggedIncidentMarkers}
-                  jtfOptions={jtfOptions}
-                  areaOptions={areaOptions}
-                />
-              </LayerGroup>
-            </LayersControl.Overlay>
-          )}
+          {jtfOptions.map((jtf) => {
+            const jtfMarkers = loggedIncidentsByJtf.get(jtf.id);
+            if (!jtfMarkers || jtfMarkers.length === 0) return null;
+            return (
+              <LayersControl.Overlay key={jtf.id} name={`Logged Incidents — ${jtf.name}`}>
+                <LayerGroup>
+                  <IncidentMarkerItems
+                    markers={jtfMarkers}
+                    jtfOptions={jtfOptions}
+                    areaOptions={areaOptions}
+                  />
+                </LayerGroup>
+              </LayersControl.Overlay>
+            );
+          })}
           {mapPlacedMarkers.length > 0 && (
             <LayersControl.Overlay checked name="Incident Markers">
               <LayerGroup>
