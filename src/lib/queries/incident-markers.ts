@@ -12,6 +12,9 @@ export interface IncidentMarker {
   lng: number;
   markerStyle: "NONE" | "BLINK" | "PULSE";
   source: "LOGGED" | "MAP_MARKER";
+  /** When the record was created — used to auto-pulse just-logged incidents
+   * on the map regardless of their chosen markerStyle (see priority-map.tsx). */
+  createdAt: string;
   areaLabel: string | null;
   /** Whether the current user may edit/delete this marker
    * (`canModifyEntry`) — resolved server-side rather than shipping
@@ -43,6 +46,7 @@ export async function getIncidentMarkers(user: SessionUser): Promise<IncidentMar
     lng: incident.lng!,
     markerStyle: incident.markerStyle,
     source: incident.source,
+    createdAt: incident.createdAt.toISOString(),
     areaLabel: incident.electionArea
       ? [incident.electionArea.barangay, incident.electionArea.municipality, incident.electionArea.province]
           .filter(Boolean)

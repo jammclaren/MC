@@ -219,6 +219,15 @@ function Legend({ counts, total }: { counts: Record<string, number>; total: numb
   );
 }
 
+const LATEST_INCIDENT_WINDOW_MS = 60 * 60 * 1000;
+
+/** Just-logged incidents pulse regardless of their stored markerStyle, so a
+ * fresh report catches the eye on the map without anyone having to remember
+ * to pick "Pulse" — it fades back to the chosen style after an hour. */
+function isLatestIncident(createdAt: string): boolean {
+  return Date.now() - new Date(createdAt).getTime() <= LATEST_INCIDENT_WINDOW_MS;
+}
+
 /** Small animated dot icon for an incident marker — the animation class
  * (blink/pulse) is applied to the inner span, never the outer Leaflet
  * positioning wrapper, so it never fights Leaflet's own transform. */
@@ -251,7 +260,7 @@ function IncidentMarkerItems({
         <Marker
           key={marker.id}
           position={[marker.lat, marker.lng]}
-          icon={buildIncidentIcon(marker.markerStyle)}
+          icon={buildIncidentIcon(isLatestIncident(marker.createdAt) ? "PULSE" : marker.markerStyle)}
         >
           <Popup>
             <div className="text-xs">
