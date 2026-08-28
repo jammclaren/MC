@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatTile } from "@/components/stat-tile";
-import { GaugeMeter } from "@/components/gauge-meter";
 import { FunnelPanel } from "@/components/funnel-panel";
 import { LabeledBarChart } from "@/components/charts/labeled-bar-chart";
 import { IncidentsByDayChart, type IncidentsByDayDatum } from "@/components/charts/incidents-by-day-chart";
@@ -58,7 +57,6 @@ export function OverviewIncidentOpsPanel({
     const last24h = markers.filter(
       (m) => now - new Date(m.createdAt).getTime() <= LAST_24H_MS
     );
-    const withResult = markers.filter((m) => m.result != null && m.result.trim() !== "");
     const violent = markers.filter((m) => isViolentIncidentType(m.type));
 
     const byJtf = new Map<string, number>();
@@ -81,14 +79,12 @@ export function OverviewIncidentOpsPanel({
 
     const mostRecent = markers[0] ?? null;
 
-    const outcomeRatePct = total > 0 ? (withResult.length / total) * 100 : 0;
     const violentLast24h = last24h.some((m) => isViolentIncidentType(m.type));
 
     return {
       total,
       last24hCount: last24h.length,
       violentLast24h,
-      outcomeRatePct,
       jtfChartData,
       topTypes,
       mostRecent,
@@ -156,11 +152,6 @@ export function OverviewIncidentOpsPanel({
           </div>
 
           <div className="flex flex-col gap-4">
-            <GaugeMeter
-              value={stats.outcomeRatePct}
-              label="Outcome Reporting Rate"
-              caption="Plotted incidents with a result on file"
-            />
             <OverviewIncidentMapLoader markers={markers} />
           </div>
 
