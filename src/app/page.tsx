@@ -19,7 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { DeploymentBarChart } from "@/components/charts/deployment-bar-chart";
 import { IncidentsByDayChart } from "@/components/charts/incidents-by-day-chart";
 import { StatTile } from "@/components/stat-tile";
@@ -172,48 +171,6 @@ export default async function OverviewPage() {
                 <TableRow>
                   <TableCell colSpan={3} className="text-center text-muted-foreground">
                     No deployment data yet.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Incidents</CardTitle>
-          <CardDescription>Last 10 reported, most recent first.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>JTF</TableHead>
-                <TableHead>Area</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Result</TableHead>
-                <TableHead>Priority</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.recentIncidents.map((incident) => (
-                <TableRow key={incident.id}>
-                  <TableCell>{incident.date.toLocaleDateString()}</TableCell>
-                  <TableCell>{incident.jtfName}</TableCell>
-                  <TableCell>{incident.areaLabel ?? "—"}</TableCell>
-                  <TableCell>{incident.type}</TableCell>
-                  <TableCell>{incident.result ?? "—"}</TableCell>
-                  <TableCell>
-                    {incident.isPriority && <Badge variant="critical">Priority</Badge>}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {data.recentIncidents.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    No incidents reported yet.
                   </TableCell>
                 </TableRow>
               )}
