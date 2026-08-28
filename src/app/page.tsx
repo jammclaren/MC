@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { getSessionUser } from "@/lib/session";
 import { getOverviewData } from "@/lib/queries/overview";
 import { getIncidentMarkers } from "@/lib/queries/incident-markers";
 import { safePercent } from "@/lib/percentages";
+import { nowMs } from "@/lib/time";
 import {
   Card,
   CardContent,
@@ -28,7 +28,7 @@ import { FunnelPanel } from "@/components/funnel-panel";
 import { PriorityLeaderboard } from "@/components/priority-leaderboard";
 import { BpeCountdown } from "@/components/bpe-countdown";
 import { DailyAssessmentPanel } from "@/components/daily-assessment-panel";
-import { OverviewIncidentMapLoader } from "@/components/overview-incident-map-loader";
+import { OverviewIncidentOpsPanel } from "@/components/overview-incident-ops-panel";
 import { Users, ShieldAlert, TriangleAlert, Crosshair, Vote } from "lucide-react";
 
 /** "30 July 2026" — day-month-year, independent of locale part ordering. */
@@ -53,6 +53,7 @@ export default async function OverviewPage() {
     getOverviewData(user),
     getIncidentMarkers(user),
   ]);
+  const now = nowMs();
 
   return (
     <div className="flex flex-col gap-8">
@@ -221,22 +222,13 @@ export default async function OverviewPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-4">
-          <div>
-            <CardTitle>Monitored Incidents Map</CardTitle>
-            <CardDescription>
-              Every incident on file with a grid reference, at a glance.
-            </CardDescription>
-          </div>
-          <Link href="/priority-map" className="text-sm text-primary hover:underline">
-            Open Situation Map →
-          </Link>
-        </CardHeader>
-        <CardContent>
-          <OverviewIncidentMapLoader markers={incidentMarkers} />
-        </CardContent>
-      </Card>
+      <OverviewIncidentOpsPanel
+        markers={incidentMarkers}
+        topPriorityAreas={data.topPriorityAreas}
+        priorityAreaCount={data.priorityAreaCount}
+        bpeEndDate={data.bpe.endDate}
+        now={now}
+      />
 
       <DailyAssessmentPanel />
     </div>

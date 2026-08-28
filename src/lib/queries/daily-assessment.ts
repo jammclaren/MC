@@ -1,4 +1,5 @@
 import { safePercent } from "@/lib/percentages";
+import { isViolentIncidentType } from "@/lib/incident-classification";
 import { PROVINCE_TO_JTF } from "@/lib/queries/election-board";
 import type { OverviewData } from "@/lib/queries/overview";
 
@@ -40,28 +41,6 @@ export interface DailyAssessment {
 const CRITICAL_PRIORITY_AREA_THRESHOLD = 200;
 const ELEVATED_PRIORITY_AREA_THRESHOLD = 50;
 const MODERATE_PRIORITY_AREA_THRESHOLD = 10;
-
-// Substring keywords (case-insensitive) used only to flag a monitored
-// incident's type as "armed/violent" for tactical-level wording below. This
-// is a separate, plainer classification than INCIDENT_SEVERITY_WEIGHTS in
-// priority-score.ts (which drives the numeric priority score) — this one
-// just decides which incidents deserve a named tactical callout.
-const VIOLENT_INCIDENT_KEYWORDS = [
-  "shoot",
-  "snip",
-  "ambush",
-  "strafing",
-  "ied",
-  "bomb",
-  "grenade",
-  "armed encounter",
-  "kidnap",
-];
-
-function isViolentIncidentType(type: string): boolean {
-  const lower = type.toLowerCase();
-  return VIOLENT_INCIDENT_KEYWORDS.some((kw) => lower.includes(kw));
-}
 
 function severityFromPriorityAreas(priorityAreaCount: number): SeverityLevel {
   if (priorityAreaCount >= CRITICAL_PRIORITY_AREA_THRESHOLD) return "CRITICAL";
