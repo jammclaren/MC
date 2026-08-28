@@ -38,7 +38,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${rajdhani.variable} dark h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex">
         <div className="hud-viewport-frame" aria-hidden="true">
           <span className="hud-corner-tl" />
           <span className="hud-corner-tr" />
@@ -46,7 +46,7 @@ export default function RootLayout({
           <span className="hud-corner-br" />
         </div>
         <Nav />
-        <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">
+        <main className="min-w-0 flex-1 px-8 py-8">
           {children}
         </main>
         <Toaster />

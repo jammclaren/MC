@@ -35,37 +35,42 @@ export async function Nav() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-primary/30 bg-background/95 shadow-[0_1px_16px_-4px_var(--primary)] backdrop-blur supports-backdrop-filter:bg-background/80">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6">
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-2.5 py-3">
-            {/* eslint-disable-next-line @next/next/no-img-element -- small
-                static header mark; not worth next/image's optimization
-                pipeline for a 22KB, always-visible icon. */}
-            <img
-              src="/wesmincom-seal.png"
-              alt="Western Mindanao Command seal"
-              className="size-8"
-            />
-            <span className="flex size-2 rounded-full bg-status-good shadow-[0_0_6px_var(--status-good)]" />
-            <span className="font-display text-base font-bold tracking-widest uppercase">
-              WESMINCOM <span className="text-primary">DASHBOARD</span>
-            </span>
-          </div>
-          <NavLinks links={allLinks} />
-        </div>
-        <div className="flex items-center gap-4">
-          <LiveClock />
-          <span className="hidden font-mono text-xs text-muted-foreground sm:inline">
-            {user.role}
-            {jtf ? ` · ${jtf.name.toUpperCase()}` : ""}
-            {user.warfightingFunction
-              ? ` · ${user.warfightingFunction.replaceAll("_", " ")}`
-              : ""}
+    <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-primary/30 bg-background/95 shadow-[1px_0_16px_-4px_var(--primary)] backdrop-blur supports-backdrop-filter:bg-background/80">
+      <div className="flex items-center gap-2.5 border-b border-border px-4 py-4">
+        {/* eslint-disable-next-line @next/next/no-img-element -- small
+            static header mark; not worth next/image's optimization
+            pipeline for a 22KB, always-visible icon. */}
+        <img
+          src="/wesmincom-seal.png"
+          alt="Western Mindanao Command seal"
+          className="size-8 shrink-0"
+        />
+        <span className="flex flex-col">
+          <span className="font-display text-sm leading-tight font-bold tracking-widest uppercase">
+            WESMINCOM
           </span>
-          <SignOutButton />
-        </div>
+          <span className="font-display text-sm leading-tight font-bold tracking-widest text-primary uppercase">
+            Dashboard
+          </span>
+        </span>
+        <span className="ml-auto flex size-2 rounded-full bg-status-good shadow-[0_0_6px_var(--status-good)]" />
       </div>
-    </header>
+
+      <div className="flex-1 overflow-y-auto px-3 py-4">
+        <NavLinks links={allLinks} />
+      </div>
+
+      <div className="flex flex-col gap-3 border-t border-border px-4 py-4">
+        <LiveClock />
+        <span className="font-mono text-xs text-muted-foreground">
+          {user.role}
+          {jtf ? ` · ${jtf.name.toUpperCase()}` : ""}
+          {user.warfightingFunction
+            ? ` · ${user.warfightingFunction.replaceAll("_", " ")}`
+            : ""}
+        </span>
+        <SignOutButton />
+      </div>
+    </aside>
   );
 }
