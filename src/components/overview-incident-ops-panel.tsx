@@ -155,7 +155,7 @@ export function OverviewIncidentOpsPanel({
             </div>
           </div>
 
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col gap-4">
             <GaugeMeter
               value={stats.outcomeRatePct}
               label="Outcome Reporting Rate"
