@@ -20,11 +20,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DeploymentBarChart } from "@/components/charts/deployment-bar-chart";
-import { IncidentsByDayChart } from "@/components/charts/incidents-by-day-chart";
 import { StatTile } from "@/components/stat-tile";
 import { GaugeMeter } from "@/components/gauge-meter";
 import { FunnelPanel } from "@/components/funnel-panel";
-import { PriorityLeaderboard } from "@/components/priority-leaderboard";
 import { BpeCountdown } from "@/components/bpe-countdown";
 import { DailyAssessmentPanel } from "@/components/daily-assessment-panel";
 import { OverviewIncidentOpsPanel } from "@/components/overview-incident-ops-panel";
@@ -90,7 +88,16 @@ export default async function OverviewPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+      <OverviewIncidentOpsPanel
+        markers={incidentMarkers}
+        topPriorityAreas={data.topPriorityAreas}
+        priorityAreaCount={data.priorityAreaCount}
+        incidentsByDay={data.incidentsByDay}
+        bpeEndDate={data.bpe.endDate}
+        now={now}
+      />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>BPE 2026 Window</CardTitle>
@@ -115,26 +122,6 @@ export default async function OverviewPage() {
           </CardHeader>
           <CardContent>
             <FunnelPanel stages={data.electionOpsFunnel} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Incidents (14d)</CardTitle>
-            <CardDescription>Daily count, most recent on the right.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <IncidentsByDayChart data={data.incidentsByDay} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Priority Leaderboard</CardTitle>
-            <CardDescription>Top areas by computed priority score.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <PriorityLeaderboard entries={data.topPriorityAreas} />
           </CardContent>
         </Card>
       </div>
@@ -178,14 +165,6 @@ export default async function OverviewPage() {
           </Table>
         </CardContent>
       </Card>
-
-      <OverviewIncidentOpsPanel
-        markers={incidentMarkers}
-        topPriorityAreas={data.topPriorityAreas}
-        priorityAreaCount={data.priorityAreaCount}
-        bpeEndDate={data.bpe.endDate}
-        now={now}
-      />
 
       <DailyAssessmentPanel />
     </div>

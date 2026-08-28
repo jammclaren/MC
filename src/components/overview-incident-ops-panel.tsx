@@ -7,6 +7,8 @@ import { StatTile } from "@/components/stat-tile";
 import { GaugeMeter } from "@/components/gauge-meter";
 import { FunnelPanel } from "@/components/funnel-panel";
 import { LabeledBarChart } from "@/components/charts/labeled-bar-chart";
+import { IncidentsByDayChart, type IncidentsByDayDatum } from "@/components/charts/incidents-by-day-chart";
+import { PriorityLeaderboard, type LeaderboardEntry } from "@/components/priority-leaderboard";
 import { OverviewIncidentMapLoader } from "@/components/overview-incident-map-loader";
 import { isViolentIncidentType } from "@/lib/incident-classification";
 import type { IncidentMarker } from "@/lib/queries/incident-markers";
@@ -34,21 +36,18 @@ function daysRemaining(endIso: string): number | null {
   return Math.max(0, Math.ceil((end.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)));
 }
 
-export interface TopPriorityAreaSummary {
-  label: string;
-  priorityScore: number;
-}
-
 export function OverviewIncidentOpsPanel({
   markers,
   topPriorityAreas,
   priorityAreaCount,
+  incidentsByDay,
   bpeEndDate,
   now,
 }: {
   markers: IncidentMarker[];
-  topPriorityAreas: TopPriorityAreaSummary[];
+  topPriorityAreas: LeaderboardEntry[];
   priorityAreaCount: number;
+  incidentsByDay: IncidentsByDayDatum[];
   bpeEndDate: string;
   /** Request-time timestamp (ms), computed server-side and passed down so
    * the "last 24h" calculation stays a pure function of props. */
@@ -107,7 +106,6 @@ export function OverviewIncidentOpsPanel({
   }, [markers, now]);
 
   const remaining = daysRemaining(bpeEndDate);
-  const topArea = topPriorityAreas[0] ?? null;
 
   return (
     <Card className="border-primary/30">
@@ -147,44 +145,42 @@ export function OverviewIncidentOpsPanel({
               <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
                 Incidents by JTF
               </h3>
-              <LabeledBarChart data={stats.jtfChartData} />
+              <LabeledBarChart data={stats.jtfChartData} height={140} />
+            </div>
+            <div>
+              <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+                Incidents (14d)
+              </h3>
+              <IncidentsByDayChart data={incidentsByDay} />
             </div>
           </div>
 
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:justify-around">
-              <GaugeMeter
-                value={stats.outcomeRatePct}
-                label="Outcome Reporting Rate"
-                caption="Plotted incidents with a result on file"
-              />
-              <div className="w-full max-w-xs">
-                <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-                  Top Incident Types
-                </h3>
-                <FunnelPanel stages={stats.topTypes} />
-              </div>
-            </div>
+          <div className="flex flex-col items-center gap-4">
+            <GaugeMeter
+              value={stats.outcomeRatePct}
+              label="Outcome Reporting Rate"
+              caption="Plotted incidents with a result on file"
+            />
             <OverviewIncidentMapLoader markers={markers} />
           </div>
 
           <div className="flex flex-col gap-4">
             <div>
               <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-                By Source
+                Priority Leaderboard
               </h3>
-              <FunnelPanel stages={stats.sourceStages} />
+              <PriorityLeaderboard entries={topPriorityAreas} />
             </div>
             <div>
               <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-                Severity Mix
+                Top Incident Types
               </h3>
-              <FunnelPanel stages={stats.severityStages} />
+              <FunnelPanel stages={stats.topTypes} />
             </div>
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-4 border-t border-border pt-4 sm:grid-cols-3">
+        <div className="mt-6 grid grid-cols-1 gap-4 border-t border-border pt-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="flex flex-col gap-1">
             <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
               Most Recent Report
@@ -202,21 +198,17 @@ export function OverviewIncidentOpsPanel({
               <p className="text-sm text-muted-foreground">No plotted incidents yet.</p>
             )}
           </div>
-          <div className="flex flex-col gap-1">
+          <div>
             <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-              Top Priority Area
+              By Source
             </span>
-            {topArea ? (
-              <p className="text-sm">
-                <span className="font-medium">{topArea.label}</span>
-                <br />
-                <span className="text-muted-foreground">
-                  Priority score {topArea.priorityScore.toFixed(1)}
-                </span>
-              </p>
-            ) : (
-              <p className="text-sm text-muted-foreground">No priority areas scored yet.</p>
-            )}
+            <FunnelPanel stages={stats.sourceStages} />
+          </div>
+          <div>
+            <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+              Severity Mix
+            </span>
+            <FunnelPanel stages={stats.severityStages} />
           </div>
           <div className="flex flex-col gap-1">
             <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
