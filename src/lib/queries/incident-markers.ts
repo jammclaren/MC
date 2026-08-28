@@ -4,6 +4,7 @@ import { canModifyEntry, scopeJtfFilter, type SessionUser } from "@/lib/rbac";
 export interface IncidentMarker {
   id: string;
   jtfId: string;
+  jtfName: string;
   electionAreaId: string | null;
   type: string;
   result: string | null;
@@ -30,13 +31,14 @@ export async function getIncidentMarkers(user: SessionUser): Promise<IncidentMar
 
   const incidents = await prisma.incident.findMany({
     where: { jtfId: scopeJtfId, lat: { not: null }, lng: { not: null } },
-    include: { electionArea: true },
+    include: { electionArea: true, jtf: { select: { name: true } } },
     orderBy: { date: "desc" },
   });
 
   return incidents.map((incident) => ({
     id: incident.id,
     jtfId: incident.jtfId,
+    jtfName: incident.jtf.name,
     electionAreaId: incident.electionAreaId,
     canModify: canModifyEntry(user, incident.jtfId, incident.createdById),
     type: incident.type,

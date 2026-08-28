@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getSessionUser } from "@/lib/session";
 import { getOverviewData } from "@/lib/queries/overview";
+import { getIncidentMarkers } from "@/lib/queries/incident-markers";
 import { safePercent } from "@/lib/percentages";
 import {
   Card,
@@ -26,6 +28,7 @@ import { FunnelPanel } from "@/components/funnel-panel";
 import { PriorityLeaderboard } from "@/components/priority-leaderboard";
 import { BpeCountdown } from "@/components/bpe-countdown";
 import { DailyAssessmentPanel } from "@/components/daily-assessment-panel";
+import { OverviewIncidentMapLoader } from "@/components/overview-incident-map-loader";
 import { Users, ShieldAlert, TriangleAlert, Crosshair, Vote } from "lucide-react";
 
 /** "30 July 2026" — day-month-year, independent of locale part ordering. */
@@ -46,7 +49,10 @@ export default async function OverviewPage() {
     redirect("/login");
   }
 
-  const data = await getOverviewData(user);
+  const [data, incidentMarkers] = await Promise.all([
+    getOverviewData(user),
+    getIncidentMarkers(user),
+  ]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -212,6 +218,23 @@ export default async function OverviewPage() {
               )}
             </TableBody>
           </Table>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-4">
+          <div>
+            <CardTitle>Monitored Incidents Map</CardTitle>
+            <CardDescription>
+              Every incident on file with a grid reference, at a glance.
+            </CardDescription>
+          </div>
+          <Link href="/priority-map" className="text-sm text-primary hover:underline">
+            Open Situation Map →
+          </Link>
+        </CardHeader>
+        <CardContent>
+          <OverviewIncidentMapLoader markers={incidentMarkers} />
         </CardContent>
       </Card>
 
