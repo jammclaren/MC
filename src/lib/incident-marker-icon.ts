@@ -26,6 +26,12 @@ function iconSizeForZoom(zoom: number | undefined): number {
   return Math.round(MIN_ICON_SIZE + t * (MAX_ICON_SIZE - MIN_ICON_SIZE));
 }
 
+// Recent (pulsing) incidents render noticeably larger than older ones, so
+// a fresh report stands out from the surrounding "previous incident" dots
+// at a glance, on top of its own pulse animation.
+const RECENT_SIZE_MULTIPLIER = 1.6;
+const PREVIOUS_SIZE_MULTIPLIER = 0.7;
+
 function pulseDotHtml(): string {
   return `<span style="position:relative;display:block;width:100%;height:100%;border-radius:9999px;background:var(--status-critical);box-shadow:0 0 6px rgba(0,0,0,0.7);"></span>`;
 }
@@ -36,11 +42,11 @@ function pulseDotHtml(): string {
  * so the dot shrinks at wide zoom levels; omit it for always-full-size
  * (e.g. a legend swatch). */
 export function buildIncidentIcon(style: IncidentMarker["markerStyle"], zoom?: number): L.DivIcon {
-  const size = iconSizeForZoom(zoom);
-  const half = size / 2;
-  const border = size <= 9 ? 1 : 2;
+  const baseSize = iconSizeForZoom(zoom);
 
   if (style === "PULSE") {
+    const size = Math.round(baseSize * RECENT_SIZE_MULTIPLIER);
+    const half = size / 2;
     // A static dot with one soft, expanding-and-fading ring behind it —
     // a "live ping" pulse — rather than the dot itself scaling up and
     // down in place.
@@ -56,6 +62,9 @@ export function buildIncidentIcon(style: IncidentMarker["markerStyle"], zoom?: n
     });
   }
 
+  const size = Math.max(4, Math.round(baseSize * PREVIOUS_SIZE_MULTIPLIER));
+  const half = size / 2;
+  const border = size <= 9 ? 1 : 2;
   const animClass = style === "BLINK" ? "incident-marker-blink" : "";
   return L.divIcon({
     className: "incident-marker-icon",
