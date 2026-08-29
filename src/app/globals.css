@@ -235,6 +235,18 @@
 .leaflet-control-zoom a:hover {
   background-color: var(--accent) !important;
 }
+
+/* Tints the "Tactical Blueprint" base layer's neutral-gray tiles toward
+ * this dashboard's primary blue (#3987e5, the same blue used by the
+ * Tactical Grid's own line-work above) — sepia() gives the grayscale
+ * source a hue to rotate, hue-rotate() carries it from sepia's ~39deg to
+ * primary blue's ~213deg, and saturate()/brightness() push it to a vivid,
+ * dark-console tone instead of a washed-out pastel. Scoped to this pane
+ * (see TacticalBlueprintPane) rather than TileLayer's className prop,
+ * which lands on the layer's own container div, not each tile image. */
+.leaflet-tacticalBlueprint-pane {
+  filter: sepia(1) saturate(4) hue-rotate(174deg) brightness(0.85) contrast(1.05);
+}
 .leaflet-control-attribution {
   background-color: rgba(26, 26, 25, 0.8) !important;
   color: var(--muted-foreground) !important;

@@ -24,6 +24,10 @@ import {
   type JtfOption,
 } from "@/components/incident-marker-form-dialog";
 import { buildIncidentIcon, isLatestIncident } from "@/lib/incident-marker-icon";
+import {
+  TacticalBlueprintPane,
+  TACTICAL_BLUEPRINT_PANE,
+} from "@/components/tactical-blueprint-pane";
 import { Button } from "@/components/ui/button";
 import { DeleteButton } from "@/components/delete-button";
 import { MapPin } from "lucide-react";
@@ -450,8 +454,13 @@ export function PriorityMap({
           </LayersControl.BaseLayer>
           <LayersControl.BaseLayer name="Tactical Blueprint">
             <LayerGroup>
-              <TileLayer attribution={DARK_CANVAS_ATTRIBUTION} url={DARK_CANVAS_BASE_URL} />
-              <TileLayer url={DARK_CANVAS_REFERENCE_URL} />
+              <TacticalBlueprintPane />
+              <TileLayer
+                attribution={DARK_CANVAS_ATTRIBUTION}
+                url={DARK_CANVAS_BASE_URL}
+                pane={TACTICAL_BLUEPRINT_PANE}
+              />
+              <TileLayer url={DARK_CANVAS_REFERENCE_URL} pane={TACTICAL_BLUEPRINT_PANE} />
             </LayerGroup>
           </LayersControl.BaseLayer>
           <LayersControl.BaseLayer name="Tactical Grid (Offline)">

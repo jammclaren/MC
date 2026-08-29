@@ -6,6 +6,10 @@ import L from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import type { IncidentMarker } from "@/lib/queries/incident-markers";
 import { buildIncidentIcon, isLatestIncident } from "@/lib/incident-marker-icon";
+import {
+  TacticalBlueprintPane,
+  TACTICAL_BLUEPRINT_PANE,
+} from "@/components/tactical-blueprint-pane";
 
 // Esri "Dark Gray Canvas" — same tiles as the Situation Map's "Tactical
 // Blueprint" base layer, used here as this widget's fixed (only) base so
@@ -55,8 +59,13 @@ export function OverviewIncidentMap({ markers }: { markers: IncidentMarker[] }) 
         className="h-[400px] w-full rounded-md border bg-muted"
         scrollWheelZoom={false}
       >
-        <TileLayer attribution={DARK_CANVAS_ATTRIBUTION} url={DARK_CANVAS_BASE_URL} />
-        <TileLayer url={DARK_CANVAS_REFERENCE_URL} />
+        <TacticalBlueprintPane />
+        <TileLayer
+          attribution={DARK_CANVAS_ATTRIBUTION}
+          url={DARK_CANVAS_BASE_URL}
+          pane={TACTICAL_BLUEPRINT_PANE}
+        />
+        <TileLayer url={DARK_CANVAS_REFERENCE_URL} pane={TACTICAL_BLUEPRINT_PANE} />
         {markers.map((marker) => (
           <Marker
             key={marker.id}
