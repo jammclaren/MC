@@ -41,6 +41,7 @@ export default async function OverviewPage() {
     <div className="flex flex-col gap-8">
       <div className="text-center">
         <h1 className="font-display text-4xl font-bold tracking-wide uppercase">Command Overview</h1>
+        <p className="text-sm text-muted-foreground">Western Mindanao Command</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -76,7 +77,6 @@ export default async function OverviewPage() {
         incidentsByDay={data.incidentsByDay}
         totalDeployed={data.totalDeployed}
         totalQrf={data.totalQrf}
-        totalRegisteredVoters={data.totalRegisteredVoters}
         bpeStartDate={data.bpe.startDate}
         bpeEndDate={data.bpe.endDate}
         now={now}

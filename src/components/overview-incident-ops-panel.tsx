@@ -4,10 +4,8 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatTile } from "@/components/stat-tile";
-import { GaugeMeter } from "@/components/gauge-meter";
 import { BpeCountdown } from "@/components/bpe-countdown";
 import { FunnelPanel } from "@/components/funnel-panel";
-import { safePercent } from "@/lib/percentages";
 import { LabeledBarChart } from "@/components/charts/labeled-bar-chart";
 import { IncidentsByDayChart, type IncidentsByDayDatum } from "@/components/charts/incidents-by-day-chart";
 import { PriorityLeaderboard, type LeaderboardEntry } from "@/components/priority-leaderboard";
@@ -25,7 +23,6 @@ export function OverviewIncidentOpsPanel({
   incidentsByDay,
   totalDeployed,
   totalQrf,
-  totalRegisteredVoters,
   bpeStartDate,
   bpeEndDate,
   now,
@@ -35,7 +32,6 @@ export function OverviewIncidentOpsPanel({
   incidentsByDay: IncidentsByDayDatum[];
   totalDeployed: number;
   totalQrf: number;
-  totalRegisteredVoters: number;
   bpeStartDate: string;
   bpeEndDate: string;
   /** Request-time timestamp (ms), computed server-side and passed down so
@@ -194,14 +190,7 @@ export function OverviewIncidentOpsPanel({
                 <span className="text-muted-foreground">{totalQrf.toLocaleString()} QRF</span>
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <BpeCountdown startDate={bpeStartDate} endDate={bpeEndDate} />
-              <GaugeMeter
-                value={safePercent(totalDeployed, totalRegisteredVoters) ?? 0}
-                label="Coverage"
-                maxWidthPx={80}
-              />
-            </div>
+            <BpeCountdown startDate={bpeStartDate} endDate={bpeEndDate} />
           </div>
         </div>
       </CardContent>

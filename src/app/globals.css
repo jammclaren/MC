@@ -274,12 +274,11 @@
 .province-outline-glow {
   filter: drop-shadow(0 0 3px #3987e5) drop-shadow(0 0 7px #3987e5);
 }
+/* Hidden per request — Esri/OSM's free tile terms do still ask for
+ * attribution to be shown somewhere in the app; if that matters for this
+ * deployment, it should live in an About/credits page instead. */
 .leaflet-control-attribution {
-  background-color: rgba(26, 26, 25, 0.8) !important;
-  color: var(--muted-foreground) !important;
-}
-.leaflet-control-attribution a {
-  color: var(--primary) !important;
+  display: none !important;
 }
 .leaflet-tooltip {
   background-color: var(--card) !important;

@@ -1,5 +1,5 @@
 import { getSessionUser } from "@/lib/session";
-import { NavSidebar } from "@/components/nav-sidebar";
+import { NavTopBar } from "@/components/nav-topbar";
 import { prisma } from "@/lib/prisma";
 
 const NAV_LINKS = [
@@ -36,5 +36,5 @@ export async function Nav() {
     user.warfightingFunction ? ` · ${user.warfightingFunction.replaceAll("_", " ")}` : ""
   }`;
 
-  return <NavSidebar links={allLinks} roleLine={roleLine} />;
+  return <NavTopBar links={allLinks} roleLine={roleLine} />;
 }
