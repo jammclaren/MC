@@ -8,7 +8,6 @@ export interface StatTileProps {
   icon?: LucideIcon;
   tone?: "default" | "good" | "warning" | "critical";
   hint?: string;
-  size?: "default" | "sm";
 }
 
 const TONE_CLASSES: Record<NonNullable<StatTileProps["tone"]>, string> = {
@@ -29,16 +28,9 @@ export function StatTile({
   icon: Icon,
   tone = "default",
   hint,
-  size = "default",
 }: StatTileProps) {
-  const compact = size === "sm";
   return (
-    <div
-      className={cn(
-        "relative flex flex-col overflow-hidden rounded-md border-t-2 border-t-primary/60 bg-card ring-1 ring-foreground/10",
-        compact ? "gap-0.5 px-3 py-2" : "gap-1 px-4 py-3"
-      )}
-    >
+    <div className="relative flex flex-col gap-1 overflow-hidden rounded-md border-t-2 border-t-primary/60 bg-card px-4 py-3 ring-1 ring-foreground/10">
       <div className="flex items-center justify-between">
         <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
           {label}
@@ -48,8 +40,7 @@ export function StatTile({
       <div className="flex items-baseline gap-1.5">
         <span
           className={cn(
-            "font-mono font-semibold tabular-nums",
-            compact ? "text-2xl" : "text-3xl",
+            "font-mono text-3xl font-semibold tabular-nums",
             TONE_CLASSES[tone]
           )}
         >

@@ -74,7 +74,7 @@ export function DailyAssessmentPanel() {
   }
 
   return (
-    <Card size="sm">
+    <Card>
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-4">
         <div>
           <CardTitle>Daily Analysis &amp; Assessment</CardTitle>
