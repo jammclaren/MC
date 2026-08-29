@@ -263,14 +263,14 @@ function IncidentMarkerItems({
   const zoom = useCurrentZoom();
   return (
     <>
-      {markers.map((marker) => (
+      {markers.map((marker) => {
+        const isRecent = isLatestIncident(marker.createdAt);
+        return (
         <Marker
           key={marker.id}
           position={[marker.lat, marker.lng]}
-          icon={buildIncidentIcon(
-            isLatestIncident(marker.createdAt) ? "PULSE" : marker.markerStyle,
-            zoom
-          )}
+          icon={buildIncidentIcon(isRecent ? "PULSE" : marker.markerStyle, zoom)}
+          zIndexOffset={isRecent ? 1000 : 0}
         >
           <Popup>
             <div className="text-xs">
@@ -309,7 +309,8 @@ function IncidentMarkerItems({
             </div>
           </Popup>
         </Marker>
-      ))}
+        );
+      })}
     </>
   );
 }

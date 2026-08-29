@@ -56,26 +56,27 @@ function IncidentMarkers({ markers }: { markers: IncidentMarker[] }) {
   const zoom = useCurrentZoom();
   return (
     <>
-      {markers.map((marker) => (
-        <Marker
-          key={marker.id}
-          position={[marker.lat, marker.lng]}
-          icon={buildIncidentIcon(
-            isLatestIncident(marker.createdAt) ? "PULSE" : marker.markerStyle,
-            zoom
-          )}
-        >
-          <Popup>
-            <div className="text-xs">
-              <div className="font-medium">{marker.type}</div>
-              <div>{new Date(marker.date).toLocaleDateString()}</div>
-              <div>{marker.jtfName}</div>
-              {marker.areaLabel && <div>{marker.areaLabel}</div>}
-              {marker.result && <div>Result: {marker.result}</div>}
-            </div>
-          </Popup>
-        </Marker>
-      ))}
+      {markers.map((marker) => {
+        const isRecent = isLatestIncident(marker.createdAt);
+        return (
+          <Marker
+            key={marker.id}
+            position={[marker.lat, marker.lng]}
+            icon={buildIncidentIcon(isRecent ? "PULSE" : marker.markerStyle, zoom)}
+            zIndexOffset={isRecent ? 1000 : 0}
+          >
+            <Popup>
+              <div className="text-xs">
+                <div className="font-medium">{marker.type}</div>
+                <div>{new Date(marker.date).toLocaleDateString()}</div>
+                <div>{marker.jtfName}</div>
+                {marker.areaLabel && <div>{marker.areaLabel}</div>}
+                {marker.result && <div>Result: {marker.result}</div>}
+              </div>
+            </Popup>
+          </Marker>
+        );
+      })}
     </>
   );
 }
