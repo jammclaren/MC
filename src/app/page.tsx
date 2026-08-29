@@ -21,22 +21,9 @@ import {
 import { DeploymentBarChart } from "@/components/charts/deployment-bar-chart";
 import { StatTile } from "@/components/stat-tile";
 import { FunnelPanel } from "@/components/funnel-panel";
-import { BpeCountdown } from "@/components/bpe-countdown";
 import { DailyAssessmentPanel } from "@/components/daily-assessment-panel";
 import { OverviewIncidentOpsPanel } from "@/components/overview-incident-ops-panel";
 import { Users, ShieldAlert, TriangleAlert, Crosshair, Vote } from "lucide-react";
-
-/** "30 July 2026" — day-month-year, independent of locale part ordering. */
-function formatBpeDate(iso: string): string {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Manila",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).formatToParts(new Date(iso));
-  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
-  return `${get("day")} ${get("month")} ${get("year")}`;
-}
 
 export default async function OverviewPage() {
   const user = await getSessionUser();
@@ -90,20 +77,10 @@ export default async function OverviewPage() {
         totalDeployed={data.totalDeployed}
         totalQrf={data.totalQrf}
         totalRegisteredVoters={data.totalRegisteredVoters}
+        bpeStartDate={data.bpe.startDate}
+        bpeEndDate={data.bpe.endDate}
         now={now}
       />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>BPE 2026 Window</CardTitle>
-          <CardDescription>
-            {formatBpeDate(data.bpe.startDate)} – {formatBpeDate(data.bpe.endDate)}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center gap-6">
-          <BpeCountdown startDate={data.bpe.startDate} endDate={data.bpe.endDate} />
-        </CardContent>
-      </Card>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>

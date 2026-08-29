@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatTile } from "@/components/stat-tile";
 import { GaugeMeter } from "@/components/gauge-meter";
+import { BpeCountdown } from "@/components/bpe-countdown";
 import { FunnelPanel } from "@/components/funnel-panel";
 import { safePercent } from "@/lib/percentages";
 import { LabeledBarChart } from "@/components/charts/labeled-bar-chart";
@@ -25,6 +26,8 @@ export function OverviewIncidentOpsPanel({
   totalDeployed,
   totalQrf,
   totalRegisteredVoters,
+  bpeStartDate,
+  bpeEndDate,
   now,
 }: {
   markers: IncidentMarker[];
@@ -33,6 +36,8 @@ export function OverviewIncidentOpsPanel({
   totalDeployed: number;
   totalQrf: number;
   totalRegisteredVoters: number;
+  bpeStartDate: string;
+  bpeEndDate: string;
   /** Request-time timestamp (ms), computed server-side and passed down so
    * the "last 24h" calculation stays a pure function of props. */
   now: number;
@@ -178,12 +183,7 @@ export function OverviewIncidentOpsPanel({
             </span>
             <FunnelPanel stages={stats.severityStages} />
           </div>
-          <div className="flex items-center gap-3">
-            <GaugeMeter
-              value={safePercent(totalDeployed, totalRegisteredVoters) ?? 0}
-              label="Coverage"
-              maxWidthPx={90}
-            />
+          <div className="flex items-center justify-between gap-3">
             <div className="flex flex-col gap-1">
               <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
                 Troops Deployed
@@ -193,6 +193,14 @@ export function OverviewIncidentOpsPanel({
                 <br />
                 <span className="text-muted-foreground">{totalQrf.toLocaleString()} QRF</span>
               </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <BpeCountdown startDate={bpeStartDate} endDate={bpeEndDate} />
+              <GaugeMeter
+                value={safePercent(totalDeployed, totalRegisteredVoters) ?? 0}
+                label="Coverage"
+                maxWidthPx={80}
+              />
             </div>
           </div>
         </div>
