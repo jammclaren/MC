@@ -9,6 +9,7 @@ import { buildIncidentIcon, isLatestIncident } from "@/lib/incident-marker-icon"
 import {
   TacticalBlueprintPane,
   TACTICAL_BLUEPRINT_PANE,
+  TACTICAL_BLUEPRINT_GLOW_PANE,
 } from "@/components/tactical-blueprint-pane";
 
 // Esri "Dark Gray Canvas" — same tiles as the Situation Map's "Tactical
@@ -60,6 +61,7 @@ export function OverviewIncidentMap({ markers }: { markers: IncidentMarker[] }) 
         scrollWheelZoom={false}
       >
         <TacticalBlueprintPane />
+        <TileLayer url={DARK_CANVAS_REFERENCE_URL} pane={TACTICAL_BLUEPRINT_GLOW_PANE} />
         <TileLayer
           attribution={DARK_CANVAS_ATTRIBUTION}
           url={DARK_CANVAS_BASE_URL}

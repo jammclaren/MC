@@ -20,8 +20,10 @@ import {
 } from "@/components/ui/table";
 import { DeploymentBarChart } from "@/components/charts/deployment-bar-chart";
 import { StatTile } from "@/components/stat-tile";
+import { GaugeMeter } from "@/components/gauge-meter";
 import { FunnelPanel } from "@/components/funnel-panel";
 import { BpeCountdown } from "@/components/bpe-countdown";
+import { safePercent } from "@/lib/percentages";
 import { DailyAssessmentPanel } from "@/components/daily-assessment-panel";
 import { OverviewIncidentOpsPanel } from "@/components/overview-incident-ops-panel";
 import { Users, ShieldAlert, TriangleAlert, Crosshair, Vote } from "lucide-react";
@@ -91,73 +93,79 @@ export default async function OverviewPage() {
         topPriorityAreas={data.topPriorityAreas}
         priorityAreaCount={data.priorityAreaCount}
         incidentsByDay={data.incidentsByDay}
-        bpeEndDate={data.bpe.endDate}
+        totalDeployed={data.totalDeployed}
+        totalQrf={data.totalQrf}
         now={now}
       />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>BPE 2026 Window</CardTitle>
+          <CardDescription>
+            {formatBpeDate(data.bpe.startDate)} – {formatBpeDate(data.bpe.endDate)}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center gap-6 sm:flex-row sm:items-start sm:justify-around">
+          <BpeCountdown startDate={data.bpe.startDate} endDate={data.bpe.endDate} />
+          <GaugeMeter
+            value={safePercent(data.totalDeployed, data.totalRegisteredVoters) ?? 0}
+            label="Voter Coverage"
+            caption={`${data.totalDeployed.toLocaleString()} / ${data.totalRegisteredVoters.toLocaleString()} voters`}
+          />
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>BPE 2026 Window</CardTitle>
-            <CardDescription>
-              {formatBpeDate(data.bpe.startDate)} – {formatBpeDate(data.bpe.endDate)}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center gap-6">
-            <BpeCountdown startDate={data.bpe.startDate} endDate={data.bpe.endDate} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Election Ops Funnel</CardTitle>
+            <CardTitle>Status of Election Operations</CardTitle>
             <CardDescription>Areas progressing through the BPE pipeline.</CardDescription>
           </CardHeader>
           <CardContent>
             <FunnelPanel stages={data.electionOpsFunnel} />
           </CardContent>
         </Card>
-      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Troop Deployment Recapitulation</CardTitle>
-          <CardDescription>
-            {data.totalDeployed.toLocaleString()} deployed to polling ·{" "}
-            {data.totalQrf.toLocaleString()} QRF
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-6">
-          <DeploymentBarChart data={data.jtfDeployments} />
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>JTF</TableHead>
-                <TableHead className="text-right">Deployed to Polling</TableHead>
-                <TableHead className="text-right">QRF</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.jtfDeployments.map((row) => (
-                <TableRow key={row.jtfId}>
-                  <TableCell>{row.jtfName}</TableCell>
-                  <TableCell className="text-right">
-                    {row.deployedToPolling.toLocaleString()}
-                  </TableCell>
-                  <TableCell className="text-right">{row.qrf.toLocaleString()}</TableCell>
-                </TableRow>
-              ))}
-              {data.jtfDeployments.length === 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Troop Deployment Recapitulation</CardTitle>
+            <CardDescription>
+              {data.totalDeployed.toLocaleString()} deployed to polling ·{" "}
+              {data.totalQrf.toLocaleString()} QRF
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-6">
+            <DeploymentBarChart data={data.jtfDeployments} />
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center text-muted-foreground">
-                    No deployment data yet.
-                  </TableCell>
+                  <TableHead>JTF</TableHead>
+                  <TableHead className="text-right">Deployed to Polling</TableHead>
+                  <TableHead className="text-right">QRF</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {data.jtfDeployments.map((row) => (
+                  <TableRow key={row.jtfId}>
+                    <TableCell>{row.jtfName}</TableCell>
+                    <TableCell className="text-right">
+                      {row.deployedToPolling.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-right">{row.qrf.toLocaleString()}</TableCell>
+                  </TableRow>
+                ))}
+                {data.jtfDeployments.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center text-muted-foreground">
+                      No deployment data yet.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
 
       <DailyAssessmentPanel />
     </div>

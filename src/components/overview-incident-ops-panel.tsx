@@ -16,38 +16,21 @@ import { AlertTriangle } from "lucide-react";
 const TOP_TYPES_LIMIT = 5;
 const LAST_24H_MS = 24 * 60 * 60 * 1000;
 
-/** "14 September 2026" — day-month-year, independent of locale part ordering. */
-function formatDate(iso: string): string {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Manila",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).formatToParts(new Date(iso));
-  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
-  return `${get("day")} ${get("month")} ${get("year")}`;
-}
-
-function daysRemaining(endIso: string): number | null {
-  const end = new Date(endIso);
-  const now = new Date();
-  if (now > end) return null;
-  return Math.max(0, Math.ceil((end.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)));
-}
-
 export function OverviewIncidentOpsPanel({
   markers,
   topPriorityAreas,
   priorityAreaCount,
   incidentsByDay,
-  bpeEndDate,
+  totalDeployed,
+  totalQrf,
   now,
 }: {
   markers: IncidentMarker[];
   topPriorityAreas: LeaderboardEntry[];
   priorityAreaCount: number;
   incidentsByDay: IncidentsByDayDatum[];
-  bpeEndDate: string;
+  totalDeployed: number;
+  totalQrf: number;
   /** Request-time timestamp (ms), computed server-side and passed down so
    * the "last 24h" calculation stays a pure function of props. */
   now: number;
@@ -100,8 +83,6 @@ export function OverviewIncidentOpsPanel({
       ],
     };
   }, [markers, now]);
-
-  const remaining = daysRemaining(bpeEndDate);
 
   return (
     <Card className="border-primary/30">
@@ -203,14 +184,12 @@ export function OverviewIncidentOpsPanel({
           </div>
           <div className="flex flex-col gap-1">
             <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-              BPE Window Closes
+              Troops Deployed
             </span>
             <p className="text-sm">
-              <span className="font-medium">{formatDate(bpeEndDate)}</span>
+              <span className="font-medium">{totalDeployed.toLocaleString()} to polling</span>
               <br />
-              <span className="text-muted-foreground">
-                {remaining === null ? "Window concluded" : `${remaining} day(s) remaining`}
-              </span>
+              <span className="text-muted-foreground">{totalQrf.toLocaleString()} QRF</span>
             </p>
           </div>
         </div>

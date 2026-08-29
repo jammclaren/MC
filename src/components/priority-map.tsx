@@ -27,6 +27,7 @@ import { buildIncidentIcon, isLatestIncident } from "@/lib/incident-marker-icon"
 import {
   TacticalBlueprintPane,
   TACTICAL_BLUEPRINT_PANE,
+  TACTICAL_BLUEPRINT_GLOW_PANE,
 } from "@/components/tactical-blueprint-pane";
 import { Button } from "@/components/ui/button";
 import { DeleteButton } from "@/components/delete-button";
@@ -455,6 +456,7 @@ export function PriorityMap({
           <LayersControl.BaseLayer name="Tactical Blueprint">
             <LayerGroup>
               <TacticalBlueprintPane />
+              <TileLayer url={DARK_CANVAS_REFERENCE_URL} pane={TACTICAL_BLUEPRINT_GLOW_PANE} />
               <TileLayer
                 attribution={DARK_CANVAS_ATTRIBUTION}
                 url={DARK_CANVAS_BASE_URL}

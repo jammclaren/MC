@@ -240,17 +240,28 @@
  * a glowing cyan wireframe-on-near-black look. sepia() gives the
  * grayscale source a hue to rotate; hue-rotate() carries that from
  * sepia's ~39deg to cyan's ~188deg (#22d3ee); saturate() pushes it
- * vivid. Kept as a single filter chain rather than a mix-blend-mode
- * overlay — Leaflet's tile containers carry their own `transform` for
- * GPU-accelerated positioning, which isolates them into their own
+ * vivid. Kept as a filter chain rather than a mix-blend-mode overlay —
+ * Leaflet's tile containers carry their own `transform` for GPU-
+ * accelerated positioning, which isolates them into their own
  * compositing layer and stopped a blend-mode overlay from seeing the
- * actual tile pixels beneath it (rendered as solid black). filter
- * doesn't have that problem: it applies to this pane's full rendered
- * output, transformed descendants included. Scoped to this pane (see
- * TacticalBlueprintPane) rather than TileLayer's className prop, which
- * lands on the layer's own container div, not each tile image. */
+ * actual tile pixels beneath it (rendered as solid black); filter
+ * doesn't have that problem, since it applies to this pane's full
+ * rendered output, transformed descendants included. Scoped to this
+ * pane (see TacticalBlueprintPane) rather than TileLayer's className
+ * prop, which lands on the layer's own container div, not each tile
+ * image. Reduced opacity gives the fill a translucent, hologram-over-
+ * the-HUD-grid read instead of a flat solid basemap. */
 .leaflet-tacticalBlueprint-pane {
   filter: sepia(1) hue-rotate(149deg) saturate(5) brightness(0.85) contrast(1.15);
+  opacity: 0.72;
+}
+/* A blurred, brighter duplicate of the same tiles sitting one pane behind
+ * the crisp one (see TacticalBlueprintPane) — the blur bleeds each line
+ * into a soft halo, reading as boundaries lit from within rather than a
+ * flat recolor. */
+.leaflet-tacticalBlueprintGlow-pane {
+  filter: sepia(1) hue-rotate(149deg) saturate(6) brightness(1.6) blur(3px);
+  opacity: 0.6;
 }
 .leaflet-control-attribution {
   background-color: rgba(26, 26, 25, 0.8) !important;
