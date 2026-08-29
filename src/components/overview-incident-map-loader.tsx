@@ -11,7 +11,7 @@ const OverviewIncidentMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-[400px] w-full animate-pulse rounded-md border bg-muted" />
+      <div className="h-[500px] w-full animate-pulse rounded-md border bg-muted" />
     ),
   }
 );

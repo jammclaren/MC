@@ -72,25 +72,25 @@
    * custom property, which invalidates the whole font-family list wherever
    * it's used as a fallback (including .font-display below). */
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --background: #0d0d0d;
+  --background: #090d0e;
   --foreground: #ffffff;
-  --card: #1a1a19;
+  --card: #0f1a1c;
   --card-foreground: #ffffff;
-  --popover: #1a1a19;
+  --popover: #0f1a1c;
   --popover-foreground: #ffffff;
-  --primary: #3987e5;
-  --primary-foreground: #ffffff;
-  --secondary: #232322;
+  --primary: #22d3ee;
+  --primary-foreground: #05181b;
+  --secondary: #172325;
   --secondary-foreground: #ffffff;
-  --muted: #202020;
-  --muted-foreground: #94a0ad;
-  --accent: #1c2a3a;
+  --muted: #131e20;
+  --muted-foreground: #8fa8ac;
+  --accent: #0d2b30;
   --accent-foreground: #ffffff;
   --destructive: #e66767;
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.15);
-  --ring: #3987e5;
-  --chart-1: #3987e5;
+  --ring: #22d3ee;
+  --chart-1: #22d3ee;
   --chart-2: #d95926;
   --chart-3: #199e70;
   --chart-4: #c98500;
@@ -99,51 +99,51 @@
   --status-warning: #fab219;
   --status-serious: #ec835a;
   --status-critical: #d03b3b;
-  --gridline: #2c2c2a;
-  --axis-baseline: #383835;
+  --gridline: #1e2a2b;
+  --axis-baseline: #2c3839;
   --radius: 0.375rem;
-  --sidebar: #1a1a19;
+  --sidebar: #0f1a1c;
   --sidebar-foreground: #ffffff;
-  --sidebar-primary: #3987e5;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #1c2a3a;
+  --sidebar-primary: #22d3ee;
+  --sidebar-primary-foreground: #05181b;
+  --sidebar-accent: #0d2b30;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.1);
-  --sidebar-ring: #3987e5;
+  --sidebar-ring: #22d3ee;
 }
 
 .dark {
-  --background: #0d0d0d;
+  --background: #090d0e;
   --foreground: #ffffff;
-  --card: #1a1a19;
+  --card: #0f1a1c;
   --card-foreground: #ffffff;
-  --popover: #1a1a19;
+  --popover: #0f1a1c;
   --popover-foreground: #ffffff;
-  --primary: #3987e5;
-  --primary-foreground: #ffffff;
-  --secondary: #232322;
+  --primary: #22d3ee;
+  --primary-foreground: #05181b;
+  --secondary: #172325;
   --secondary-foreground: #ffffff;
-  --muted: #202020;
-  --muted-foreground: #94a0ad;
-  --accent: #1c2a3a;
+  --muted: #131e20;
+  --muted-foreground: #8fa8ac;
+  --accent: #0d2b30;
   --accent-foreground: #ffffff;
   --destructive: #e66767;
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.15);
-  --ring: #3987e5;
-  --chart-1: #3987e5;
+  --ring: #22d3ee;
+  --chart-1: #22d3ee;
   --chart-2: #d95926;
   --chart-3: #199e70;
   --chart-4: #c98500;
   --chart-5: #9085e9;
-  --sidebar: #1a1a19;
+  --sidebar: #0f1a1c;
   --sidebar-foreground: #ffffff;
-  --sidebar-primary: #3987e5;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #1c2a3a;
+  --sidebar-primary: #22d3ee;
+  --sidebar-primary-foreground: #05181b;
+  --sidebar-accent: #0d2b30;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.1);
-  --sidebar-ring: #3987e5;
+  --sidebar-ring: #22d3ee;
 }
 
 @layer base {
@@ -153,8 +153,8 @@
   body {
     @apply bg-background text-foreground;
     background-image:
-      linear-gradient(rgba(57, 135, 229, 0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(57, 135, 229, 0.05) 1px, transparent 1px);
+      linear-gradient(rgba(34, 211, 238, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(34, 211, 238, 0.05) 1px, transparent 1px);
     background-size: 40px 40px;
     background-attachment: fixed;
   }
@@ -200,29 +200,29 @@
   background-image:
     repeating-linear-gradient(
       0deg,
-      rgba(57, 135, 229, 0.07) 0px,
-      rgba(57, 135, 229, 0.07) 1px,
+      rgba(34, 211, 238, 0.07) 0px,
+      rgba(34, 211, 238, 0.07) 1px,
       transparent 1px,
       transparent 22px
     ),
     repeating-linear-gradient(
       90deg,
-      rgba(57, 135, 229, 0.07) 0px,
-      rgba(57, 135, 229, 0.07) 1px,
+      rgba(34, 211, 238, 0.07) 0px,
+      rgba(34, 211, 238, 0.07) 1px,
       transparent 1px,
       transparent 22px
     ),
     repeating-linear-gradient(
       0deg,
-      rgba(57, 135, 229, 0.16) 0px,
-      rgba(57, 135, 229, 0.16) 1px,
+      rgba(34, 211, 238, 0.16) 0px,
+      rgba(34, 211, 238, 0.16) 1px,
       transparent 1px,
       transparent 132px
     ),
     repeating-linear-gradient(
       90deg,
-      rgba(57, 135, 229, 0.16) 0px,
-      rgba(57, 135, 229, 0.16) 1px,
+      rgba(34, 211, 238, 0.16) 0px,
+      rgba(34, 211, 238, 0.16) 1px,
       transparent 1px,
       transparent 132px
     ) !important;
@@ -272,7 +272,7 @@
  * opaque raster image only outlines the tile's rectangle, not the
  * line-work drawn inside it). */
 .province-outline-glow {
-  filter: drop-shadow(0 0 3px #3987e5) drop-shadow(0 0 7px #3987e5);
+  filter: drop-shadow(0 0 3px #22d3ee) drop-shadow(0 0 7px #22d3ee);
 }
 /* Hidden per request — Esri/OSM's free tile terms do still ask for
  * attribution to be shown somewhere in the app; if that matters for this
@@ -407,6 +407,6 @@
     0 100%,
     0 12px
   );
-  box-shadow: 0 0 0 1px rgba(57, 135, 229, 0.12) inset,
-    0 -1px 12px -2px rgba(57, 135, 229, 0.5);
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.18) inset,
+    0 -1px 12px -2px rgba(34, 211, 238, 0.55);
 }

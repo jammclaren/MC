@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+
 export interface FunnelStageInput {
   label: string;
   count: number;
@@ -10,15 +12,21 @@ export interface FunnelStageInput {
  * — the more useful question for an ops pipeline (SPEC.md's election-ops
  * status fields) than a sales-funnel-style stage-over-stage rate.
  */
-export function FunnelPanel({ stages }: { stages: FunnelStageInput[] }) {
+export function FunnelPanel({
+  stages,
+  compact = false,
+}: {
+  stages: FunnelStageInput[];
+  compact?: boolean;
+}) {
   const total = stages[0]?.count ?? 0;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className={compact ? "flex flex-col gap-2" : "flex flex-col gap-4"}>
       {stages.map((stage, i) => {
         const pct = total > 0 ? (stage.count / total) * 100 : 0;
         return (
-          <div key={stage.label} className="flex flex-col gap-1">
+          <div key={stage.label} className={compact ? "flex flex-col gap-1" : "flex flex-col gap-1.5"}>
             <div className="flex items-baseline justify-between text-sm">
               <span className="text-muted-foreground">{stage.label}</span>
               <span className="font-mono tabular-nums">
@@ -30,7 +38,12 @@ export function FunnelPanel({ stages }: { stages: FunnelStageInput[] }) {
                 )}
               </span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className={cn(
+                "w-full overflow-hidden rounded-full bg-muted",
+                compact ? "h-2" : "h-2.5"
+              )}
+            >
               <div
                 className="h-full rounded-full bg-primary transition-all"
                 style={{ width: `${Math.max(pct, total > 0 && stage.count > 0 ? 2 : 0)}%` }}

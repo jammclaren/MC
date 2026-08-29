@@ -72,7 +72,7 @@ export function OverviewIncidentOpsPanel({
   }, [markers, now]);
 
   return (
-    <Card className="border-primary/30">
+    <Card className="border-primary/30" size="sm">
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-4">
         <div>
           <p className="font-display text-xs font-semibold tracking-widest text-primary uppercase">
@@ -93,27 +93,27 @@ export function OverviewIncidentOpsPanel({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)]">
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)]">
+          <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <StatTile label="Incidents Plotted" value={stats.total.toLocaleString()} />
               <StatTile label="Logged (24h)" value={stats.last24hCount.toLocaleString()} />
             </div>
             <div>
-              <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+              <h3 className="mb-1 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
                 Incidents by JTF
               </h3>
-              <LabeledBarChart data={stats.jtfChartData} height={140} />
+              <LabeledBarChart data={stats.jtfChartData} height={200} />
             </div>
             <div>
-              <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+              <h3 className="mb-1 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
                 Incidents (14d)
               </h3>
-              <IncidentsByDayChart data={incidentsByDay} />
+              <IncidentsByDayChart data={incidentsByDay} height={240} />
             </div>
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             <OverviewIncidentMapLoader markers={markers} />
             <div className="rounded-md border border-border p-3">
               <h3 className="mb-1 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
@@ -134,21 +134,21 @@ export function OverviewIncidentOpsPanel({
             </div>
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             <div>
-              <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+              <h3 className="mb-1 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
                 Priority Leaderboard
               </h3>
               <PriorityLeaderboard entries={topPriorityAreas} />
             </div>
             <div>
-              <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+              <h3 className="mb-1 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
                 Top Incident Types
               </h3>
               <FunnelPanel stages={stats.topTypes} />
             </div>
             <div>
-              <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+              <h3 className="mb-1 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
                 Severity Mix
               </h3>
               <FunnelPanel stages={stats.severityStages} />

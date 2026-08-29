@@ -94,9 +94,9 @@ const DEFAULT_CENTER: [number, number] = [7.2, 124.2];
 const DEFAULT_ZOOM = 8;
 
 const PROVINCE_STYLE: L.PathOptions = {
-  color: "#3987e5",
+  color: "#22d3ee",
   weight: 1.5,
-  fillColor: "#123a5c",
+  fillColor: "#0a3a3f",
   fillOpacity: 0.3,
   interactive: false,
   className: "province-outline-glow",
@@ -155,7 +155,7 @@ function ContourRings({ data }: { data: GeoJSON.FeatureCollection }) {
           key={i}
           positions={positions}
           pathOptions={{
-            color: "#3987e5",
+            color: "#22d3ee",
             weight: 1,
             opacity: 0.2,
             fill: false,

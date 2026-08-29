@@ -52,7 +52,7 @@ export function OverviewIncidentMap({ markers }: { markers: IncidentMarker[] }) 
       <MapContainer
         center={DEFAULT_CENTER}
         zoom={DEFAULT_ZOOM}
-        className="h-[400px] w-full rounded-md border bg-muted"
+        className="h-[500px] w-full rounded-md border bg-muted"
         scrollWheelZoom={false}
       >
         <TacticalBlueprintPane />

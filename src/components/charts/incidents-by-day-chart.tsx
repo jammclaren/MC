@@ -15,9 +15,15 @@ function formatDay(dateStr: unknown): string {
   return d.toLocaleDateString("en-US", { day: "2-digit", month: "short", timeZone: "UTC" });
 }
 
-export function IncidentsByDayChart({ data }: { data: IncidentsByDayDatum[] }) {
+export function IncidentsByDayChart({
+  data,
+  height = 180,
+}: {
+  data: IncidentsByDayDatum[];
+  height?: number;
+}) {
   return (
-    <ResponsiveContainer width="100%" height={180}>
+    <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
         <XAxis
           dataKey="date"

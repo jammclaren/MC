@@ -21,7 +21,7 @@ const TICK_STYLE = { fill: "var(--muted-foreground)", fontSize: 12 };
 
 export function DeploymentBarChart({ data }: { data: DeploymentBarChartDatum[] }) {
   return (
-    <ResponsiveContainer width="100%" height={280}>
+    <ResponsiveContainer width="100%" height={210}>
       <BarChart data={data}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--gridline)" />
         <XAxis dataKey="jtfName" tick={TICK_STYLE} stroke="var(--axis-baseline)" />
