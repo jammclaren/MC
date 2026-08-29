@@ -35,6 +35,10 @@ export interface GaugeMeterProps {
    * coverage metrics; pass inverted thresholds for "less is better" ones. */
   goodAt?: number;
   warningAt?: number;
+  /** Max rendered width — the SVG's viewBox scales everything (arc,
+   * stroke, the percentage text) proportionally, so this alone controls
+   * overall size. @default 220 */
+  maxWidthPx?: number;
 }
 
 export function GaugeMeter({
@@ -43,6 +47,7 @@ export function GaugeMeter({
   caption,
   goodAt = 70,
   warningAt = 40,
+  maxWidthPx = 220,
 }: GaugeMeterProps) {
   const clamped = Math.max(0, Math.min(100, value));
   const color =
@@ -57,7 +62,7 @@ export function GaugeMeter({
       <svg
         viewBox={`0 0 ${SIZE} ${SIZE / 2 + STROKE}`}
         width="100%"
-        className="max-w-[220px]"
+        style={{ maxWidth: maxWidthPx }}
       >
         <path
           d={arcPath(0, 100)}

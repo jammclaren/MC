@@ -4,7 +4,9 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatTile } from "@/components/stat-tile";
+import { GaugeMeter } from "@/components/gauge-meter";
 import { FunnelPanel } from "@/components/funnel-panel";
+import { safePercent } from "@/lib/percentages";
 import { LabeledBarChart } from "@/components/charts/labeled-bar-chart";
 import { IncidentsByDayChart, type IncidentsByDayDatum } from "@/components/charts/incidents-by-day-chart";
 import { PriorityLeaderboard, type LeaderboardEntry } from "@/components/priority-leaderboard";
@@ -23,6 +25,7 @@ export function OverviewIncidentOpsPanel({
   incidentsByDay,
   totalDeployed,
   totalQrf,
+  totalRegisteredVoters,
   now,
 }: {
   markers: IncidentMarker[];
@@ -31,6 +34,7 @@ export function OverviewIncidentOpsPanel({
   incidentsByDay: IncidentsByDayDatum[];
   totalDeployed: number;
   totalQrf: number;
+  totalRegisteredVoters: number;
   /** Request-time timestamp (ms), computed server-side and passed down so
    * the "last 24h" calculation stays a pure function of props. */
   now: number;
@@ -182,15 +186,22 @@ export function OverviewIncidentOpsPanel({
             </span>
             <FunnelPanel stages={stats.severityStages} />
           </div>
-          <div className="flex flex-col gap-1">
-            <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-              Troops Deployed
-            </span>
-            <p className="text-sm">
-              <span className="font-medium">{totalDeployed.toLocaleString()} to polling</span>
-              <br />
-              <span className="text-muted-foreground">{totalQrf.toLocaleString()} QRF</span>
-            </p>
+          <div className="flex items-center gap-3">
+            <GaugeMeter
+              value={safePercent(totalDeployed, totalRegisteredVoters) ?? 0}
+              label="Coverage"
+              maxWidthPx={90}
+            />
+            <div className="flex flex-col gap-1">
+              <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+                Troops Deployed
+              </span>
+              <p className="text-sm">
+                <span className="font-medium">{totalDeployed.toLocaleString()} to polling</span>
+                <br />
+                <span className="text-muted-foreground">{totalQrf.toLocaleString()} QRF</span>
+              </p>
+            </div>
           </div>
         </div>
       </CardContent>

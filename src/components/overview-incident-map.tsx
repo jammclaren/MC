@@ -1,7 +1,7 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import L from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import type { IncidentMarker } from "@/lib/queries/incident-markers";
@@ -47,11 +47,6 @@ function FitToMarkers({ markers }: { markers: IncidentMarker[] }) {
  * a lighter-weight sibling to the full Situation Map (editing, threat
  * categorization, layer toggles all stay on /priority-map). */
 export function OverviewIncidentMap({ markers }: { markers: IncidentMarker[] }) {
-  const violentCount = useMemo(
-    () => markers.filter((m) => isLatestIncident(m.createdAt)).length,
-    [markers]
-  );
-
   return (
     <div className="relative isolate">
       <MapContainer
@@ -87,21 +82,6 @@ export function OverviewIncidentMap({ markers }: { markers: IncidentMarker[] }) 
         ))}
         <FitToMarkers markers={markers} />
       </MapContainer>
-      <div className="pointer-events-none absolute top-2 left-2 z-[900] rounded-md border border-primary/30 bg-card/90 px-3 py-1.5 text-xs shadow-[0_0_16px_-4px_var(--primary)] backdrop-blur-sm">
-        <span className="font-mono font-medium tabular-nums text-primary">
-          {markers.length.toLocaleString()}
-        </span>{" "}
-        <span className="text-muted-foreground">plotted</span>
-        {violentCount > 0 && (
-          <>
-            {" · "}
-            <span className="font-mono font-medium tabular-nums text-status-critical">
-              {violentCount.toLocaleString()}
-            </span>{" "}
-            <span className="text-muted-foreground">in last hour</span>
-          </>
-        )}
-      </div>
     </div>
   );
 }

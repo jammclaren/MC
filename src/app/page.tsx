@@ -20,10 +20,8 @@ import {
 } from "@/components/ui/table";
 import { DeploymentBarChart } from "@/components/charts/deployment-bar-chart";
 import { StatTile } from "@/components/stat-tile";
-import { GaugeMeter } from "@/components/gauge-meter";
 import { FunnelPanel } from "@/components/funnel-panel";
 import { BpeCountdown } from "@/components/bpe-countdown";
-import { safePercent } from "@/lib/percentages";
 import { DailyAssessmentPanel } from "@/components/daily-assessment-panel";
 import { OverviewIncidentOpsPanel } from "@/components/overview-incident-ops-panel";
 import { Users, ShieldAlert, TriangleAlert, Crosshair, Vote } from "lucide-react";
@@ -95,6 +93,7 @@ export default async function OverviewPage() {
         incidentsByDay={data.incidentsByDay}
         totalDeployed={data.totalDeployed}
         totalQrf={data.totalQrf}
+        totalRegisteredVoters={data.totalRegisteredVoters}
         now={now}
       />
 
@@ -105,13 +104,8 @@ export default async function OverviewPage() {
             {formatBpeDate(data.bpe.startDate)} – {formatBpeDate(data.bpe.endDate)}
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col items-center gap-6 sm:flex-row sm:items-start sm:justify-around">
+        <CardContent className="flex flex-col items-center gap-6">
           <BpeCountdown startDate={data.bpe.startDate} endDate={data.bpe.endDate} />
-          <GaugeMeter
-            value={safePercent(data.totalDeployed, data.totalRegisteredVoters) ?? 0}
-            label="Voter Coverage"
-            caption={`${data.totalDeployed.toLocaleString()} / ${data.totalRegisteredVoters.toLocaleString()} voters`}
-          />
         </CardContent>
       </Card>
 
