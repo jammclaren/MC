@@ -38,11 +38,9 @@ export function OverviewIncidentOpsPanel({
 
     const byJtf = new Map<string, number>();
     const byType = new Map<string, number>();
-    const bySource = { LOGGED: 0, MAP_MARKER: 0 };
     for (const m of markers) {
       byJtf.set(m.jtfName, (byJtf.get(m.jtfName) ?? 0) + 1);
       byType.set(m.type, (byType.get(m.type) ?? 0) + 1);
-      bySource[m.source] += 1;
     }
 
     const jtfChartData = Array.from(byJtf.entries())
@@ -65,11 +63,6 @@ export function OverviewIncidentOpsPanel({
       jtfChartData,
       topTypes,
       mostRecent,
-      sourceStages: [
-        { label: "Total Plotted", count: total },
-        { label: "Logged Incident", count: bySource.LOGGED },
-        { label: "Map Marker", count: bySource.MAP_MARKER },
-      ],
       severityStages: [
         { label: "Total Plotted", count: total },
         { label: "Armed / Violent Type", count: violent.length },
@@ -122,6 +115,23 @@ export function OverviewIncidentOpsPanel({
 
           <div className="flex flex-col gap-4">
             <OverviewIncidentMapLoader markers={markers} />
+            <div className="rounded-md border border-border p-3">
+              <h3 className="mb-1 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+                Most Recent Report
+              </h3>
+              {stats.mostRecent ? (
+                <p className="text-sm">
+                  <span className="font-medium">{stats.mostRecent.type}</span>
+                  {stats.mostRecent.areaLabel ? ` — ${stats.mostRecent.areaLabel}` : ""}
+                  <br />
+                  <span className="text-muted-foreground">
+                    {stats.mostRecent.jtfName} · {new Date(stats.mostRecent.date).toLocaleDateString()}
+                  </span>
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">No plotted incidents yet.</p>
+              )}
+            </div>
           </div>
 
           <div className="flex flex-col gap-4">
@@ -137,38 +147,12 @@ export function OverviewIncidentOpsPanel({
               </h3>
               <FunnelPanel stages={stats.topTypes} />
             </div>
-          </div>
-        </div>
-
-        <div className="mt-6 grid grid-cols-1 gap-4 border-t border-border pt-4 sm:grid-cols-3">
-          <div className="flex flex-col gap-1">
-            <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-              Most Recent Report
-            </span>
-            {stats.mostRecent ? (
-              <p className="text-sm">
-                <span className="font-medium">{stats.mostRecent.type}</span>
-                {stats.mostRecent.areaLabel ? ` — ${stats.mostRecent.areaLabel}` : ""}
-                <br />
-                <span className="text-muted-foreground">
-                  {stats.mostRecent.jtfName} · {new Date(stats.mostRecent.date).toLocaleDateString()}
-                </span>
-              </p>
-            ) : (
-              <p className="text-sm text-muted-foreground">No plotted incidents yet.</p>
-            )}
-          </div>
-          <div>
-            <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-              By Source
-            </span>
-            <FunnelPanel stages={stats.sourceStages} />
-          </div>
-          <div>
-            <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-              Severity Mix
-            </span>
-            <FunnelPanel stages={stats.severityStages} />
+            <div>
+              <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+                Severity Mix
+              </h3>
+              <FunnelPanel stages={stats.severityStages} />
+            </div>
           </div>
         </div>
       </CardContent>
