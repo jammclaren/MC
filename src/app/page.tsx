@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import { getOverviewData } from "@/lib/queries/overview";
 import { getIncidentMarkers } from "@/lib/queries/incident-markers";
-import { safePercent } from "@/lib/percentages";
 import { nowMs } from "@/lib/time";
 import {
   Card,
@@ -21,7 +20,6 @@ import {
 } from "@/components/ui/table";
 import { DeploymentBarChart } from "@/components/charts/deployment-bar-chart";
 import { StatTile } from "@/components/stat-tile";
-import { GaugeMeter } from "@/components/gauge-meter";
 import { FunnelPanel } from "@/components/funnel-panel";
 import { BpeCountdown } from "@/components/bpe-countdown";
 import { DailyAssessmentPanel } from "@/components/daily-assessment-panel";
@@ -107,11 +105,6 @@ export default async function OverviewPage() {
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-6">
             <BpeCountdown startDate={data.bpe.startDate} endDate={data.bpe.endDate} />
-            <GaugeMeter
-              value={safePercent(data.totalDeployed, data.totalRegisteredVoters) ?? 0}
-              label="Voter Coverage"
-              caption={`${data.totalDeployed.toLocaleString()} / ${data.totalRegisteredVoters.toLocaleString()} voters`}
-            />
           </CardContent>
         </Card>
 
