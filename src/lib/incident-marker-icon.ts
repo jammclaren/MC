@@ -41,12 +41,11 @@ export function buildIncidentIcon(style: IncidentMarker["markerStyle"], zoom?: n
   const border = size <= 9 ? 1 : 2;
 
   if (style === "PULSE") {
-    // A static dot with two staggered expanding-and-fading rings behind
-    // it — a "live location" pulse — rather than the dot itself scaling
-    // up and down in place.
+    // A static dot with one soft, expanding-and-fading ring behind it —
+    // a "live ping" pulse — rather than the dot itself scaling up and
+    // down in place.
     const html = `<span style="position:relative;display:block;width:${size}px;height:${size}px;">
-      <span class="incident-marker-pulse-ring" style="animation-delay:0s;"></span>
-      <span class="incident-marker-pulse-ring" style="animation-delay:0.7s;"></span>
+      <span class="incident-marker-pulse-ring"></span>
       ${dotHtml(border)}
     </span>`;
     return L.divIcon({
