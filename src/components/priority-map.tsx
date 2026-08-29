@@ -61,6 +61,17 @@ const LIGHT_CANVAS_REFERENCE_URL =
 const LIGHT_CANVAS_ATTRIBUTION =
   "Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors, and the GIS User Community";
 
+// Esri "Dark Gray Canvas" — same stacked base+reference pattern as Light
+// Canvas above, but dark navy/charcoal with thin light line-work, giving
+// the "tactical blueprint" read that matches this dashboard's HUD theme
+// better than a bright basemap. Same free/no-API-key tier.
+const DARK_CANVAS_BASE_URL =
+  "https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}";
+const DARK_CANVAS_REFERENCE_URL =
+  "https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}";
+const DARK_CANVAS_ATTRIBUTION =
+  "Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors, and the GIS User Community";
+
 // Same validated status hex values as the Badge good/warning/serious/critical
 // variants (src/app/globals.css) and the Green/Yellow/Orange/Red source
 // categorization, so map fills and badges never disagree.
@@ -435,6 +446,12 @@ export function PriorityMap({
             <LayerGroup>
               <TileLayer attribution={LIGHT_CANVAS_ATTRIBUTION} url={LIGHT_CANVAS_BASE_URL} />
               <TileLayer url={LIGHT_CANVAS_REFERENCE_URL} />
+            </LayerGroup>
+          </LayersControl.BaseLayer>
+          <LayersControl.BaseLayer name="Tactical Blueprint">
+            <LayerGroup>
+              <TileLayer attribution={DARK_CANVAS_ATTRIBUTION} url={DARK_CANVAS_BASE_URL} />
+              <TileLayer url={DARK_CANVAS_REFERENCE_URL} />
             </LayerGroup>
           </LayersControl.BaseLayer>
           <LayersControl.BaseLayer name="Tactical Grid (Offline)">

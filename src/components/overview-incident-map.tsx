@@ -7,9 +7,16 @@ import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import type { IncidentMarker } from "@/lib/queries/incident-markers";
 import { buildIncidentIcon, isLatestIncident } from "@/lib/incident-marker-icon";
 
-const OSM_TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-const OSM_ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+// Esri "Dark Gray Canvas" — same tiles as the Situation Map's "Tactical
+// Blueprint" base layer, used here as this widget's fixed (only) base so
+// the Command Overview glance view matches the full map's tactical theme
+// by default. Free, no API key required.
+const DARK_CANVAS_BASE_URL =
+  "https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}";
+const DARK_CANVAS_REFERENCE_URL =
+  "https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}";
+const DARK_CANVAS_ATTRIBUTION =
+  "Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors, and the GIS User Community";
 
 // Same rough BARMM/Western Mindanao center used as the priority map's
 // fallback, shown only when there are no plottable incidents to fit to.
@@ -48,7 +55,8 @@ export function OverviewIncidentMap({ markers }: { markers: IncidentMarker[] }) 
         className="h-[400px] w-full rounded-md border bg-muted"
         scrollWheelZoom={false}
       >
-        <TileLayer attribution={OSM_ATTRIBUTION} url={OSM_TILE_URL} />
+        <TileLayer attribution={DARK_CANVAS_ATTRIBUTION} url={DARK_CANVAS_BASE_URL} />
+        <TileLayer url={DARK_CANVAS_REFERENCE_URL} />
         {markers.map((marker) => (
           <Marker
             key={marker.id}
