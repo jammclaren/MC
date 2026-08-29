@@ -253,7 +253,7 @@
  * the-HUD-grid read instead of a flat solid basemap. */
 .leaflet-tacticalBlueprint-pane {
   filter: sepia(1) hue-rotate(149deg) saturate(5) brightness(0.85) contrast(1.15);
-  opacity: 0.72;
+  opacity: 0.4;
 }
 /* A blurred, brighter duplicate of the same tiles sitting one pane behind
  * the crisp one (see TacticalBlueprintPane) — the blur bleeds each line
@@ -261,7 +261,18 @@
  * flat recolor. */
 .leaflet-tacticalBlueprintGlow-pane {
   filter: sepia(1) hue-rotate(149deg) saturate(6) brightness(1.6) blur(3px);
-  opacity: 0.6;
+  opacity: 0.5;
+}
+
+/* Genuine neon glow for the Situation Map's Province Outline and Contour
+ * Rings — these render as real SVG <path> elements (not raster tiles),
+ * so drop-shadow() can follow their actual stroke alpha and produce a
+ * true halo, unlike the raster Tactical Blueprint tiles above (which
+ * needed the blurred-duplicate-pane trick since drop-shadow on an
+ * opaque raster image only outlines the tile's rectangle, not the
+ * line-work drawn inside it). */
+.province-outline-glow {
+  filter: drop-shadow(0 0 3px #3987e5) drop-shadow(0 0 7px #3987e5);
 }
 .leaflet-control-attribution {
   background-color: rgba(26, 26, 25, 0.8) !important;

@@ -21,7 +21,6 @@ const LAST_24H_MS = 24 * 60 * 60 * 1000;
 export function OverviewIncidentOpsPanel({
   markers,
   topPriorityAreas,
-  priorityAreaCount,
   incidentsByDay,
   totalDeployed,
   totalQrf,
@@ -30,7 +29,6 @@ export function OverviewIncidentOpsPanel({
 }: {
   markers: IncidentMarker[];
   topPriorityAreas: LeaderboardEntry[];
-  priorityAreaCount: number;
   incidentsByDay: IncidentsByDayDatum[];
   totalDeployed: number;
   totalQrf: number;
@@ -98,12 +96,6 @@ export function OverviewIncidentOpsPanel({
           <CardTitle className="text-xl">Monitored Incidents Map</CardTitle>
         </div>
         <div className="flex flex-wrap gap-2">
-          {priorityAreaCount > 0 && (
-            <span className="flex items-center gap-1.5 rounded-md border border-status-critical/40 bg-status-critical/10 px-2.5 py-1 text-xs font-medium text-status-critical">
-              <AlertTriangle className="size-3.5" />
-              {priorityAreaCount.toLocaleString()} priority area(s) flagged
-            </span>
-          )}
           {stats.violentLast24h && (
             <span className="flex items-center gap-1.5 rounded-md border border-status-critical/40 bg-status-critical/10 px-2.5 py-1 text-xs font-medium text-status-critical">
               <AlertTriangle className="size-3.5" />

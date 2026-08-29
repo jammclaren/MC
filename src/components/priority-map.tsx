@@ -99,6 +99,7 @@ const PROVINCE_STYLE: L.PathOptions = {
   fillColor: "#123a5c",
   fillOpacity: 0.3,
   interactive: false,
+  className: "province-outline-glow",
 };
 
 // Decorative topographic-style contour rings, not real elevation data —
@@ -159,6 +160,7 @@ function ContourRings({ data }: { data: GeoJSON.FeatureCollection }) {
             opacity: 0.2,
             fill: false,
             interactive: false,
+            className: "province-outline-glow",
           }}
         />
       ))}
