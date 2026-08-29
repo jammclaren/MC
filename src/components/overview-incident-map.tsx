@@ -1,9 +1,9 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import L from "leaflet";
-import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvent } from "react-leaflet";
 import type { IncidentMarker } from "@/lib/queries/incident-markers";
 import { buildIncidentIcon, isLatestIncident } from "@/lib/incident-marker-icon";
 import {
@@ -43,6 +43,43 @@ function FitToMarkers({ markers }: { markers: IncidentMarker[] }) {
   return null;
 }
 
+/** Tracks the map's current zoom so marker icons can shrink as it zooms
+ * out — must be rendered as a MapContainer descendant to reach useMap(). */
+function useCurrentZoom(): number {
+  const map = useMap();
+  const [zoom, setZoom] = useState(map.getZoom());
+  useMapEvent("zoomend", () => setZoom(map.getZoom()));
+  return zoom;
+}
+
+function IncidentMarkers({ markers }: { markers: IncidentMarker[] }) {
+  const zoom = useCurrentZoom();
+  return (
+    <>
+      {markers.map((marker) => (
+        <Marker
+          key={marker.id}
+          position={[marker.lat, marker.lng]}
+          icon={buildIncidentIcon(
+            isLatestIncident(marker.createdAt) ? "PULSE" : marker.markerStyle,
+            zoom
+          )}
+        >
+          <Popup>
+            <div className="text-xs">
+              <div className="font-medium">{marker.type}</div>
+              <div>{new Date(marker.date).toLocaleDateString()}</div>
+              <div>{marker.jtfName}</div>
+              {marker.areaLabel && <div>{marker.areaLabel}</div>}
+              {marker.result && <div>Result: {marker.result}</div>}
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+    </>
+  );
+}
+
 /** Read-only glance view of monitored incidents for the Command Overview —
  * a lighter-weight sibling to the full Situation Map (editing, threat
  * categorization, layer toggles all stay on /priority-map). */
@@ -63,23 +100,7 @@ export function OverviewIncidentMap({ markers }: { markers: IncidentMarker[] }) 
           pane={TACTICAL_BLUEPRINT_PANE}
         />
         <TileLayer url={DARK_CANVAS_REFERENCE_URL} pane={TACTICAL_BLUEPRINT_PANE} />
-        {markers.map((marker) => (
-          <Marker
-            key={marker.id}
-            position={[marker.lat, marker.lng]}
-            icon={buildIncidentIcon(isLatestIncident(marker.createdAt) ? "PULSE" : marker.markerStyle)}
-          >
-            <Popup>
-              <div className="text-xs">
-                <div className="font-medium">{marker.type}</div>
-                <div>{new Date(marker.date).toLocaleDateString()}</div>
-                <div>{marker.jtfName}</div>
-                {marker.areaLabel && <div>{marker.areaLabel}</div>}
-                {marker.result && <div>Result: {marker.result}</div>}
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        <IncidentMarkers markers={markers} />
         <FitToMarkers markers={markers} />
       </MapContainer>
     </div>

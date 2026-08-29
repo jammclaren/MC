@@ -15,6 +15,7 @@ import {
   TileLayer,
   Tooltip,
   useMap,
+  useMapEvent,
 } from "react-leaflet";
 import type { ScoredArea } from "@/lib/queries/priority-areas";
 import type { IncidentMarker } from "@/lib/queries/incident-markers";
@@ -238,6 +239,15 @@ function Legend({ counts, total }: { counts: Record<string, number>; total: numb
   );
 }
 
+/** Tracks the map's current zoom so marker icons can shrink as it zooms
+ * out — must be rendered as a MapContainer descendant to reach useMap(). */
+function useCurrentZoom(): number {
+  const map = useMap();
+  const [zoom, setZoom] = useState(map.getZoom());
+  useMapEvent("zoomend", () => setZoom(map.getZoom()));
+  return zoom;
+}
+
 /** Shared marker rendering for both the "Incident Markers" (map-placed) and
  * "Logged Incidents" (plain Log Incident form) overlays — same popup/edit/
  * delete behavior either way, just filtered to a different `source`. */
@@ -250,13 +260,17 @@ function IncidentMarkerItems({
   jtfOptions: JtfOption[];
   areaOptions: ElectionAreaOption[];
 }) {
+  const zoom = useCurrentZoom();
   return (
     <>
       {markers.map((marker) => (
         <Marker
           key={marker.id}
           position={[marker.lat, marker.lng]}
-          icon={buildIncidentIcon(isLatestIncident(marker.createdAt) ? "PULSE" : marker.markerStyle)}
+          icon={buildIncidentIcon(
+            isLatestIncident(marker.createdAt) ? "PULSE" : marker.markerStyle,
+            zoom
+          )}
         >
           <Popup>
             <div className="text-xs">
