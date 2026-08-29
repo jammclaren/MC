@@ -26,8 +26,8 @@ function iconSizeForZoom(zoom: number | undefined): number {
   return Math.round(MIN_ICON_SIZE + t * (MAX_ICON_SIZE - MIN_ICON_SIZE));
 }
 
-function dotHtml(border: number): string {
-  return `<span style="position:relative;display:block;width:100%;height:100%;border-radius:9999px;background:var(--status-critical);border:${border}px solid #fff;box-shadow:0 0 6px rgba(0,0,0,0.7);"></span>`;
+function pulseDotHtml(): string {
+  return `<span style="position:relative;display:block;width:100%;height:100%;border-radius:9999px;background:var(--status-critical);box-shadow:0 0 6px rgba(0,0,0,0.7);"></span>`;
 }
 
 /** Small animated dot icon for an incident marker — the animation is
@@ -46,7 +46,7 @@ export function buildIncidentIcon(style: IncidentMarker["markerStyle"], zoom?: n
     // down in place.
     const html = `<span style="position:relative;display:block;width:${size}px;height:${size}px;">
       <span class="incident-marker-pulse-ring"></span>
-      ${dotHtml(border)}
+      ${pulseDotHtml()}
     </span>`;
     return L.divIcon({
       className: "incident-marker-icon",

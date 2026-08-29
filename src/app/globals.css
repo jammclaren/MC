@@ -318,10 +318,10 @@
 @keyframes marker-pulse-ring {
   0% {
     transform: scale(0.9);
-    opacity: 0.6;
+    opacity: 0.7;
   }
   100% {
-    transform: scale(3.2);
+    transform: scale(5.5);
     opacity: 0;
   }
 }
