@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatTile } from "@/components/stat-tile";
-import { BpeCountdown } from "@/components/bpe-countdown";
 import { FunnelPanel } from "@/components/funnel-panel";
 import { LabeledBarChart } from "@/components/charts/labeled-bar-chart";
 import { IncidentsByDayChart, type IncidentsByDayDatum } from "@/components/charts/incidents-by-day-chart";
@@ -21,19 +20,11 @@ export function OverviewIncidentOpsPanel({
   markers,
   topPriorityAreas,
   incidentsByDay,
-  totalDeployed,
-  totalQrf,
-  bpeStartDate,
-  bpeEndDate,
   now,
 }: {
   markers: IncidentMarker[];
   topPriorityAreas: LeaderboardEntry[];
   incidentsByDay: IncidentsByDayDatum[];
-  totalDeployed: number;
-  totalQrf: number;
-  bpeStartDate: string;
-  bpeEndDate: string;
   /** Request-time timestamp (ms), computed server-side and passed down so
    * the "last 24h" calculation stays a pure function of props. */
   now: number;
@@ -149,7 +140,7 @@ export function OverviewIncidentOpsPanel({
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-4 border-t border-border pt-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-6 grid grid-cols-1 gap-4 border-t border-border pt-4 sm:grid-cols-3">
           <div className="flex flex-col gap-1">
             <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
               Most Recent Report
@@ -178,19 +169,6 @@ export function OverviewIncidentOpsPanel({
               Severity Mix
             </span>
             <FunnelPanel stages={stats.severityStages} />
-          </div>
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex flex-col gap-1">
-              <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-                Troops Deployed
-              </span>
-              <p className="text-sm">
-                <span className="font-medium">{totalDeployed.toLocaleString()} to polling</span>
-                <br />
-                <span className="text-muted-foreground">{totalQrf.toLocaleString()} QRF</span>
-              </p>
-            </div>
-            <BpeCountdown startDate={bpeStartDate} endDate={bpeEndDate} />
           </div>
         </div>
       </CardContent>

@@ -75,10 +75,6 @@ export default async function OverviewPage() {
         markers={incidentMarkers}
         topPriorityAreas={data.topPriorityAreas}
         incidentsByDay={data.incidentsByDay}
-        totalDeployed={data.totalDeployed}
-        totalQrf={data.totalQrf}
-        bpeStartDate={data.bpe.startDate}
-        bpeEndDate={data.bpe.endDate}
         now={now}
       />
 
