@@ -237,25 +237,20 @@
 }
 
 /* Recolors the "Tactical Blueprint" base layer's neutral-gray tiles into
- * a glowing cyan wireframe-on-near-black look. filter first strips the
- * source to a high-contrast, near-black grayscale (dark fills crushed
- * down, boundary/road line-work pushed bright); the ::after overlay then
- * recolors that luminance data to an exact cyan via mix-blend-mode:
- * color, which borrows the overlay's hue/saturation but keeps the tiles'
- * own lightness — far more precise than approximating the target hue
- * through a hue-rotate() filter chain. Scoped to this pane (see
+ * a glowing cyan wireframe-on-near-black look. sepia() gives the
+ * grayscale source a hue to rotate; hue-rotate() carries that from
+ * sepia's ~39deg to cyan's ~188deg (#22d3ee); saturate() pushes it
+ * vivid. Kept as a single filter chain rather than a mix-blend-mode
+ * overlay — Leaflet's tile containers carry their own `transform` for
+ * GPU-accelerated positioning, which isolates them into their own
+ * compositing layer and stopped a blend-mode overlay from seeing the
+ * actual tile pixels beneath it (rendered as solid black). filter
+ * doesn't have that problem: it applies to this pane's full rendered
+ * output, transformed descendants included. Scoped to this pane (see
  * TacticalBlueprintPane) rather than TileLayer's className prop, which
  * lands on the layer's own container div, not each tile image. */
 .leaflet-tacticalBlueprint-pane {
-  filter: grayscale(1) brightness(0.4) contrast(1.6);
-}
-.leaflet-tacticalBlueprint-pane::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-color: #22d3ee;
-  mix-blend-mode: color;
-  pointer-events: none;
+  filter: sepia(1) hue-rotate(149deg) saturate(5) brightness(0.85) contrast(1.15);
 }
 .leaflet-control-attribution {
   background-color: rgba(26, 26, 25, 0.8) !important;
