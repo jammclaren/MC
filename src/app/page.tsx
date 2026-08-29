@@ -39,10 +39,6 @@ export default async function OverviewPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="text-center">
-        <h1 className="font-display text-4xl font-bold tracking-wide uppercase">Command Overview</h1>
-      </div>
-
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <StatTile
           label="Registered Voters (BARMM)"

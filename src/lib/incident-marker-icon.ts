@@ -26,17 +26,38 @@ function iconSizeForZoom(zoom: number | undefined): number {
   return Math.round(MIN_ICON_SIZE + t * (MAX_ICON_SIZE - MIN_ICON_SIZE));
 }
 
-/** Small animated dot icon for an incident marker — the animation class
- * (blink/pulse) is applied to the inner span, never the outer Leaflet
- * positioning wrapper, so it never fights Leaflet's own transform. Pass the
- * map's current zoom so the dot shrinks at wide zoom levels; omit it for
- * always-full-size (e.g. a legend swatch). */
+function dotHtml(border: number): string {
+  return `<span style="position:relative;display:block;width:100%;height:100%;border-radius:9999px;background:var(--status-critical);border:${border}px solid #fff;box-shadow:0 0 6px rgba(0,0,0,0.7);"></span>`;
+}
+
+/** Small animated dot icon for an incident marker — the animation is
+ * applied to inner elements, never the outer Leaflet positioning wrapper,
+ * so it never fights Leaflet's own transform. Pass the map's current zoom
+ * so the dot shrinks at wide zoom levels; omit it for always-full-size
+ * (e.g. a legend swatch). */
 export function buildIncidentIcon(style: IncidentMarker["markerStyle"], zoom?: number): L.DivIcon {
-  const animClass =
-    style === "BLINK" ? "incident-marker-blink" : style === "PULSE" ? "incident-marker-pulse" : "";
   const size = iconSizeForZoom(zoom);
   const half = size / 2;
   const border = size <= 9 ? 1 : 2;
+
+  if (style === "PULSE") {
+    // A static dot with two staggered expanding-and-fading rings behind
+    // it — a "live location" pulse — rather than the dot itself scaling
+    // up and down in place.
+    const html = `<span style="position:relative;display:block;width:${size}px;height:${size}px;">
+      <span class="incident-marker-pulse-ring" style="animation-delay:0s;"></span>
+      <span class="incident-marker-pulse-ring" style="animation-delay:0.7s;"></span>
+      ${dotHtml(border)}
+    </span>`;
+    return L.divIcon({
+      className: "incident-marker-icon",
+      html,
+      iconSize: [size, size],
+      iconAnchor: [half, half],
+    });
+  }
+
+  const animClass = style === "BLINK" ? "incident-marker-blink" : "";
   return L.divIcon({
     className: "incident-marker-icon",
     html: `<span style="display:block;width:${size}px;height:${size}px;border-radius:9999px;background:var(--status-critical);border:${border}px solid #fff;box-shadow:0 0 6px rgba(0,0,0,0.7);" class="${animClass}"></span>`,
