@@ -5,8 +5,8 @@ import { prisma } from "@/lib/prisma";
 const NAV_LINKS = [
   { href: "/", label: "Overview" },
   { href: "/priority-map", label: "Situation Map" },
-  { href: "/bpe-deployment", label: "Deployment" },
   { href: "/incidents", label: "Monitored Incidents" },
+  { href: "/bpe-deployment", label: "Deployment" },
   { href: "/election-ops", label: "Election Status" },
   { href: "/election-board", label: "Election Profile" },
 ] as const;
