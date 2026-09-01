@@ -21,6 +21,7 @@ import { ElectionOpsStatusDialog } from "@/components/election-ops-status-dialog
 import { ElectionAreaFormDialog } from "@/components/election-area-form-dialog";
 import { DeleteButton } from "@/components/delete-button";
 import type { ElectionOpsAreaRow } from "@/lib/queries/election-ops";
+import type { BarangayIndex } from "@/lib/barangay-index";
 
 function pctLabel(pct: number | null): string {
   return pct === null ? "—" : `${pct.toFixed(0)}%`;
@@ -39,9 +40,11 @@ interface MunicipalityGroup {
 export function ElectionAreasAccordion({
   areas,
   jtfOptions,
+  barangayIndex,
 }: {
   areas: ElectionOpsAreaRowWithAccess[];
   jtfOptions: { id: string; name: string }[];
+  barangayIndex?: BarangayIndex;
 }) {
   const groups = useMemo(() => {
     const map = new Map<string, MunicipalityGroup>();
@@ -159,6 +162,7 @@ export function ElectionAreasAccordion({
                               />
                               <ElectionAreaFormDialog
                                 jtfOptions={jtfOptions}
+                                barangayIndex={barangayIndex}
                                 initial={{
                                   id: area.id,
                                   jtfId: area.jtfId,

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getScoredAreas } from "@/lib/queries/priority-areas";
 import { getIncidentMarkers } from "@/lib/queries/incident-markers";
 import { canWriteJtf } from "@/lib/rbac";
+import { getBarangayIndex } from "@/lib/barangay-index";
 import { PriorityMapLoader } from "@/components/priority-map-loader";
 import {
   Card,
@@ -74,6 +75,7 @@ export default async function PriorityMapPage() {
           <ElectionAreaFormDialog
             jtfOptions={jtfOptions}
             lockJtfId={writableJtfId}
+            barangayIndex={getBarangayIndex()}
             trigger={<Button>Add Area</Button>}
           />
         )}

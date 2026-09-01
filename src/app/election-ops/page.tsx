@@ -3,6 +3,7 @@ import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { listElectionOpsAreas } from "@/lib/queries/election-ops";
 import { canWriteJtf } from "@/lib/rbac";
+import { getBarangayIndex } from "@/lib/barangay-index";
 import {
   Card,
   CardContent,
@@ -72,6 +73,7 @@ export default async function ElectionOpsPage({
           <ElectionAreasAccordion
             areas={areas.map((area) => ({ ...area, canEdit: canWriteJtf(user, area.jtfId) }))}
             jtfOptions={jtfs.map((j) => ({ id: j.id, name: j.name }))}
+            barangayIndex={getBarangayIndex()}
           />
         </CardContent>
       </Card>

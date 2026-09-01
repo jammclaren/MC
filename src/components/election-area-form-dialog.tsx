@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import type { BarangayIndex } from "@/lib/barangay-index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,11 +55,17 @@ export function ElectionAreaFormDialog({
   jtfOptions,
   lockJtfId,
   initial,
+  barangayIndex,
   trigger,
 }: {
   jtfOptions: JtfOption[];
   lockJtfId?: string;
   initial?: ElectionAreaFormInitial;
+  /** GIS-boundary-derived name suggestions — picking from these (instead
+   * of free-typing) keeps this area's name matching its actual map
+   * polygon, so its hotspot category renders where it should instead of
+   * silently going gray/unmatched over a spelling drift. */
+  barangayIndex?: BarangayIndex;
   trigger: React.ReactElement;
 }) {
   const router = useRouter();
@@ -76,6 +83,15 @@ export function ElectionAreaFormDialog({
   const [registeredVoters, setRegisteredVoters] = useState(initial?.registeredVoters ?? "");
   const [lat, setLat] = useState(initial?.lat ?? "");
   const [lng, setLng] = useState(initial?.lng ?? "");
+
+  const municipalityOptions = useMemo(
+    () => barangayIndex?.municipalitiesByProvince[province.trim()] ?? [],
+    [barangayIndex, province]
+  );
+  const barangayOptions = useMemo(
+    () => barangayIndex?.barangaysByMunicipality[`${province.trim()}||${municipality.trim()}`] ?? [],
+    [barangayIndex, province, municipality]
+  );
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -144,19 +160,52 @@ export function ElectionAreaFormDialog({
             )}
             <div className="col-span-2 flex flex-col gap-2">
               <Label htmlFor="province">Province</Label>
-              <Input id="province" required value={province} onChange={(e) => setProvince(e.target.value)} />
+              <Input
+                id="province"
+                required
+                list="election-area-province-options"
+                value={province}
+                onChange={(e) => setProvince(e.target.value)}
+              />
+              {barangayIndex && (
+                <datalist id="election-area-province-options">
+                  {barangayIndex.provinces.map((p) => (
+                    <option key={p} value={p} />
+                  ))}
+                </datalist>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="municipality">Municipality</Label>
               <Input
                 id="municipality"
+                list="election-area-municipality-options"
                 value={municipality}
                 onChange={(e) => setMunicipality(e.target.value)}
               />
+              {barangayIndex && (
+                <datalist id="election-area-municipality-options">
+                  {municipalityOptions.map((m) => (
+                    <option key={m} value={m} />
+                  ))}
+                </datalist>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="barangay">Barangay</Label>
-              <Input id="barangay" value={barangay} onChange={(e) => setBarangay(e.target.value)} />
+              <Input
+                id="barangay"
+                list="election-area-barangay-options"
+                value={barangay}
+                onChange={(e) => setBarangay(e.target.value)}
+              />
+              {barangayIndex && (
+                <datalist id="election-area-barangay-options">
+                  {barangayOptions.map((b) => (
+                    <option key={b} value={b} />
+                  ))}
+                </datalist>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <Label>Hotspot Category</Label>
