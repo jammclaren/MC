@@ -2,6 +2,7 @@
 
 import "leaflet/dist/leaflet.css";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import L from "leaflet";
 import {
   LayerGroup,
@@ -330,8 +331,18 @@ export function PriorityMap({
   lockJtfId?: string;
   canCreateMarker: boolean;
 }) {
+  const router = useRouter();
   const [provinces, setProvinces] = useState<GeoJSON.FeatureCollection | null>(null);
   const [barangays, setBarangays] = useState<GeoJSON.FeatureCollection | null>(null);
+
+  // Another JTF's hotspot-category edit on the Election Status page (or
+  // this one's own, from a different tab) doesn't push to this page —
+  // periodically re-pull fresh server data so a boundary's color catches
+  // up without anyone having to manually reload the Situation Map.
+  useEffect(() => {
+    const interval = setInterval(() => router.refresh(), 20_000);
+    return () => clearInterval(interval);
+  }, [router]);
 
   useEffect(() => {
     fetch("/barmm-provinces.geojson")
@@ -392,6 +403,18 @@ export function PriorityMap({
     }
     return counts;
   }, [areas]);
+
+  // react-leaflet's <GeoJSON> doesn't reliably restyle already-rendered
+  // layers when only the `style`/`onEachFeature` closures change (the
+  // `data` object itself is stable — fetched once, see below) — force a
+  // remount via `key` instead, but keyed on a signature of the actual
+  // per-area category values rather than just `areas.length`, so an edit
+  // that changes a category without changing the area count still
+  // triggers a restyle.
+  const categorizationSignature = useMemo(
+    () => areas.map((a) => `${a.id}:${a.hotspotCategory ?? ""}`).join("|"),
+    [areas]
+  );
 
   function styleBarangay(feature?: GeoJSON.Feature): L.PathOptions {
     const p = feature?.properties as
@@ -504,7 +527,7 @@ export function PriorityMap({
             <LayersControl.Overlay checked name="Threat Categorization">
               <LayerGroup>
                 <GeoJSON
-                  key={areas.length}
+                  key={categorizationSignature}
                   data={barangays}
                   style={styleBarangay}
                   onEachFeature={onEachBarangay}
