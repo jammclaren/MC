@@ -39,6 +39,11 @@ export interface BoardParty {
   votesEncoded: number;
 }
 
+export interface MunicipalityVoterTotal {
+  municipality: string;
+  registeredVoters: number;
+}
+
 export interface ElectionBoardData {
   province: string;
   contestantCount: number;
@@ -46,6 +51,7 @@ export interface ElectionBoardData {
   votesEncoded: number;
   reportingPct: number;
   registeredVoters: number;
+  municipalityVoterTotals: MunicipalityVoterTotal[];
   leaderboard: BoardCandidate[];
   parties: BoardParty[];
   candidates: BoardCandidate[];
@@ -71,7 +77,7 @@ export async function getElectionBoardData(
 ): Promise<ElectionBoardData> {
   const scopeJtfId = scopeJtfFilter(user, undefined, { allowRollup: true });
 
-  const [candidates, allParties, registeredVotersAgg] = await Promise.all([
+  const [candidates, allParties, registeredVotersAgg, electionAreasForVoters] = await Promise.all([
     prisma.candidate.findMany({
       where: { jtfId: scopeJtfId, province },
       include: { party: true },
@@ -89,6 +95,13 @@ export async function getElectionBoardData(
     prisma.electionArea.aggregate({
       where: { jtfId: scopeJtfId, province },
       _sum: { registeredVoters: true },
+    }),
+    // Per-municipality breakdown for the Registered Voters edit dialog's
+    // municipality picker/prefill — grouped client-side below since a
+    // municipality's total can span several barangay rows.
+    prisma.electionArea.findMany({
+      where: { jtfId: scopeJtfId, province, municipality: { not: null } },
+      select: { municipality: true, registeredVoters: true },
     }),
   ]);
 
@@ -137,6 +150,20 @@ export async function getElectionBoardData(
   // BPE-deployment tracker this could eventually plug into.
   const reportingPct = votesEncoded > 0 ? 100 : 0;
 
+  const voterTotalsByMunicipality = new Map<string, number>();
+  for (const area of electionAreasForVoters) {
+    const key = area.municipality!;
+    voterTotalsByMunicipality.set(
+      key,
+      (voterTotalsByMunicipality.get(key) ?? 0) + (area.registeredVoters ?? 0)
+    );
+  }
+  const municipalityVoterTotals: MunicipalityVoterTotal[] = Array.from(
+    voterTotalsByMunicipality.entries()
+  )
+    .map(([municipality, registeredVoters]) => ({ municipality, registeredVoters }))
+    .sort((a, b) => a.municipality.localeCompare(b.municipality));
+
   return {
     province,
     contestantCount: candidates.length,
@@ -144,6 +171,7 @@ export async function getElectionBoardData(
     votesEncoded,
     reportingPct,
     registeredVoters: registeredVotersAgg._sum.registeredVoters ?? 0,
+    municipalityVoterTotals,
     leaderboard: candidates.map(toBoardCandidate),
     parties,
     candidates: candidates

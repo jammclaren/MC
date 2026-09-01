@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { StatTile } from "@/components/stat-tile";
 import { CandidateFormDialog } from "@/components/candidate-form-dialog";
 import { PartyFormDialog } from "@/components/party-form-dialog";
+import { RegisteredVotersFormDialog } from "@/components/registered-voters-form-dialog";
 import { DeleteButton } from "@/components/delete-button";
 import { Users, Flag, Vote, Radio } from "lucide-react";
 
@@ -101,6 +102,14 @@ export default async function ElectionBoardPage({
         </div>
         {canWrite && (
           <div className="flex gap-2">
+            {provinceJtfId && (
+              <RegisteredVotersFormDialog
+                jtfId={provinceJtfId}
+                province={province}
+                municipalityOptions={board.municipalityVoterTotals}
+                trigger={<Button variant="outline">Edit Registered Voters</Button>}
+              />
+            )}
             <PartyFormDialog trigger={<Button variant="outline">Add Party</Button>} />
             {provinceJtfId && (
               <CandidateFormDialog
