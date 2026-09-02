@@ -50,9 +50,9 @@ export function NavTopBar({
 
   return (
     <header className="sticky top-0 z-40 border-b border-primary/30 bg-background/95 shadow-[0_1px_16px_-4px_var(--primary)] backdrop-blur supports-backdrop-filter:bg-background/80">
-      <div className="flex w-full items-center justify-between gap-6 px-6">
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-2.5 py-3">
+      <div className="flex w-full items-center justify-between gap-3 px-3 sm:gap-6 sm:px-6">
+        <div className="flex min-w-0 items-center gap-4 sm:gap-8">
+          <div className="flex shrink-0 items-center gap-2.5 py-3">
             {/* eslint-disable-next-line @next/next/no-img-element -- small
                 static header mark; not worth next/image's optimization
                 pipeline for a 22KB, always-visible icon. */}
@@ -62,15 +62,15 @@ export function NavTopBar({
               className="size-8"
             />
             <span className="flex size-2 rounded-full bg-status-good shadow-[0_0_6px_var(--status-good)]" />
-            <span className="font-display text-base font-bold tracking-widest uppercase">
+            <span className="hidden font-display text-base font-bold tracking-widest uppercase md:inline">
               WESMINCOM <span className="text-primary">DASHBOARD</span>
             </span>
           </div>
           <NavLinks links={links} />
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-4">
           <LiveClock />
-          <span className="hidden font-mono text-xs text-muted-foreground sm:inline">
+          <span className="hidden font-mono text-xs text-muted-foreground lg:inline">
             {roleLine}
           </span>
           <SignOutButton />

@@ -167,6 +167,13 @@
   .font-display {
     font-family: var(--font-display), var(--font-sans);
   }
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
   .text-status-good {
     color: var(--status-good);
   }
