@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -88,6 +88,18 @@ export function UserFormDialog({
 
   const needsJtf = role === "JTF_COMMANDER" || role === "JTF_STAFF" || role === "VIEWER";
   const needsWfc = role === "WFC_STAFF";
+  // Lets each <Select>'s trigger show a real label instead of the raw
+  // value — Base UI's Select.Value only resolves a label automatically
+  // when the Root is given this `items` list.
+  const roleItems = useMemo(() => ROLES.map((r) => ({ value: r, label: r })), []);
+  const jtfItems = useMemo(
+    () => jtfOptions.map((jtf) => ({ value: jtf.id, label: jtf.name })),
+    [jtfOptions]
+  );
+  const wfcItems = useMemo(
+    () => WARFIGHTING_FUNCTIONS.map((fn) => ({ value: fn, label: WFC_LABELS[fn] })),
+    []
+  );
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -179,7 +191,11 @@ export function UserFormDialog({
             </div>
             <div className="flex flex-col gap-2">
               <Label>Role</Label>
-              <Select value={role} onValueChange={(v: string | null) => v && setRole(v as Role)}>
+              <Select
+                items={roleItems}
+                value={role}
+                onValueChange={(v: string | null) => v && setRole(v as Role)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -195,7 +211,7 @@ export function UserFormDialog({
             {needsJtf && (
               <div className="flex flex-col gap-2">
                 <Label>JTF</Label>
-                <Select value={jtfId} onValueChange={(v: string | null) => setJtfId(v ?? "")}>
+                <Select items={jtfItems} value={jtfId} onValueChange={(v: string | null) => setJtfId(v ?? "")}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select JTF" />
                   </SelectTrigger>
@@ -213,6 +229,7 @@ export function UserFormDialog({
               <div className="flex flex-col gap-2">
                 <Label>Warfighting Function</Label>
                 <Select
+                  items={wfcItems}
                   value={warfightingFunction}
                   onValueChange={(v: string | null) =>
                     setWarfightingFunction((v as WarfightingFunction) ?? "")

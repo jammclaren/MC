@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -89,6 +89,20 @@ export function DeploymentFormDialog({
   );
 
   const visibleAreas = areaOptions.filter((a) => a.jtfId === values.jtfId);
+  // Lets each <Select>'s trigger show a real label instead of the raw
+  // value — Base UI's Select.Value only resolves a label automatically
+  // when the Root is given this `items` list.
+  const jtfItems = useMemo(
+    () => jtfOptions.map((jtf) => ({ value: jtf.id, label: jtf.name })),
+    [jtfOptions]
+  );
+  const areaItems = useMemo(
+    () => [
+      { value: "__none__", label: "No specific area" },
+      ...visibleAreas.map((area) => ({ value: area.id, label: area.label })),
+    ],
+    [visibleAreas]
+  );
 
   function setField<K extends keyof DeploymentFormValues>(key: K, value: DeploymentFormValues[K]) {
     setValues((v) => ({ ...v, [key]: value }));
@@ -148,6 +162,7 @@ export function DeploymentFormDialog({
               <div className="col-span-2 flex flex-col gap-2">
                 <Label>JTF</Label>
                 <Select
+                  items={jtfItems}
                   value={values.jtfId}
                   onValueChange={(v: string | null) =>
                     setValues((prev) => ({ ...prev, jtfId: v ?? "", electionAreaId: undefined }))
@@ -178,6 +193,7 @@ export function DeploymentFormDialog({
             <div className="col-span-2 flex flex-col gap-2">
               <Label>Area (optional)</Label>
               <Select
+                items={areaItems}
                 value={values.electionAreaId ?? "__none__"}
                 onValueChange={(v: string | null) =>
                   setField("electionAreaId", !v || v === "__none__" ? undefined : v)

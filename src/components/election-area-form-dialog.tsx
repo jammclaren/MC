@@ -92,6 +92,20 @@ export function ElectionAreaFormDialog({
     () => barangayIndex?.barangaysByMunicipality[`${province.trim()}||${municipality.trim()}`] ?? [],
     [barangayIndex, province, municipality]
   );
+  // Lets each <Select>'s trigger show a real label instead of the raw
+  // value — Base UI's Select.Value only resolves a label automatically
+  // when the Root is given this `items` list.
+  const jtfItems = useMemo(
+    () => jtfOptions.map((jtf) => ({ value: jtf.id, label: jtf.name })),
+    [jtfOptions]
+  );
+  const hotspotItems = useMemo(
+    () => [
+      { value: "__none__", label: "Unclassified" },
+      ...HOTSPOT_CATEGORIES.map((c) => ({ value: c, label: c })),
+    ],
+    []
+  );
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -144,7 +158,7 @@ export function ElectionAreaFormDialog({
             {!isEdit && !lockJtfId && (
               <div className="col-span-2 flex flex-col gap-2">
                 <Label>JTF</Label>
-                <Select value={jtfId} onValueChange={(v: string | null) => setJtfId(v ?? "")}>
+                <Select items={jtfItems} value={jtfId} onValueChange={(v: string | null) => setJtfId(v ?? "")}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select JTF" />
                   </SelectTrigger>
@@ -210,6 +224,7 @@ export function ElectionAreaFormDialog({
             <div className="flex flex-col gap-2">
               <Label>Hotspot Category</Label>
               <Select
+                items={hotspotItems}
                 value={hotspotCategory || "__none__"}
                 onValueChange={(v: string | null) =>
                   setHotspotCategory(!v || v === "__none__" ? "" : v)

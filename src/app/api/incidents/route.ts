@@ -9,6 +9,12 @@ import { withAudit } from "@/lib/audit";
 const createIncidentSchema = z.object({
   jtfId: z.string().min(1),
   electionAreaId: z.string().optional(),
+  // Manually typed by the reporting JTF — see the schema comment on
+  // Incident.locationLabel for why this stays separate from electionAreaId.
+  // Optional here (the map-marker "Add Marker" flow doesn't send it, using
+  // electionAreaId instead) — the plain Log Incident form enforces it as
+  // required client-side.
+  locationLabel: z.string().trim().max(200).optional(),
   date: z.coerce.date(),
   // A short category (e.g. "Armed Clash", "Checkpoint Interdiction") — the
   // 120-cap keeps a full operational narrative from landing here instead

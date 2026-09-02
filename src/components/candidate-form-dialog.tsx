@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -66,6 +66,17 @@ export function CandidateFormDialog({
   const [isCocFiler, setIsCocFiler] = useState(initial?.isCocFiler ?? true);
   const [votesEncoded, setVotesEncoded] = useState(initial?.votesEncoded ?? "0");
   const [sourceNote, setSourceNote] = useState(initial?.sourceNote ?? "");
+  // Lets the <Select>'s trigger show a real label instead of the raw
+  // value — Base UI's Select.Value only resolves a label automatically
+  // when the Root is given this `items` list.
+  const partyItems = useMemo(
+    () => [
+      { value: NO_PARTY_VALUE, label: "Independent / none" },
+      ...partyOptions.map((p) => ({ value: p.id, label: `${p.abbreviation} — ${p.name}` })),
+      { value: NEW_PARTY_VALUE, label: "+ New party…" },
+    ],
+    [partyOptions]
+  );
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -151,7 +162,11 @@ export function CandidateFormDialog({
             </div>
             <div className="flex flex-col gap-2">
               <Label>Party</Label>
-              <Select value={partyId} onValueChange={(v: string | null) => setPartyId(v ?? NO_PARTY_VALUE)}>
+              <Select
+                items={partyItems}
+                value={partyId}
+                onValueChange={(v: string | null) => setPartyId(v ?? NO_PARTY_VALUE)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Independent" />
                 </SelectTrigger>

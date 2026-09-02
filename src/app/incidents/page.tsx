@@ -39,20 +39,12 @@ export default async function IncidentsPage({
   }
 
   const filters = await searchParams;
-  const [incidents, jtfs, areas] = await Promise.all([
+  const [incidents, jtfs] = await Promise.all([
     listIncidents(user, filters),
     prisma.jTF.findMany({ orderBy: { name: "asc" } }),
-    prisma.electionArea.findMany({
-      select: { id: true, jtfId: true, barangay: true, municipality: true, province: true },
-    }),
   ]);
 
   const jtfOptions = jtfs.map((jtf) => ({ id: jtf.id, name: jtf.name }));
-  const areaOptions = areas.map((area) => ({
-    id: area.id,
-    jtfId: area.jtfId,
-    label: [area.barangay, area.municipality, area.province].filter(Boolean).join(", "),
-  }));
 
   const writableJtfId =
     user.role === "ADMIN" ? undefined : user.jtfId && canWriteJtf(user, user.jtfId) ? user.jtfId : undefined;
@@ -70,7 +62,6 @@ export default async function IncidentsPage({
         {canCreate && (
           <IncidentFormDialog
             jtfOptions={jtfOptions}
-            areaOptions={areaOptions}
             lockJtfId={writableJtfId}
             trigger={<Button>Log Incident</Button>}
           />
@@ -163,11 +154,13 @@ export default async function IncidentsPage({
             </TableHeader>
             <TableBody>
               {incidents.map((incident) => {
-                const areaLabel = incident.electionArea
-                  ? [incident.electionArea.barangay, incident.electionArea.municipality]
-                      .filter(Boolean)
-                      .join(", ") || incident.electionArea.province
-                  : "—";
+                const areaLabel =
+                  incident.locationLabel ||
+                  (incident.electionArea
+                    ? [incident.electionArea.barangay, incident.electionArea.municipality]
+                        .filter(Boolean)
+                        .join(", ") || incident.electionArea.province
+                    : "—");
                 const canModify = canModifyEntry(user, incident.jtfId, incident.createdById);
                 return (
                   <TableRow key={incident.id}>
@@ -181,11 +174,11 @@ export default async function IncidentsPage({
                         <div className="flex justify-end gap-1">
                           <IncidentFormDialog
                             jtfOptions={jtfOptions}
-                            areaOptions={areaOptions}
                             initial={{
                               id: incident.id,
                               jtfId: incident.jtfId,
                               electionAreaId: incident.electionAreaId ?? undefined,
+                              locationLabel: incident.locationLabel ?? "",
                               date: incident.date.toISOString().slice(0, 10),
                               type: incident.type,
                               result: incident.result ?? "",

@@ -49,10 +49,12 @@ export async function getIncidentMarkers(user: SessionUser): Promise<IncidentMar
     markerStyle: incident.markerStyle,
     source: incident.source,
     createdAt: incident.createdAt.toISOString(),
-    areaLabel: incident.electionArea
-      ? [incident.electionArea.barangay, incident.electionArea.municipality, incident.electionArea.province]
-          .filter(Boolean)
-          .join(", ")
-      : null,
+    areaLabel:
+      incident.locationLabel ||
+      (incident.electionArea
+        ? [incident.electionArea.barangay, incident.electionArea.municipality, incident.electionArea.province]
+            .filter(Boolean)
+            .join(", ")
+        : null),
   }));
 }

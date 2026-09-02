@@ -8,6 +8,7 @@ import { withAudit } from "@/lib/audit";
 
 const updateIncidentSchema = z.object({
   electionAreaId: z.string().nullable().optional(),
+  locationLabel: z.string().trim().max(200).nullable().optional(),
   date: z.coerce.date().optional(),
   type: z.string().trim().min(1).max(120).optional(),
   result: z.string().trim().max(4000).nullable().optional(),

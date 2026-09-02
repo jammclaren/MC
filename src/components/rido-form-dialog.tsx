@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,14 @@ export function RidoFormDialog({
   const [quarter, setQuarter] = useState("");
   const [involving, setInvolving] = useState<string>(INVOLVING[0]);
   const [count, setCount] = useState("0");
+  // Lets the <Select>'s trigger show a real label instead of the raw
+  // value — Base UI's Select.Value only resolves a label automatically
+  // when the Root is given this `items` list.
+  const jtfItems = useMemo(
+    () => jtfOptions.map((jtf) => ({ value: jtf.id, label: jtf.name })),
+    [jtfOptions]
+  );
+  const involvingItems = useMemo(() => INVOLVING.map((i) => ({ value: i, label: i })), []);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -81,7 +89,7 @@ export function RidoFormDialog({
             {!lockJtfId && (
               <div className="flex flex-col gap-2">
                 <Label>JTF</Label>
-                <Select value={jtfId} onValueChange={(v: string | null) => setJtfId(v ?? "")}>
+                <Select items={jtfItems} value={jtfId} onValueChange={(v: string | null) => setJtfId(v ?? "")}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select JTF" />
                   </SelectTrigger>
@@ -107,7 +115,11 @@ export function RidoFormDialog({
             </div>
             <div className="flex flex-col gap-2">
               <Label>Involving</Label>
-              <Select value={involving} onValueChange={(v: string | null) => setInvolving(v ?? INVOLVING[0])}>
+              <Select
+                items={involvingItems}
+                value={involving}
+                onValueChange={(v: string | null) => setInvolving(v ?? INVOLVING[0])}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

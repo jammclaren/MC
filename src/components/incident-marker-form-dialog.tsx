@@ -86,6 +86,20 @@ export function IncidentMarkerFormDialog({
 
   const parsed = useMemo(() => parseMgrs(mgrsInput), [mgrsInput]);
   const visibleAreas = areaOptions.filter((a) => a.jtfId === jtfId);
+  // Lets each <Select>'s trigger show a real label instead of the raw
+  // value — Base UI's Select.Value only resolves a label automatically
+  // when the Root is given this `items` list.
+  const jtfItems = useMemo(
+    () => jtfOptions.map((jtf) => ({ value: jtf.id, label: jtf.name })),
+    [jtfOptions]
+  );
+  const areaItems = useMemo(
+    () => [
+      { value: NO_AREA_VALUE, label: "No specific area" },
+      ...visibleAreas.map((area) => ({ value: area.id, label: area.label })),
+    ],
+    [visibleAreas]
+  );
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -158,6 +172,7 @@ export function IncidentMarkerFormDialog({
               <div className="flex flex-col gap-2">
                 <Label>JTF</Label>
                 <Select
+                  items={jtfItems}
                   value={jtfId}
                   onValueChange={(v: string | null) => {
                     setJtfId(v ?? "");
@@ -198,6 +213,7 @@ export function IncidentMarkerFormDialog({
             <div className="flex flex-col gap-2">
               <Label>Area (optional)</Label>
               <Select
+                items={areaItems}
                 value={electionAreaId ?? NO_AREA_VALUE}
                 onValueChange={(v: string | null) =>
                   setElectionAreaId(!v || v === NO_AREA_VALUE ? undefined : v)
@@ -254,7 +270,11 @@ export function IncidentMarkerFormDialog({
 
             <div className="flex flex-col gap-2">
               <Label>Marker Animation</Label>
-              <Select value={markerStyle} onValueChange={(v: string | null) => setMarkerStyle(v ?? "NONE")}>
+              <Select
+                items={ANIMATION_OPTIONS}
+                value={markerStyle}
+                onValueChange={(v: string | null) => setMarkerStyle(v ?? "NONE")}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

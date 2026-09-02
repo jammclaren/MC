@@ -220,6 +220,14 @@ model Incident {
   jtf            JTF             @relation(fields: [jtfId], references: [id])
   electionAreaId String?
   electionArea   ElectionArea?   @relation(fields: [electionAreaId], references: [id])
+  // Free-text location the reporting JTF types directly (e.g. "Brgy
+  // Libertad, Kolambugan, Lanao del Norte") — required on the Log Incident
+  // form regardless of whether the incident also happens to fall inside a
+  // tracked ElectionArea (electionAreaId stays a separate, optional link
+  // used for priority-score integration, not a substitute for this).
+  // Nullable at the DB level only for incidents logged before this field
+  // existed.
+  locationLabel  String?
   date           DateTime
   type           String
   result         String?

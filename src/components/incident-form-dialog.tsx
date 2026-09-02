@@ -17,29 +17,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export interface JtfOption {
   id: string;
   name: string;
 }
 
-export interface ElectionAreaOption {
-  id: string;
-  jtfId: string;
-  label: string;
-}
-
 export interface IncidentFormValues {
   id?: string;
   jtfId: string;
   electionAreaId?: string;
+  locationLabel: string;
   date: string;
   type: string;
   result?: string;
@@ -49,13 +38,11 @@ export interface IncidentFormValues {
 
 export function IncidentFormDialog({
   jtfOptions,
-  areaOptions,
   lockJtfId,
   initial,
   trigger,
 }: {
   jtfOptions: JtfOption[];
-  areaOptions: ElectionAreaOption[];
   /** Non-ADMIN users can only write to their own JTF, so the JTF field is
    * fixed rather than a picker. */
   lockJtfId?: string;
@@ -69,6 +56,7 @@ export function IncidentFormDialog({
     initial ?? {
       jtfId: lockJtfId ?? jtfOptions[0]?.id ?? "",
       electionAreaId: undefined,
+      locationLabel: "",
       date: new Date().toISOString().slice(0, 10),
       type: "",
       result: "",
@@ -80,8 +68,14 @@ export function IncidentFormDialog({
   );
 
   const isEdit = !!initial?.id;
-  const visibleAreas = areaOptions.filter((a) => a.jtfId === values.jtfId);
   const parsedMgrs = useMemo(() => (mgrsInput.trim() ? parseMgrs(mgrsInput) : null), [mgrsInput]);
+  // Lets <Select>'s trigger show the JTF's name instead of its raw id —
+  // Base UI's Select.Value only resolves a label automatically when the
+  // Root is given this `items` list (see @base-ui/react's SelectRoot docs).
+  const jtfItems = useMemo(
+    () => jtfOptions.map((jtf) => ({ value: jtf.id, label: jtf.name })),
+    [jtfOptions]
+  );
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -100,6 +94,7 @@ export function IncidentFormDialog({
             date: values.date,
             type: values.type,
             result: values.result || null,
+            locationLabel: values.locationLabel,
             electionAreaId: values.electionAreaId || null,
             lat: parsedMgrs ? coords.lat : null,
             lng: parsedMgrs ? coords.lng : null,
@@ -146,6 +141,7 @@ export function IncidentFormDialog({
                   />
                 ) : (
                   <Select
+                    items={jtfItems}
                     value={values.jtfId}
                     onValueChange={(jtfId: string | null) =>
                       setValues((v) => ({
@@ -191,28 +187,15 @@ export function IncidentFormDialog({
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label>Area (optional)</Label>
-              <Select
-                value={values.electionAreaId ?? "__none__"}
-                onValueChange={(v: string | null) =>
-                  setValues((prev) => ({
-                    ...prev,
-                    electionAreaId: !v || v === "__none__" ? undefined : v,
-                  }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="No specific area" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">No specific area</SelectItem>
-                  {visibleAreas.map((area) => (
-                    <SelectItem key={area.id} value={area.id}>
-                      {area.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="locationLabel">Area</Label>
+              <Input
+                id="locationLabel"
+                required
+                maxLength={200}
+                placeholder="e.g. Brgy Libertad, Kolambugan, Lanao del Norte"
+                value={values.locationLabel}
+                onChange={(e) => setValues((v) => ({ ...v, locationLabel: e.target.value }))}
+              />
             </div>
 
             <div className="flex flex-col gap-2">

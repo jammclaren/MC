@@ -220,11 +220,13 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
       isPriority = score >= PRIORITY_FLAG_THRESHOLD;
     }
 
-    const areaLabel = incident.electionArea
-      ? [incident.electionArea.barangay, incident.electionArea.municipality]
-          .filter(Boolean)
-          .join(", ") || incident.electionArea.province
-      : null;
+    const areaLabel =
+      incident.locationLabel ||
+      (incident.electionArea
+        ? [incident.electionArea.barangay, incident.electionArea.municipality]
+            .filter(Boolean)
+            .join(", ") || incident.electionArea.province
+        : null);
 
     return {
       id: incident.id,
