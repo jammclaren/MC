@@ -32,6 +32,9 @@ export interface FunnelStage {
 export interface IncidentsByDay {
   date: string; // YYYY-MM-DD
   count: number;
+  /** Unique incident type keywords for the day, e.g. ["Harassment", "Rally"]
+   * — feeds the chart tooltip's short breakdown alongside the count. */
+  types: string[];
 }
 
 export interface PriorityAreaSummary {
@@ -135,7 +138,7 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
         jtfId: detailScopeJtfId,
         date: { gte: new Date(Date.now() - INCIDENTS_BY_DAY_WINDOW * 24 * 60 * 60 * 1000) },
       },
-      select: { date: true },
+      select: { date: true, type: true },
     }),
   ]);
 
@@ -166,21 +169,23 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     { label: "Provincial Proclaimed", count: countWhere((s) => s.provincialProclaimed) },
   ];
 
-  const incidentsByDayMap = new Map<string, number>();
+  const incidentsByDayMap = new Map<string, { count: number; types: Set<string> }>();
   const today = new Date();
   for (let i = INCIDENTS_BY_DAY_WINDOW - 1; i >= 0; i--) {
     const d = new Date(today);
     d.setUTCDate(d.getUTCDate() - i);
-    incidentsByDayMap.set(d.toISOString().slice(0, 10), 0);
+    incidentsByDayMap.set(d.toISOString().slice(0, 10), { count: 0, types: new Set() });
   }
   for (const incident of incidentsForDailyChart) {
     const key = incident.date.toISOString().slice(0, 10);
-    if (incidentsByDayMap.has(key)) {
-      incidentsByDayMap.set(key, (incidentsByDayMap.get(key) ?? 0) + 1);
+    const entry = incidentsByDayMap.get(key);
+    if (entry) {
+      entry.count += 1;
+      entry.types.add(incident.type);
     }
   }
   const incidentsByDay: IncidentsByDay[] = Array.from(incidentsByDayMap.entries()).map(
-    ([date, count]) => ({ date, count })
+    ([date, { count, types }]) => ({ date, count, types: Array.from(types) })
   );
 
   const topPriorityAreas: PriorityAreaSummary[] = scoredAreas.slice(0, 5).map((area) => ({
