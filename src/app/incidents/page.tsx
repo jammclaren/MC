@@ -55,9 +55,6 @@ export default async function IncidentsPage({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Monitored Incidents</h1>
-          <p className="text-sm text-muted-foreground">
-            Election-related incidents — the live log leadership should watch first.
-          </p>
         </div>
         {canCreate && (
           <IncidentFormDialog
