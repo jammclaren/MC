@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.wesmincom.c2",
+      "sha256_cert_fingerprints": [
+        "BF:6F:0C:6D:92:27:2C:51:38:00:34:63:A3:01:F1:F4:63:93:D4:0A:65:67:73:63:CC:2D:80:EF:FD:81:F2:9F"
+      ]
+    }
+  }
+]

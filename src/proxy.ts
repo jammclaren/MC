@@ -12,7 +12,8 @@ export default auth((req) => {
   if (
     PUBLIC_PATHS.includes(pathname) ||
     pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/icon-")
+    pathname.startsWith("/icon-") ||
+    pathname.startsWith("/.well-known/")
   ) {
     return NextResponse.next();
   }
