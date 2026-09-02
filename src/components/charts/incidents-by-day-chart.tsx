@@ -1,6 +1,6 @@
 "use client";
 
-import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 export interface IncidentsByDayDatum {
   date: string;
@@ -18,7 +18,7 @@ function formatDay(dateStr: unknown): string {
 export function IncidentsByDayChart({ data }: { data: IncidentsByDayDatum[] }) {
   return (
     <ResponsiveContainer width="100%" height={180}>
-      <BarChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+      <LineChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
         <XAxis
           dataKey="date"
           tickFormatter={formatDay}
@@ -36,10 +36,18 @@ export function IncidentsByDayChart({ data }: { data: IncidentsByDayDatum[] }) {
             color: "var(--foreground)",
             fontSize: 12,
           }}
-          cursor={{ fill: "var(--accent)" }}
+          cursor={{ stroke: "var(--accent)", strokeWidth: 1 }}
         />
-        <Bar dataKey="count" name="Incidents" fill="var(--status-warning)" radius={[2, 2, 0, 0]} />
-      </BarChart>
+        <Line
+          type="monotone"
+          dataKey="count"
+          name="Incidents"
+          stroke="var(--status-warning)"
+          strokeWidth={2}
+          dot={{ r: 3, fill: "var(--status-warning)", strokeWidth: 0 }}
+          activeDot={{ r: 5 }}
+        />
+      </LineChart>
     </ResponsiveContainer>
   );
 }
