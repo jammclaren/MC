@@ -1,13 +1,19 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 
-const PUBLIC_PATHS = ["/login"];
+const PUBLIC_PATHS = ["/login", "/manifest.webmanifest"];
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
   const isLoggedIn = !!req.auth;
 
-  if (PUBLIC_PATHS.includes(pathname) || pathname.startsWith("/api/auth")) {
+  // Manifest icons must be fetchable without a session — browsers and the
+  // Android TWA/APK tooling read them unauthenticated to validate the PWA.
+  if (
+    PUBLIC_PATHS.includes(pathname) ||
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/icon-")
+  ) {
     return NextResponse.next();
   }
 
