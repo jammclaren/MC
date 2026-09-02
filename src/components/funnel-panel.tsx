@@ -19,9 +19,11 @@ export function FunnelPanel({ stages }: { stages: FunnelStageInput[] }) {
         const pct = total > 0 ? (stage.count / total) * 100 : 0;
         return (
           <div key={stage.label} className="flex flex-col gap-1">
-            <div className="flex items-baseline justify-between text-sm">
-              <span className="text-muted-foreground">{stage.label}</span>
-              <span className="font-mono tabular-nums">
+            <div className="flex items-baseline justify-between gap-2 text-sm">
+              <span className="min-w-0 truncate text-muted-foreground" title={stage.label}>
+                {stage.label}
+              </span>
+              <span className="shrink-0 font-mono tabular-nums">
                 {stage.count.toLocaleString()}
                 {i > 0 && (
                   <span className="ml-1.5 text-xs text-muted-foreground">

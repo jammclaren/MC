@@ -10,8 +10,13 @@ const createIncidentSchema = z.object({
   jtfId: z.string().min(1),
   electionAreaId: z.string().optional(),
   date: z.coerce.date(),
-  type: z.string().min(1),
-  result: z.string().optional(),
+  // A short category (e.g. "Armed Clash", "Checkpoint Interdiction") — the
+  // 120-cap keeps a full operational narrative from landing here instead
+  // of `result`, where it belongs (see daily-assessment.ts's sibling
+  // no-fabrication comment; this is the same "don't let one bad row break
+  // the display" concern, just on the input side).
+  type: z.string().trim().min(1).max(120),
+  result: z.string().trim().max(4000).optional(),
   lat: z.number().min(-90).max(90).optional(),
   lng: z.number().min(-180).max(180).optional(),
   markerStyle: z.enum(["NONE", "BLINK", "PULSE"]).optional(),

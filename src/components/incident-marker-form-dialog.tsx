@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { parseMgrs } from "@/lib/mgrs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -232,15 +233,23 @@ export function IncidentMarkerFormDialog({
               <Input
                 id="type"
                 required
-                placeholder="e.g. harassment, checkpoint incident, ambush"
+                maxLength={120}
+                placeholder="e.g. harassment, checkpoint incident, ambush — a short category, not the full report"
                 value={type}
                 onChange={(e) => setType(e.target.value)}
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="result">Result (optional)</Label>
-              <Input id="result" value={result} onChange={(e) => setResult(e.target.value)} />
+              <Label htmlFor="result">Result / Narrative (optional)</Label>
+              <Textarea
+                id="result"
+                rows={3}
+                maxLength={4000}
+                placeholder="Outcome, or a longer narrative/OOA-style report — this field is unbounded, unlike Type"
+                value={result}
+                onChange={(e) => setResult(e.target.value)}
+              />
             </div>
 
             <div className="flex flex-col gap-2">

@@ -121,7 +121,9 @@ export function OverviewIncidentOpsPanel({
               </h3>
               {stats.mostRecent ? (
                 <p className="text-sm">
-                  <span className="font-medium">{stats.mostRecent.type}</span>
+                  <span className="line-clamp-2 font-medium" title={stats.mostRecent.type}>
+                    {stats.mostRecent.type}
+                  </span>
                   {stats.mostRecent.areaLabel ? ` — ${stats.mostRecent.areaLabel}` : ""}
                   <br />
                   <span className="text-muted-foreground">

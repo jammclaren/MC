@@ -9,8 +9,8 @@ import { withAudit } from "@/lib/audit";
 const updateIncidentSchema = z.object({
   electionAreaId: z.string().nullable().optional(),
   date: z.coerce.date().optional(),
-  type: z.string().min(1).optional(),
-  result: z.string().nullable().optional(),
+  type: z.string().trim().min(1).max(120).optional(),
+  result: z.string().trim().max(4000).nullable().optional(),
   lat: z.number().min(-90).max(90).nullable().optional(),
   lng: z.number().min(-180).max(180).nullable().optional(),
   markerStyle: z.enum(["NONE", "BLINK", "PULSE"]).optional(),
