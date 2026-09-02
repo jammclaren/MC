@@ -13,6 +13,11 @@ import type { OverviewData } from "@/lib/queries/overview";
  * could fabricate an operational figure — an LLM-narrated version of this
  * panel was considered and deliberately not built for the same reason.
  *
+ * The panel has two sources: this module's statistics-derived `analysis`,
+ * and each JTF's own free-text "overall assessment" (see
+ * jtf-assessments.ts) surfaced verbatim as `jtfAssessments` — never
+ * rewritten or summarized, for the same no-fabrication reason.
+ *
  * Recommendations are grouped into three planning echelons per command
  * guidance: Strategic (BARMM-wide posture and cross-JTF resourcing),
  * Operational (JTF/provincial coordination and BPE logistics), and Tactical
@@ -27,12 +32,20 @@ export interface RecommendationTiers {
   tactical: string[];
 }
 
+export interface JtfAssessmentInput {
+  jtfName: string;
+  authorName: string;
+  summary: string;
+  createdAt: string;
+}
+
 export interface DailyAssessment {
   reportDate: string; // "27 August 2026"
   generatedAt: string; // ISO timestamp
   severityLevel: SeverityLevel;
   incidentTrend: "increasing" | "decreasing" | "stable";
   analysis: string[];
+  jtfAssessments: JtfAssessmentInput[];
   recommendations: RecommendationTiers;
 }
 
@@ -84,7 +97,10 @@ function formatIncidentDate(date: Date): string {
   }).format(date);
 }
 
-export function computeDailyAssessment(data: OverviewData): DailyAssessment {
+export function computeDailyAssessment(
+  data: OverviewData,
+  jtfAssessments: JtfAssessmentInput[] = []
+): DailyAssessment {
   const severityLevel = severityFromPriorityAreas(data.priorityAreaCount);
   const incidentTrend = incidentTrendFrom(data.incidentsByDay);
   const remaining = daysRemaining(data.bpe.endDate);
@@ -274,6 +290,10 @@ export function computeDailyAssessment(data: OverviewData): DailyAssessment {
     severityLevel,
     incidentTrend,
     analysis,
+    // Quoted verbatim, never rewritten or summarized — see the module
+    // comment on why this app never fabricates/paraphrases a figure or a
+    // JTF's own words.
+    jtfAssessments,
     recommendations: { strategic, operational, tactical },
   };
 }

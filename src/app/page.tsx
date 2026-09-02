@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import { getOverviewData } from "@/lib/queries/overview";
 import { getIncidentMarkers } from "@/lib/queries/incident-markers";
+import { listJtfAssessments } from "@/lib/queries/jtf-assessments";
+import { canWriteJtf } from "@/lib/rbac";
 import { nowMs } from "@/lib/time";
 import {
   Card,
@@ -22,6 +24,7 @@ import { DeploymentBarChart } from "@/components/charts/deployment-bar-chart";
 import { StatTile } from "@/components/stat-tile";
 import { FunnelPanel } from "@/components/funnel-panel";
 import { DailyAssessmentPanel } from "@/components/daily-assessment-panel";
+import { JtfAssessmentCard } from "@/components/jtf-assessment-card";
 import { OverviewIncidentOpsPanel } from "@/components/overview-incident-ops-panel";
 import { Users, ShieldAlert, TriangleAlert, Crosshair, Vote } from "lucide-react";
 
@@ -31,11 +34,13 @@ export default async function OverviewPage() {
     redirect("/login");
   }
 
-  const [data, incidentMarkers] = await Promise.all([
+  const [data, incidentMarkers, jtfAssessments] = await Promise.all([
     getOverviewData(user),
     getIncidentMarkers(user),
+    listJtfAssessments(user),
   ]);
   const now = nowMs();
+  const canSubmitAssessment = !!user.jtfId && canWriteJtf(user, user.jtfId);
 
   return (
     <div className="flex flex-col gap-8">
@@ -124,6 +129,8 @@ export default async function OverviewPage() {
           </CardContent>
         </Card>
       </div>
+
+      <JtfAssessmentCard assessments={jtfAssessments} canSubmit={canSubmitAssessment} />
 
       <DailyAssessmentPanel />
     </div>

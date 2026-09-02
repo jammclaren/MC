@@ -78,6 +78,7 @@ model User {
   warfightingFunction WarfightingFunction? // set for WFC_STAFF, null otherwise
   createdAt           DateTime             @default(now())
   auditLogs           AuditLog[]
+  jtfAssessments      JtfAssessment[]
 
   @@index([jtfId])
 }
@@ -94,6 +95,7 @@ model JTF {
   rido            RidoSettlement[]
   electionAreas   ElectionArea[]
   candidates      Candidate[]
+  assessments     JtfAssessment[]
 }
 
 model Unit {
@@ -304,4 +306,26 @@ model AuditLog {
 
   @@index([userId])
   @@index([entity, entityId])
+}
+
+// A JTF's own narrative "overall assessment" — distinct from the
+// Command Overview's rule-based Daily Analysis (computed purely from
+// on-file statistics): this is free-text written by a JTF_COMMANDER/
+// JTF_STAFF, submitted for COMMAND and WFC_STAFF (both command-wide
+// readers, same scope as everywhere else in this app — see rbac.ts) to
+// read. The Daily Analysis surfaces the most recent one per JTF as an
+// additional, clearly-attributed source alongside its own stats-derived
+// analysis — quoted verbatim, never rewritten, per this app's
+// no-fabrication convention (see daily-assessment.ts).
+model JtfAssessment {
+  id        String   @id @default(cuid())
+  jtfId     String
+  jtf       JTF      @relation(fields: [jtfId], references: [id])
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  summary   String
+  createdAt DateTime @default(now())
+
+  @@index([jtfId])
+  @@index([createdAt])
 }

@@ -19,12 +19,20 @@ interface RecommendationTiers {
   tactical: string[];
 }
 
+interface JtfAssessmentInput {
+  jtfName: string;
+  authorName: string;
+  summary: string;
+  createdAt: string;
+}
+
 interface DailyAssessment {
   reportDate: string;
   generatedAt: string;
   severityLevel: "LOW" | "MODERATE" | "ELEVATED" | "CRITICAL";
   incidentTrend: "increasing" | "decreasing" | "stable";
   analysis: string[];
+  jtfAssessments: JtfAssessmentInput[];
   recommendations: RecommendationTiers;
 }
 
@@ -79,8 +87,9 @@ export function DailyAssessmentPanel() {
         <div>
           <CardTitle>Daily Analysis &amp; Assessment</CardTitle>
           <CardDescription>
-            Rule-based readout computed from this dashboard&apos;s current figures —
-            nothing here is AI-generated or invented.
+            Rule-based readout computed from this dashboard&apos;s current figures, plus
+            each JTF&apos;s own overall assessment quoted verbatim — nothing here is
+            AI-generated or invented.
           </CardDescription>
         </div>
         <Button onClick={handleGenerate} disabled={loading} variant="outline">
@@ -128,6 +137,29 @@ export function DailyAssessmentPanel() {
                 ))}
               </ul>
             </div>
+
+            {assessment.jtfAssessments.length > 0 && (
+              <div>
+                <h3 className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+                  JTF Inputs
+                </h3>
+                <div className="mt-2 flex flex-col gap-2">
+                  {assessment.jtfAssessments.map((a, i) => (
+                    <div key={i} className="rounded-md border border-border p-2.5 text-sm">
+                      <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
+                        <span className="font-display text-xs font-semibold tracking-wide text-primary uppercase">
+                          {a.jtfName}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{a.authorName}</span>
+                      </div>
+                      <p className="whitespace-pre-wrap text-muted-foreground">
+                        &quot;{a.summary}&quot;
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div>
               <h3 className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
