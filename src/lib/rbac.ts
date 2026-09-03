@@ -49,17 +49,26 @@ export function canModifyEntry(
   return false;
 }
 
+// Pre-launch kill switch — the user explicitly asked not to launch Social
+// Media Monitor yet (still needs a real Facebook Page Access Token wired
+// in). Flip to true only once they say go; until then this makes the
+// feature inaccessible to every role in production regardless of the
+// scoping below, even though its code/nav link/migration are already
+// merged to main.
+const SOCIAL_MONITOR_LAUNCHED = false;
+
 /**
  * Social Media Monitor is restricted beyond the usual JTF/command scoping:
- * COMMAND and ADMIN command-wide, plus WFC_STAFF in the two functions with
- * an actual stake in it — CMO (civil-military/public-sentiment) and
- * Intelligence (M2). Every other role, including JTF_COMMANDER/JTF_STAFF,
- * has no access at all — this isn't a JTF-scoped feature.
+ * COMMAND and ADMIN command-wide, plus WFC_STAFF in CMO (civil-military/
+ * public-sentiment) specifically — explicitly NOT Intelligence (M2), or any
+ * other warfighting function. Every other role, including JTF_COMMANDER/
+ * JTF_STAFF, has no access at all — this isn't a JTF-scoped feature.
  */
 export function canAccessSocialMonitor(user: SessionUser): boolean {
+  if (!SOCIAL_MONITOR_LAUNCHED) return false;
   if (user.role === "ADMIN" || user.role === "COMMAND") return true;
   if (user.role === "WFC_STAFF") {
-    return user.warfightingFunction === "CMO" || user.warfightingFunction === "INTELLIGENCE";
+    return user.warfightingFunction === "CMO";
   }
   return false;
 }
