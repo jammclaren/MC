@@ -13,7 +13,7 @@ export function NavLinks({ links }: { links: readonly NavLinkItem[] }) {
   const pathname = usePathname();
 
   return (
-    <nav className="no-scrollbar flex min-w-0 items-center gap-5 overflow-x-auto text-sm">
+    <nav className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
       {links.map((link) => {
         const active =
           link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
@@ -22,7 +22,7 @@ export function NavLinks({ links }: { links: readonly NavLinkItem[] }) {
             key={link.href}
             href={link.href}
             className={cn(
-              "relative shrink-0 py-4 font-display text-xs font-semibold tracking-widest whitespace-nowrap uppercase transition-colors",
+              "relative py-4 font-display text-xs font-semibold tracking-widest whitespace-nowrap uppercase transition-colors",
               active
                 ? "text-foreground after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-primary after:content-['']"
                 : "text-muted-foreground hover:text-foreground"
