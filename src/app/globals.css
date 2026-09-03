@@ -167,22 +167,6 @@
   .font-display {
     font-family: var(--font-display), var(--font-sans);
   }
-  /* Visible (not hidden) thin scrollbar — a row that overflows must still
-     show a scroll affordance, so nothing scrolls out of view invisibly. */
-  .thin-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: var(--primary) transparent;
-  }
-  .thin-scrollbar::-webkit-scrollbar {
-    height: 6px;
-  }
-  .thin-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .thin-scrollbar::-webkit-scrollbar-thumb {
-    background-color: var(--primary);
-    border-radius: 999px;
-  }
   .text-status-good {
     color: var(--status-good);
   }

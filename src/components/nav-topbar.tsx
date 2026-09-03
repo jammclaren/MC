@@ -50,8 +50,8 @@ export function NavTopBar({
 
   return (
     <header className="sticky top-0 z-40 border-b border-primary/30 bg-background/95 shadow-[0_1px_16px_-4px_var(--primary)] backdrop-blur supports-backdrop-filter:bg-background/80">
-      <div className="flex w-full items-center justify-between gap-3 px-3 sm:gap-6 sm:px-6">
-        <div className="flex min-w-0 items-center gap-4 sm:gap-8">
+      <div className="flex w-full items-center gap-3 px-3 sm:gap-6 sm:px-6">
+        <div className="flex min-w-0 flex-1 items-center gap-4 sm:gap-8">
           <div className="flex shrink-0 items-center gap-2.5 py-3">
             {/* eslint-disable-next-line @next/next/no-img-element -- small
                 static header mark; not worth next/image's optimization
