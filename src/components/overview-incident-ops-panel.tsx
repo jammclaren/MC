@@ -4,9 +4,10 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatTile } from "@/components/stat-tile";
-import { FunnelPanel } from "@/components/funnel-panel";
 import { LabeledBarChart } from "@/components/charts/labeled-bar-chart";
 import { IncidentsByDayChart, type IncidentsByDayDatum } from "@/components/charts/incidents-by-day-chart";
+import { TopIncidentTypesChart } from "@/components/charts/top-incident-types-chart";
+import { SeverityMixChart } from "@/components/charts/severity-mix-chart";
 import { PriorityLeaderboard, type LeaderboardEntry } from "@/components/priority-leaderboard";
 import { OverviewIncidentMapLoader } from "@/components/overview-incident-map-loader";
 import { isViolentIncidentType } from "@/lib/incident-classification";
@@ -63,10 +64,9 @@ export function OverviewIncidentOpsPanel({
       jtfChartData,
       topTypes,
       mostRecent,
-      severityStages: [
-        { label: "Total Plotted", count: total },
-        { label: "Armed / Violent Type", count: violent.length },
-        { label: "Other", count: total - violent.length },
+      severitySegments: [
+        { label: "Armed / Violent Type", count: violent.length, color: "var(--chart-1)" },
+        { label: "Other", count: total - violent.length, color: "var(--chart-5)" },
       ],
     };
   }, [markers, now]);
@@ -147,13 +147,13 @@ export function OverviewIncidentOpsPanel({
               <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
                 Top Incident Types
               </h3>
-              <FunnelPanel stages={stats.topTypes} />
+              <TopIncidentTypesChart data={stats.topTypes} total={stats.total} />
             </div>
             <div>
               <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
                 Severity Mix
               </h3>
-              <FunnelPanel stages={stats.severityStages} />
+              <SeverityMixChart total={stats.total} segments={stats.severitySegments} />
             </div>
           </div>
         </div>
