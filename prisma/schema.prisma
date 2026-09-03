@@ -29,6 +29,7 @@ enum WarfightingFunction {
   MANEUVER
   PROTECTION
   SUSTAINMENT
+  CMO // Civil-Military Operations
 }
 
 enum ThreatCategory {
@@ -83,6 +84,7 @@ model User {
   createdAt           DateTime             @default(now())
   auditLogs           AuditLog[]
   jtfAssessments      JtfAssessment[]
+  socialMediaPosts    SocialMediaPost[]
 
   @@index([jtfId])
 }
@@ -358,4 +360,44 @@ model JtfAssessment {
 
   @@index([jtfId])
   @@index([createdAt])
+}
+
+// --- Social Media Monitor (Facebook) — COMMAND / ADMIN / WFC CMO & M2
+// (Intelligence) only, see rbac.ts canAccessSocialMonitor.
+
+enum SocialPlatform {
+  FACEBOOK
+}
+
+enum SocialIncidentClass {
+  VIOLENT
+  NON_VIOLENT
+}
+
+// A monitored post — either pulled in automatically by the hourly Facebook
+// sync (externalPostId set, sourceNote null) or logged by staff who spotted
+// something the sync missed (externalPostId null, sourceNote describes how
+// it was found). classification defaults to a keyword-based best guess
+// (see lib/social-classifier.ts) and is always staff-correctable.
+model SocialMediaPost {
+  id             String               @id @default(cuid())
+  platform       SocialPlatform       @default(FACEBOOK)
+  externalPostId String?
+  pageName       String
+  authorName     String?
+  content        String
+  postUrl        String?
+  postedAt       DateTime
+  classification SocialIncidentClass?
+  isHighlighted  Boolean              @default(false)
+  sourceNote     String?
+  createdById    String?
+  createdBy      User?                @relation(fields: [createdById], references: [id])
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@unique([platform, externalPostId])
+  @@index([postedAt])
+  @@index([classification])
+  @@index([isHighlighted])
 }

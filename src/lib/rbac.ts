@@ -49,6 +49,27 @@ export function canModifyEntry(
   return false;
 }
 
+/**
+ * Social Media Monitor is restricted beyond the usual JTF/command scoping:
+ * COMMAND and ADMIN command-wide, plus WFC_STAFF in the two functions with
+ * an actual stake in it — CMO (civil-military/public-sentiment) and
+ * Intelligence (M2). Every other role, including JTF_COMMANDER/JTF_STAFF,
+ * has no access at all — this isn't a JTF-scoped feature.
+ */
+export function canAccessSocialMonitor(user: SessionUser): boolean {
+  if (user.role === "ADMIN" || user.role === "COMMAND") return true;
+  if (user.role === "WFC_STAFF") {
+    return user.warfightingFunction === "CMO" || user.warfightingFunction === "INTELLIGENCE";
+  }
+  return false;
+}
+
+export function assertCanAccessSocialMonitor(user: SessionUser): void {
+  if (!canAccessSocialMonitor(user)) {
+    throw new ForbiddenError("Not authorized to access the Social Media Monitor");
+  }
+}
+
 export function requireRole(user: SessionUser, roles: Role[]): void {
   if (!roles.includes(user.role)) {
     throw new ForbiddenError(`Requires one of roles: ${roles.join(", ")}`);

@@ -19,6 +19,13 @@ export default auth((req) => {
   }
 
   if (pathname.startsWith("/api/")) {
+    // Vercel Cron triggers this hourly with no browser session, only a
+    // shared-secret bearer token — the route itself verifies that (or a
+    // signed-in, authorized user) independently, so the proxy just needs
+    // to not reject it purely for lacking a session cookie.
+    if (pathname === "/api/social-posts/sync") {
+      return NextResponse.next();
+    }
     if (!isLoggedIn) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

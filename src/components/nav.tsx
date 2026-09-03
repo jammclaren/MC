@@ -1,6 +1,7 @@
 import { getSessionUser } from "@/lib/session";
 import { NavTopBar } from "@/components/nav-topbar";
 import { prisma } from "@/lib/prisma";
+import { canAccessSocialMonitor } from "@/lib/rbac";
 
 const NAV_LINKS = [
   { href: "/", label: "Overview" },
@@ -29,6 +30,9 @@ export async function Nav() {
   );
   const allLinks = [
     ...NAV_LINKS,
+    ...(canAccessSocialMonitor(user)
+      ? [{ href: "/social-monitor", label: "Social Media Monitor" }]
+      : []),
     ...visibleAdminLinks.map((l) => ({ href: l.href, label: l.label })),
   ];
 

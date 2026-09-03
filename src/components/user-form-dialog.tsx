@@ -39,6 +39,7 @@ const WARFIGHTING_FUNCTIONS = [
   "MANEUVER",
   "PROTECTION",
   "SUSTAINMENT",
+  "CMO",
 ] as const;
 type WarfightingFunction = (typeof WARFIGHTING_FUNCTIONS)[number];
 
@@ -49,6 +50,7 @@ const WFC_LABELS: Record<WarfightingFunction, string> = {
   MANEUVER: "Maneuver",
   PROTECTION: "Protection",
   SUSTAINMENT: "Sustainment",
+  CMO: "Civil-Military Operations",
 };
 
 export interface JtfOption {
