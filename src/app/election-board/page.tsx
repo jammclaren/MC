@@ -227,14 +227,31 @@ export default async function ElectionBoardPage({
                       <TableCell className="text-right font-mono tabular-nums">
                         {p.candidateCount}
                       </TableCell>
-                      <TableCell className="text-right font-mono tabular-nums">
-                        {p.votesEncoded.toLocaleString()}
+                      <TableCell className="text-right">
+                        <div className="font-mono tabular-nums">
+                          {p.votesEncoded.toLocaleString()}
+                        </div>
+                        {p.candidateVotesEncoded > 0 && p.partyListVotesEncoded > 0 && (
+                          <div className="text-xs text-muted-foreground">
+                            {p.partyListVotesEncoded.toLocaleString()} party list +{" "}
+                            {p.candidateVotesEncoded.toLocaleString()} candidate
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         {canWrite && (
                           <div className="flex justify-end gap-1">
                             <PartyFormDialog
                               initial={{ id: p.id, abbreviation: p.abbreviation, name: p.name }}
+                              votesContext={
+                                provinceJtfId
+                                  ? {
+                                      jtfId: provinceJtfId,
+                                      province,
+                                      votesEncoded: p.partyListVotesEncoded.toString(),
+                                    }
+                                  : undefined
+                              }
                               trigger={
                                 <Button variant="ghost" size="sm">
                                   Edit

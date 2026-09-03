@@ -37,19 +37,23 @@ enum ThreatCategory {
   CBC
 }
 
-/** Visual emphasis for an incident's map marker — purely a display
+/**
+ * Visual emphasis for an incident's map marker — purely a display
  * preference for faster identification on the priority map, no
- * operational meaning of its own. */
+ * operational meaning of its own.
+ */
 enum MarkerAnimation {
   NONE
   BLINK
   PULSE
 }
 
-/** Which workflow gave an incident its lat/lng — lets the priority map
+/**
+ * Which workflow gave an incident its lat/lng — lets the priority map
  * offer "Incident Markers" (deliberately placed via the map's own "Add
  * Marker" flow) and "Logged Incidents" (an MGRS reference entered on the
- * plain Log Incident form) as separate, independently toggleable layers. */
+ * plain Log Incident form) as separate, independently toggleable layers.
+ */
 enum IncidentSource {
   LOGGED
   MAP_MARKER
@@ -273,10 +277,28 @@ model ElectionOpsStatus {
 // starting at 0 pre-election.
 
 model Party {
-  id           String      @id @default(cuid())
-  abbreviation String      @unique
-  name         String
-  candidates   Candidate[]
+  id              String                @id @default(cuid())
+  abbreviation    String                @unique
+  name            String
+  candidates      Candidate[]
+  provinceResults PartyProvinceResult[]
+}
+
+// A party's directly-entered vote total for a province — for party-list
+// results reported without a per-candidate breakdown. Additive with (not a
+// replacement for) any votes already attributed to this party's individual
+// Candidate rows in that province.
+model PartyProvinceResult {
+  id           String   @id @default(cuid())
+  partyId      String
+  party        Party    @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  province     String
+  votesEncoded Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([partyId, province])
+  @@index([province])
 }
 
 model Candidate {

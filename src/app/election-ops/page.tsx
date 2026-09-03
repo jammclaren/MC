@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ElectionAreasAccordion } from "@/components/election-areas-accordion";
+import { ElectionAreaFormDialog } from "@/components/election-area-form-dialog";
 
 export default async function ElectionOpsPage({
   searchParams,
@@ -29,15 +30,33 @@ export default async function ElectionOpsPage({
     listElectionOpsAreas(user, jtfId),
     prisma.jTF.findMany({ orderBy: { name: "asc" } }),
   ]);
+  const jtfOptions = jtfs.map((j) => ({ id: j.id, name: j.name }));
+  const writableJtfId =
+    user.role === "ADMIN"
+      ? undefined
+      : user.jtfId && canWriteJtf(user, user.jtfId)
+        ? user.jtfId
+        : undefined;
+  const canCreate = user.role === "ADMIN" || (!!user.jtfId && canWriteJtf(user, user.jtfId));
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Election Status</h1>
-        <p className="text-sm text-muted-foreground">
-          Paraphernalia delivery, ACM sealing, voting, transmission, and canvassing per
-          area.
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Election Status</h1>
+          <p className="text-sm text-muted-foreground">
+            Paraphernalia delivery, ACM sealing, voting, transmission, and canvassing per
+            area.
+          </p>
+        </div>
+        {canCreate && (
+          <ElectionAreaFormDialog
+            jtfOptions={jtfOptions}
+            lockJtfId={writableJtfId}
+            barangayIndex={getBarangayIndex()}
+            trigger={<Button>Add Area</Button>}
+          />
+        )}
       </div>
 
       <form className="flex items-center gap-2 text-sm" action="/election-ops" method="get">
@@ -72,7 +91,7 @@ export default async function ElectionOpsPage({
         <CardContent>
           <ElectionAreasAccordion
             areas={areas.map((area) => ({ ...area, canEdit: canWriteJtf(user, area.jtfId) }))}
-            jtfOptions={jtfs.map((j) => ({ id: j.id, name: j.name }))}
+            jtfOptions={jtfOptions}
             barangayIndex={getBarangayIndex()}
           />
         </CardContent>

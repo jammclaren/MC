@@ -36,6 +36,12 @@ export interface BoardParty {
   abbreviation: string;
   name: string;
   candidateCount: number;
+  /** Sum of this party's individual Candidate rows' votesEncoded. */
+  candidateVotesEncoded: number;
+  /** Directly-entered party-list total for this province (editable, not
+   * derived from any candidate) — see PartyProvinceResult. */
+  partyListVotesEncoded: number;
+  /** candidateVotesEncoded + partyListVotesEncoded, for display. */
   votesEncoded: number;
 }
 
@@ -77,35 +83,43 @@ export async function getElectionBoardData(
 ): Promise<ElectionBoardData> {
   const scopeJtfId = scopeJtfFilter(user, undefined, { allowRollup: true });
 
-  const [candidates, allParties, registeredVotersAgg, electionAreasForVoters] = await Promise.all([
-    prisma.candidate.findMany({
-      where: { jtfId: scopeJtfId, province },
-      include: { party: true },
-      orderBy: [{ votesEncoded: "desc" }, { nameOnBallot: "asc" }],
-    }),
-    // The full party taxonomy, not just parties already fielding a
-    // candidate here — so a newly added party shows up (with zero
-    // candidates/votes for this province) immediately, not only once
-    // someone links a candidate to it.
-    prisma.party.findMany({ orderBy: { abbreviation: "asc" } }),
-    // Sums every ElectionArea in the province with a figure on file — not
-    // gated on ops-status tracking, since voter rolls are entered
-    // independently of paraphernalia/canvassing status (same as Overview's
-    // BARMM-wide total).
-    prisma.electionArea.aggregate({
-      where: { jtfId: scopeJtfId, province },
-      _sum: { registeredVoters: true },
-    }),
-    // Per-municipality breakdown for the Registered Voters edit dialog's
-    // municipality picker/prefill — grouped client-side below since a
-    // municipality's total can span several barangay rows.
-    prisma.electionArea.findMany({
-      where: { jtfId: scopeJtfId, province, municipality: { not: null } },
-      select: { municipality: true, registeredVoters: true },
-    }),
-  ]);
+  const [candidates, allParties, partyResults, registeredVotersAgg, electionAreasForVoters] =
+    await Promise.all([
+      prisma.candidate.findMany({
+        where: { jtfId: scopeJtfId, province },
+        include: { party: true },
+        orderBy: [{ votesEncoded: "desc" }, { nameOnBallot: "asc" }],
+      }),
+      // The full party taxonomy, not just parties already fielding a
+      // candidate here — so a newly added party shows up (with zero
+      // candidates/votes for this province) immediately, not only once
+      // someone links a candidate to it.
+      prisma.party.findMany({ orderBy: { abbreviation: "asc" } }),
+      // Directly-entered party-list totals for this province — additive
+      // with candidate-level votes, for parties reported without a
+      // per-candidate breakdown.
+      prisma.partyProvinceResult.findMany({ where: { province } }),
+      // Sums every ElectionArea in the province with a figure on file — not
+      // gated on ops-status tracking, since voter rolls are entered
+      // independently of paraphernalia/canvassing status (same as Overview's
+      // BARMM-wide total).
+      prisma.electionArea.aggregate({
+        where: { jtfId: scopeJtfId, province },
+        _sum: { registeredVoters: true },
+      }),
+      // Per-municipality breakdown for the Registered Voters edit dialog's
+      // municipality picker/prefill — grouped client-side below since a
+      // municipality's total can span several barangay rows.
+      prisma.electionArea.findMany({
+        where: { jtfId: scopeJtfId, province, municipality: { not: null } },
+        select: { municipality: true, registeredVoters: true },
+      }),
+    ]);
 
-  const votesEncoded = candidates.reduce((sum, c) => sum + c.votesEncoded, 0);
+  const partyListVotesByPartyId = new Map(partyResults.map((r) => [r.partyId, r.votesEncoded]));
+  const partyListVotesTotal = partyResults.reduce((sum, r) => sum + r.votesEncoded, 0);
+  const votesEncoded =
+    candidates.reduce((sum, c) => sum + c.votesEncoded, 0) + partyListVotesTotal;
 
   const toBoardCandidate = (c: (typeof candidates)[number]): BoardCandidate => ({
     id: c.id,
@@ -134,15 +148,19 @@ export async function getElectionBoardData(
   const parties: BoardParty[] = allParties
     .map((p) => {
       const stats = statsByPartyId.get(p.id);
+      const candidateVotesEncoded = stats?.votesEncoded ?? 0;
+      const partyListVotesEncoded = partyListVotesByPartyId.get(p.id) ?? 0;
       return {
         id: p.id,
         abbreviation: p.abbreviation,
         name: p.name,
         candidateCount: stats?.candidateCount ?? 0,
-        votesEncoded: stats?.votesEncoded ?? 0,
+        candidateVotesEncoded,
+        partyListVotesEncoded,
+        votesEncoded: candidateVotesEncoded + partyListVotesEncoded,
       };
     })
-    .sort((a, b) => b.candidateCount - a.candidateCount);
+    .sort((a, b) => b.votesEncoded - a.votesEncoded);
 
   // Reporting-percentage infrastructure (per-precinct results submission)
   // doesn't exist yet — 0 until votes are actually encoded, same as the
