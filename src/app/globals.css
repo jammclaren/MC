@@ -231,9 +231,15 @@
   background-color: var(--card) !important;
   color: var(--foreground) !important;
   border-color: var(--border) !important;
+  -webkit-tap-highlight-color: transparent;
 }
-.leaflet-control-zoom a:hover {
+.leaflet-control-zoom a:hover,
+.leaflet-control-zoom a:focus,
+.leaflet-control-zoom a:focus-visible,
+.leaflet-control-zoom a:active {
   background-color: var(--accent) !important;
+  color: var(--foreground) !important;
+  outline: none;
 }
 
 /* Recolors the "Tactical Blueprint" base layer's neutral-gray tiles into
