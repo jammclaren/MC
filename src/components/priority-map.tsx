@@ -584,7 +584,7 @@ export function PriorityMap({
             );
           })}
           {mapPlacedMarkers.length > 0 && (
-            <LayersControl.Overlay checked name="Incident Markers">
+            <LayersControl.Overlay checked name="Recent Incidents">
               <LayerGroup>
                 <IncidentMarkerItems
                   markers={mapPlacedMarkers}
