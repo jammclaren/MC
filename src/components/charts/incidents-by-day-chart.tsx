@@ -45,9 +45,15 @@ function ChartTooltip({
   );
 }
 
-export function IncidentsByDayChart({ data }: { data: IncidentsByDayDatum[] }) {
+export function IncidentsByDayChart({
+  data,
+  height = 180,
+}: {
+  data: IncidentsByDayDatum[];
+  height?: number | `${number}%`;
+}) {
   return (
-    <ResponsiveContainer width="100%" height={180}>
+    <ResponsiveContainer width="100%" height={height}>
       <AreaChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
         <defs>
           <linearGradient id={GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">

@@ -86,11 +86,11 @@ function IncidentMarkers({ markers }: { markers: IncidentMarker[] }) {
  * categorization, layer toggles all stay on /priority-map). */
 export function OverviewIncidentMap({ markers }: { markers: IncidentMarker[] }) {
   return (
-    <div className="relative isolate">
+    <div className="relative isolate h-full min-h-[400px]">
       <MapContainer
         center={DEFAULT_CENTER}
         zoom={DEFAULT_ZOOM}
-        className="h-[400px] w-full rounded-md border bg-muted"
+        className="h-full w-full rounded-md border bg-muted"
         scrollWheelZoom={false}
       >
         <TacticalBlueprintPane />

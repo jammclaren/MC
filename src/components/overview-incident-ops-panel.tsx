@@ -99,22 +99,28 @@ export function OverviewIncidentOpsPanel({
               <StatTile label="Incidents Plotted" value={stats.total.toLocaleString()} />
               <StatTile label="Logged (24h)" value={stats.last24hCount.toLocaleString()} />
             </div>
-            <div>
+            <div className="flex min-h-0 flex-1 flex-col">
               <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
                 Incidents by JTF
               </h3>
-              <LabeledBarChart data={stats.jtfChartData} height={140} />
+              <div className="min-h-[140px] flex-1">
+                <LabeledBarChart data={stats.jtfChartData} height="100%" />
+              </div>
             </div>
-            <div>
+            <div className="flex min-h-0 flex-1 flex-col">
               <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
                 Incidents (14d)
               </h3>
-              <IncidentsByDayChart data={incidentsByDay} />
+              <div className="min-h-[180px] flex-1">
+                <IncidentsByDayChart data={incidentsByDay} height="100%" />
+              </div>
             </div>
           </div>
 
           <div className="flex flex-col gap-4">
-            <OverviewIncidentMapLoader markers={markers} />
+            <div className="min-h-[400px] flex-1">
+              <OverviewIncidentMapLoader markers={markers} />
+            </div>
             <div className="rounded-md border border-border p-3">
               <h3 className="mb-1 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
                 Most Recent Report

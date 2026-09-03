@@ -15,7 +15,7 @@ export function LabeledBarChart({
   color = "var(--chart-1)",
 }: {
   data: LabeledBarDatum[];
-  height?: number;
+  height?: number | `${number}%`;
   color?: string;
 }) {
   return (
