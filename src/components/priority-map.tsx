@@ -566,8 +566,11 @@ export function PriorityMap({
             </LayersControl.Overlay>
           )}
           {jtfOptions.map((jtf) => {
-            const jtfMarkers = loggedIncidentsByJtf.get(jtf.id);
-            if (!jtfMarkers || jtfMarkers.length === 0) return null;
+            // Always offer every JTF as a toggleable layer — even one with
+            // no logged incidents yet still needs to appear in the control,
+            // both so the full JTF roster is visible at a glance and so the
+            // toggle is already there once that JTF logs its first one.
+            const jtfMarkers = loggedIncidentsByJtf.get(jtf.id) ?? [];
             return (
               <LayersControl.Overlay key={jtf.id} name={`Logged Incidents — ${jtf.name}`}>
                 <LayerGroup>
