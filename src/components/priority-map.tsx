@@ -249,9 +249,11 @@ function useCurrentZoom(): number {
   return zoom;
 }
 
-/** Shared marker rendering for both the "Incident Markers" (map-placed) and
- * "Logged Incidents" (plain Log Incident form) overlays — same popup/edit/
- * delete behavior either way, just filtered to a different `source`. */
+/** Shared marker rendering for every JTF's "Logged Incidents" overlay —
+ * same popup/edit/delete behavior regardless of whether the incident was
+ * entered via the plain Log Incident form or the map's own Add Marker
+ * click (both count as logged for their JTF; `source` is provenance only,
+ * not a display split). */
 function IncidentMarkerItems({
   markers,
   jtfOptions,
@@ -355,23 +357,21 @@ export function PriorityMap({
       .catch(() => setBarangays(null));
   }, []);
 
-  const mapPlacedMarkers = useMemo(
-    () => markers.filter((m) => m.source === "MAP_MARKER"),
-    [markers]
-  );
-  const loggedIncidentMarkers = useMemo(
-    () => markers.filter((m) => m.source === "LOGGED"),
-    [markers]
-  );
+  // Every incident counts as "logged" for its JTF on the map regardless of
+  // which flow created it (plain Log Incident form vs the map's own Add
+  // Marker click) — one layer per JTF, not a separate source-based split,
+  // so nothing can render twice across two different layers at once. A
+  // just-created incident still stands out via its own pulse animation
+  // (see isLatestIncident/buildIncidentIcon) rather than a separate layer.
   const loggedIncidentsByJtf = useMemo(() => {
     const map = new Map<string, IncidentMarker[]>();
-    for (const marker of loggedIncidentMarkers) {
+    for (const marker of markers) {
       const list = map.get(marker.jtfId) ?? [];
       list.push(marker);
       map.set(marker.jtfId, list);
     }
     return map;
-  }, [loggedIncidentMarkers]);
+  }, [markers]);
 
   const areaByKey = useMemo(() => {
     const map = new Map<string, ScoredArea>();
@@ -572,7 +572,7 @@ export function PriorityMap({
             // toggle is already there once that JTF logs its first one.
             const jtfMarkers = loggedIncidentsByJtf.get(jtf.id) ?? [];
             return (
-              <LayersControl.Overlay key={jtf.id} name={`Logged Incidents — ${jtf.name}`}>
+              <LayersControl.Overlay checked key={jtf.id} name={`Logged Incidents — ${jtf.name}`}>
                 <LayerGroup>
                   <IncidentMarkerItems
                     markers={jtfMarkers}
@@ -583,17 +583,6 @@ export function PriorityMap({
               </LayersControl.Overlay>
             );
           })}
-          {mapPlacedMarkers.length > 0 && (
-            <LayersControl.Overlay checked name="Recent Incidents">
-              <LayerGroup>
-                <IncidentMarkerItems
-                  markers={mapPlacedMarkers}
-                  jtfOptions={jtfOptions}
-                  areaOptions={areaOptions}
-                />
-              </LayerGroup>
-            </LayersControl.Overlay>
-          )}
         </LayersControl>
         {provinces && <FitToBounds data={provinces} />}
       </MapContainer>
