@@ -49,13 +49,10 @@ export function canModifyEntry(
   return false;
 }
 
-// Pre-launch kill switch — the user explicitly asked not to launch Social
-// Media Monitor yet (still needs a real Facebook Page Access Token wired
-// in). Flip to true only once they say go; until then this makes the
-// feature inaccessible to every role in production regardless of the
-// scoping below, even though its code/nav link/migration are already
-// merged to main.
-const SOCIAL_MONITOR_LAUNCHED = false;
+// Launched. Automatic Facebook sync still needs FACEBOOK_PAGE_ACCESS_TOKEN
+// and FACEBOOK_MONITORED_PAGE_IDS set before the hourly cron does anything
+// (see api/social-posts/sync) — manual logging works regardless.
+const SOCIAL_MONITOR_LAUNCHED = true;
 
 /**
  * Social Media Monitor is restricted beyond the usual JTF/command scoping:
