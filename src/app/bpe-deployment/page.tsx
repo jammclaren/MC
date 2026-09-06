@@ -123,6 +123,10 @@ export default async function BpeDeploymentPage({
                   <span className="font-medium">{card.pnpDeployed.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
+                  <span className="text-muted-foreground">WAVs/TAV</span>
+                  <span className="font-medium">{card.wavsTav.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-muted-foreground">Voter Coverage</span>
                   <span className="font-medium">
                     {coveragePct === null ? "—" : `${coveragePct.toFixed(1)}%`}

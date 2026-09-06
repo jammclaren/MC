@@ -7,6 +7,7 @@ export interface JtfDeploymentCard {
   deployedToPolling: number;
   qrf: number;
   pnpDeployed: number;
+  wavsTav: number;
   numPrecincts: number;
   registeredVoters: number;
 }
@@ -53,7 +54,14 @@ export async function getDeploymentData(
     }),
     prisma.troopDeployment.findMany({
       where: { jtfId: cardScopeJtfId },
-      select: { jtfId: true, deployedToPolling: true, qrf: true, pnpOfficers: true, pnpEnlisted: true },
+      select: {
+        jtfId: true,
+        deployedToPolling: true,
+        qrf: true,
+        pnpOfficers: true,
+        pnpEnlisted: true,
+        wavsTav: true,
+      },
     }),
     prisma.troopDeployment.findMany({
       where: { jtfId: rowScopeJtfId },
@@ -76,6 +84,7 @@ export async function getDeploymentData(
       deployedToPolling: deployRows.reduce((sum, r) => sum + r.deployedToPolling, 0),
       qrf: deployRows.reduce((sum, r) => sum + r.qrf, 0),
       pnpDeployed: deployRows.reduce((sum, r) => sum + r.pnpOfficers + r.pnpEnlisted, 0),
+      wavsTav: deployRows.reduce((sum, r) => sum + r.wavsTav, 0),
       numPrecincts: areaAgg?._sum.numPrecincts ?? 0,
       registeredVoters: areaAgg?._sum.registeredVoters ?? 0,
     };
