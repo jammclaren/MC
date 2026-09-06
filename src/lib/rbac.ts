@@ -26,16 +26,20 @@ export function canReadJtf(user: SessionUser, targetJtfId: string | null): boole
   return user.jtfId === targetJtfId;
 }
 
-/** Only ADMIN, and JTF_COMMANDER/JTF_STAFF within their own JTF, may write. */
+/** Only ADMIN, and JTF_COMMANDER/JTF_STAFF/BATTALION_STAFF within their own
+ * JTF, may write. BATTALION_STAFF is scoped identically to JTF_STAFF — the
+ * difference between them is which pages/nav links are visible at all (see
+ * canAccessPage), not what a write within an allowed page may touch. */
 export function canWriteJtf(user: SessionUser, targetJtfId: string): boolean {
   if (user.role === "ADMIN") return true;
-  if (user.role === "JTF_COMMANDER" || user.role === "JTF_STAFF") {
+  if (user.role === "JTF_COMMANDER" || user.role === "JTF_STAFF" || user.role === "BATTALION_STAFF") {
     return user.jtfId === targetJtfId;
   }
   return false;
 }
 
-/** JTF_STAFF may only edit/delete entries they created themselves. */
+/** JTF_STAFF/BATTALION_STAFF may only edit/delete entries they created
+ * themselves. */
 export function canModifyEntry(
   user: SessionUser,
   targetJtfId: string,
@@ -43,10 +47,33 @@ export function canModifyEntry(
 ): boolean {
   if (user.role === "ADMIN") return true;
   if (user.role === "JTF_COMMANDER") return user.jtfId === targetJtfId;
-  if (user.role === "JTF_STAFF") {
+  if (user.role === "JTF_STAFF" || user.role === "BATTALION_STAFF") {
     return user.jtfId === targetJtfId && user.id === createdById;
   }
   return false;
+}
+
+/**
+ * BATTALION_STAFF has the narrowest nav/page surface of any JTF-scoped
+ * role: Overview, Monitored Incidents, Election Status, and Election
+ * Profile only — no Situation Map, no Deployment. Every other role keeps
+ * its existing full access to these four pages; this only ever removes
+ * access, never grants it beyond what a role already had.
+ */
+const BATTALION_STAFF_BLOCKED_PAGES = ["situation-map", "deployment"] as const;
+type RestrictablePage = (typeof BATTALION_STAFF_BLOCKED_PAGES)[number];
+
+export function canAccessPage(user: SessionUser, page: RestrictablePage): boolean {
+  if (user.role === "BATTALION_STAFF") {
+    return !BATTALION_STAFF_BLOCKED_PAGES.includes(page);
+  }
+  return true;
+}
+
+export function assertCanAccessPage(user: SessionUser, page: RestrictablePage): void {
+  if (!canAccessPage(user, page)) {
+    throw new ForbiddenError("Not authorized to access this page");
+  }
 }
 
 // Launched. Automatic Facebook sync still needs FACEBOOK_PAGE_ACCESS_TOKEN
@@ -73,6 +100,24 @@ export function canAccessSocialMonitor(user: SessionUser): boolean {
 export function assertCanAccessSocialMonitor(user: SessionUser): void {
   if (!canAccessSocialMonitor(user)) {
     throw new ForbiddenError("Not authorized to access the Social Media Monitor");
+  }
+}
+
+/**
+ * Situation Report is restricted to ADMIN and WFC Intelligence (M2) only —
+ * explicitly not COMMAND, not CMO, and not any JTF-scoped role.
+ */
+export function canAccessSituationReport(user: SessionUser): boolean {
+  if (user.role === "ADMIN") return true;
+  if (user.role === "WFC_STAFF") {
+    return user.warfightingFunction === "INTELLIGENCE";
+  }
+  return false;
+}
+
+export function assertCanAccessSituationReport(user: SessionUser): void {
+  if (!canAccessSituationReport(user)) {
+    throw new ForbiddenError("Not authorized to access the Situation Report");
   }
 }
 

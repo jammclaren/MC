@@ -424,3 +424,24 @@
   box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.18) inset,
     0 -1px 12px -2px rgba(34, 211, 238, 0.55);
 }
+
+/* Situation Report print support — hidden on screen, shown only when
+ * actually printing; and the tactical console chrome (nav bar, HUD
+ * corner frame, background grid) has no place on a printed page. */
+.print-only {
+  display: none;
+}
+@media print {
+  .no-print,
+  header,
+  .hud-viewport-frame {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+}

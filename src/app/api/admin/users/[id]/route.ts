@@ -12,6 +12,7 @@ const roleSchema = z.enum([
   "COMMAND",
   "JTF_COMMANDER",
   "JTF_STAFF",
+  "BATTALION_STAFF",
   "VIEWER",
   "WFC_STAFF",
 ]);
@@ -23,6 +24,7 @@ const warfightingFunctionSchema = z.enum([
   "MANEUVER",
   "PROTECTION",
   "SUSTAINMENT",
+  "CMO",
 ]);
 
 const updateUserSchema = z.object({

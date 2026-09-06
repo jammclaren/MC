@@ -1,13 +1,13 @@
 import { getSessionUser } from "@/lib/session";
 import { NavTopBar } from "@/components/nav-topbar";
 import { prisma } from "@/lib/prisma";
-import { canAccessSocialMonitor } from "@/lib/rbac";
+import { canAccessPage, canAccessSituationReport, canAccessSocialMonitor } from "@/lib/rbac";
 
 const NAV_LINKS = [
   { href: "/", label: "Overview" },
-  { href: "/priority-map", label: "Situation Map" },
+  { href: "/priority-map", label: "Situation Map", page: "situation-map" },
   { href: "/incidents", label: "Monitored Incidents" },
-  { href: "/bpe-deployment", label: "Deployment" },
+  { href: "/bpe-deployment", label: "Deployment", page: "deployment" },
   { href: "/election-ops", label: "Election Status" },
   { href: "/election-board", label: "Election Profile" },
 ] as const;
@@ -25,13 +25,19 @@ export async function Nav() {
     ? await prisma.jTF.findUnique({ where: { id: user.jtfId }, select: { name: true } })
     : null;
 
+  const visibleNavLinks = NAV_LINKS.filter(
+    (link) => !("page" in link) || canAccessPage(user, link.page)
+  );
   const visibleAdminLinks = ADMIN_LINKS.filter((link) =>
     (link.roles as readonly string[]).includes(user.role)
   );
   const allLinks = [
-    ...NAV_LINKS,
+    ...visibleNavLinks.map((l) => ({ href: l.href, label: l.label })),
     ...(canAccessSocialMonitor(user)
       ? [{ href: "/social-monitor", label: "Social Media Monitor" }]
+      : []),
+    ...(canAccessSituationReport(user)
+      ? [{ href: "/situation-report", label: "Situation Report" }]
       : []),
     ...visibleAdminLinks.map((l) => ({ href: l.href, label: l.label })),
   ];

@@ -1,9 +1,9 @@
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { getScoredAreas } from "@/lib/queries/priority-areas";
 import { getIncidentMarkers } from "@/lib/queries/incident-markers";
-import { canWriteJtf } from "@/lib/rbac";
+import { canAccessPage, canWriteJtf } from "@/lib/rbac";
 import { getBarangayIndex } from "@/lib/barangay-index";
 import { PriorityMapLoader } from "@/components/priority-map-loader";
 import {
@@ -36,6 +36,9 @@ export default async function PriorityMapPage() {
   const user = await getSessionUser();
   if (!user) {
     redirect("/login");
+  }
+  if (!canAccessPage(user, "situation-map")) {
+    notFound();
   }
 
   const [areas, jtfs, markers, electionAreas] = await Promise.all([

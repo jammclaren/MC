@@ -27,6 +27,7 @@ const ROLES = [
   "COMMAND",
   "JTF_COMMANDER",
   "JTF_STAFF",
+  "BATTALION_STAFF",
   "VIEWER",
   "WFC_STAFF",
 ] as const;
@@ -88,7 +89,8 @@ export function UserFormDialog({
     initial?.warfightingFunction ?? ""
   );
 
-  const needsJtf = role === "JTF_COMMANDER" || role === "JTF_STAFF" || role === "VIEWER";
+  const needsJtf =
+    role === "JTF_COMMANDER" || role === "JTF_STAFF" || role === "BATTALION_STAFF" || role === "VIEWER";
   const needsWfc = role === "WFC_STAFF";
   // Lets each <Select>'s trigger show a real label instead of the raw
   // value — Base UI's Select.Value only resolves a label automatically

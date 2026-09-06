@@ -12,6 +12,7 @@ const roleSchema = z.enum([
   "COMMAND",
   "JTF_COMMANDER",
   "JTF_STAFF",
+  "BATTALION_STAFF",
   "VIEWER",
   "WFC_STAFF",
 ]);
@@ -23,6 +24,7 @@ const warfightingFunctionSchema = z.enum([
   "MANEUVER",
   "PROTECTION",
   "SUSTAINMENT",
+  "CMO",
 ]);
 
 const createUserSchema = z
@@ -36,7 +38,10 @@ const createUserSchema = z
   })
   .refine(
     (data) => data.role === "ADMIN" || data.role === "COMMAND" || data.role === "WFC_STAFF" || !!data.jtfId,
-    { message: "jtfId is required for JTF_COMMANDER, JTF_STAFF, and VIEWER roles", path: ["jtfId"] }
+    {
+      message: "jtfId is required for JTF_COMMANDER, JTF_STAFF, BATTALION_STAFF, and VIEWER roles",
+      path: ["jtfId"],
+    }
   )
   .refine((data) => data.role !== "WFC_STAFF" || !!data.warfightingFunction, {
     message: "warfightingFunction is required for WFC_STAFF",

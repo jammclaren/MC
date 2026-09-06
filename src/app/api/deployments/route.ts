@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUser } from "@/lib/session";
-import { assertCanReadJtf, assertCanWriteJtf, scopeJtfFilter } from "@/lib/rbac";
+import { assertCanReadJtf, assertCanWriteJtf, ForbiddenError, scopeJtfFilter } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import { withAudit } from "@/lib/audit";
 
@@ -51,6 +51,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const user = await requireSessionUser();
+    // Deployment is one of the two pages BATTALION_STAFF has no access to
+    // at all (see rbac.ts canAccessPage) — block the API too, not just the
+    // page/nav link.
+    if (user.role === "BATTALION_STAFF") {
+      throw new ForbiddenError("Not authorized to write deployment data");
+    }
     const body = createDeploymentSchema.parse(await request.json());
     assertCanWriteJtf(user, body.jtfId);
 

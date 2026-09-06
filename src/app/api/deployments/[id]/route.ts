@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUser } from "@/lib/session";
-import { assertCanWriteJtf } from "@/lib/rbac";
+import { assertCanWriteJtf, ForbiddenError } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import { withAudit } from "@/lib/audit";
 
@@ -36,6 +36,9 @@ export async function PATCH(
   try {
     const { id } = await params;
     const user = await requireSessionUser();
+    if (user.role === "BATTALION_STAFF") {
+      throw new ForbiddenError("Not authorized to write deployment data");
+    }
     const existing = await loadDeploymentOrThrow(id);
     assertCanWriteJtf(user, existing.jtfId);
 
@@ -65,6 +68,9 @@ export async function DELETE(
   try {
     const { id } = await params;
     const user = await requireSessionUser();
+    if (user.role === "BATTALION_STAFF") {
+      throw new ForbiddenError("Not authorized to write deployment data");
+    }
     const existing = await loadDeploymentOrThrow(id);
     assertCanWriteJtf(user, existing.jtfId);
 

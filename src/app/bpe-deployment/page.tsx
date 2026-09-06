@@ -1,9 +1,9 @@
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { getDeploymentData } from "@/lib/queries/deployments";
 import { safePercent } from "@/lib/percentages";
-import { canWriteJtf } from "@/lib/rbac";
+import { canAccessPage, canWriteJtf } from "@/lib/rbac";
 import {
   Card,
   CardContent,
@@ -25,6 +25,9 @@ export default async function BpeDeploymentPage({
   const user = await getSessionUser();
   if (!user) {
     redirect("/login");
+  }
+  if (!canAccessPage(user, "deployment")) {
+    notFound();
   }
 
   const { jtfId } = await searchParams;

@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StatTile } from "@/components/stat-tile";
 import { CandidateFormDialog } from "@/components/candidate-form-dialog";
+import { CandidatesTable } from "@/components/candidates-table";
 import { PartyFormDialog } from "@/components/party-form-dialog";
 import { RegisteredVotersFormDialog } from "@/components/registered-voters-form-dialog";
 import { DeleteButton } from "@/components/delete-button";
@@ -173,6 +174,7 @@ export default async function ElectionBoardPage({
                     <TableHead>Candidate / Party</TableHead>
                     <TableHead className="text-right">Votes</TableHead>
                     <TableHead className="text-right">Share</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -194,11 +196,36 @@ export default async function ElectionBoardPage({
                       <TableCell className="text-right font-mono tabular-nums text-primary">
                         {c.voteSharePct === null ? "—" : `${c.voteSharePct.toFixed(1)}%`}
                       </TableCell>
+                      <TableCell className="text-right">
+                        {canWrite && provinceJtfId && (
+                          <div className="flex justify-end gap-1">
+                            <CandidateFormDialog
+                              jtfId={provinceJtfId}
+                              province={province}
+                              partyOptions={partyOptions}
+                              initial={{
+                                id: c.id,
+                                district: c.district ?? "",
+                                nameOnBallot: c.nameOnBallot,
+                                partyId: c.partyId ?? "",
+                                isCocFiler: c.isCocFiler,
+                                votesEncoded: c.votesEncoded.toString(),
+                                sourceNote: c.sourceNote ?? "",
+                              }}
+                              trigger={
+                                <Button variant="ghost" size="sm">
+                                  Edit
+                                </Button>
+                              }
+                            />
+                          </div>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                   {board.leaderboard.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground">
+                      <TableCell colSpan={5} className="text-center text-muted-foreground">
                         No candidates on file for this province yet.
                       </TableCell>
                     </TableRow>
@@ -279,69 +306,13 @@ export default async function ElectionBoardPage({
             </TabsContent>
 
             <TabsContent value="candidates">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name on Ballot</TableHead>
-                    <TableHead>District</TableHead>
-                    <TableHead>Party</TableHead>
-                    <TableHead>COC Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {board.candidates.map((c) => (
-                    <TableRow key={c.id}>
-                      <TableCell className="font-medium">{c.nameOnBallot}</TableCell>
-                      <TableCell>{c.district ?? "—"}</TableCell>
-                      <TableCell>{c.partyAbbreviation ?? "Independent"}</TableCell>
-                      <TableCell>
-                        {c.isCocFiler ? (
-                          <Badge variant="good">COC Filer</Badge>
-                        ) : (
-                          <Badge variant="outline">Unconfirmed</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {canWrite && provinceJtfId && (
-                          <div className="flex justify-end gap-1">
-                            <CandidateFormDialog
-                              jtfId={provinceJtfId}
-                              province={province}
-                              partyOptions={partyOptions}
-                              initial={{
-                                id: c.id,
-                                district: c.district ?? "",
-                                nameOnBallot: c.nameOnBallot,
-                                partyId: c.partyId ?? "",
-                                isCocFiler: c.isCocFiler,
-                                votesEncoded: c.votesEncoded.toString(),
-                                sourceNote: c.sourceNote ?? "",
-                              }}
-                              trigger={
-                                <Button variant="ghost" size="sm">
-                                  Edit
-                                </Button>
-                              }
-                            />
-                            <DeleteButton
-                              url={`/api/candidates/${c.id}`}
-                              confirmMessage="Delete this candidate? This cannot be undone."
-                            />
-                          </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {board.candidates.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground">
-                        No candidates on file for this province yet.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              <CandidatesTable
+                candidates={board.candidates}
+                canWrite={canWrite}
+                provinceJtfId={provinceJtfId}
+                province={province}
+                partyOptions={partyOptions}
+              />
             </TabsContent>
           </Tabs>
         </CardContent>
