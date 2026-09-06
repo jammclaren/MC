@@ -22,6 +22,7 @@ export function OverviewIncidentOpsPanel({
   topPriorityAreas,
   incidentsByDay,
   now,
+  canAccessSituationMap = true,
 }: {
   markers: IncidentMarker[];
   topPriorityAreas: LeaderboardEntry[];
@@ -29,6 +30,10 @@ export function OverviewIncidentOpsPanel({
   /** Request-time timestamp (ms), computed server-side and passed down so
    * the "last 24h" calculation stays a pure function of props. */
   now: number;
+  /** BATTALION_STAFF has no access to /priority-map at all (see rbac.ts
+   * canAccessPage) — the nav already hides that link, but this card's own
+   * shortcut needs the same guard or it'd be a stray way in. */
+  canAccessSituationMap?: boolean;
 }) {
   const stats = useMemo(() => {
     const total = markers.length;
@@ -87,9 +92,11 @@ export function OverviewIncidentOpsPanel({
               Armed incident in last 24h
             </span>
           )}
-          <Link href="/priority-map" className="self-center text-sm text-primary hover:underline">
-            Open Situation Map →
-          </Link>
+          {canAccessSituationMap && (
+            <Link href="/priority-map" className="self-center text-sm text-primary hover:underline">
+              Open Situation Map →
+            </Link>
+          )}
         </div>
       </CardHeader>
       <CardContent>

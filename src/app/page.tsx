@@ -3,7 +3,7 @@ import { getSessionUser } from "@/lib/session";
 import { getOverviewData } from "@/lib/queries/overview";
 import { getIncidentMarkers } from "@/lib/queries/incident-markers";
 import { listJtfAssessments } from "@/lib/queries/jtf-assessments";
-import { canWriteJtf } from "@/lib/rbac";
+import { canAccessPage, canWriteJtf } from "@/lib/rbac";
 import { nowMs } from "@/lib/time";
 import {
   Card,
@@ -76,6 +76,7 @@ export default async function OverviewPage() {
         topPriorityAreas={data.topPriorityAreas}
         incidentsByDay={data.incidentsByDay}
         now={now}
+        canAccessSituationMap={canAccessPage(user, "situation-map")}
       />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
