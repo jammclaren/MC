@@ -44,6 +44,8 @@ const WARFIGHTING_FUNCTIONS = [
 ] as const;
 type WarfightingFunction = (typeof WARFIGHTING_FUNCTIONS)[number];
 
+const NO_JTF_VALUE = "__none__";
+
 const WFC_LABELS: Record<WarfightingFunction, string> = {
   COMMAND_CONTROL: "Command & Control",
   INTELLIGENCE: "Intelligence",
@@ -84,21 +86,32 @@ export function UserFormDialog({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<Role>(initial?.role ?? "JTF_STAFF");
-  const [jtfId, setJtfId] = useState<string>(initial?.jtfId ?? "");
+  const [jtfId, setJtfId] = useState<string>(
+    initial?.jtfId ?? (initial?.role === "VIEWER" ? NO_JTF_VALUE : "")
+  );
   const [warfightingFunction, setWarfightingFunction] = useState<WarfightingFunction | "">(
     initial?.warfightingFunction ?? ""
   );
 
-  const needsJtf =
+  // JTF_COMMANDER/JTF_STAFF/BRIGADE_STAFF are always scoped to one JTF.
+  // VIEWER can go either way — a command-wide viewer (jtfId left null,
+  // reads everything, per rbac.ts's canReadJtf) is a real, intentional
+  // configuration, not a fallback, so the JTF field shows but isn't
+  // mandatory for that role specifically.
+  const showJtf =
     role === "JTF_COMMANDER" || role === "JTF_STAFF" || role === "BRIGADE_STAFF" || role === "VIEWER";
+  const requireJtf = showJtf && role !== "VIEWER";
   const needsWfc = role === "WFC_STAFF";
   // Lets each <Select>'s trigger show a real label instead of the raw
   // value — Base UI's Select.Value only resolves a label automatically
   // when the Root is given this `items` list.
   const roleItems = useMemo(() => ROLES.map((r) => ({ value: r, label: r })), []);
   const jtfItems = useMemo(
-    () => jtfOptions.map((jtf) => ({ value: jtf.id, label: jtf.name })),
-    [jtfOptions]
+    () => [
+      ...(role === "VIEWER" ? [{ value: NO_JTF_VALUE, label: "Command-wide (no JTF)" }] : []),
+      ...jtfOptions.map((jtf) => ({ value: jtf.id, label: jtf.name })),
+    ],
+    [jtfOptions, role]
   );
   const wfcItems = useMemo(
     () => WARFIGHTING_FUNCTIONS.map((fn) => ({ value: fn, label: WFC_LABELS[fn] })),
@@ -107,7 +120,7 @@ export function UserFormDialog({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (needsJtf && !jtfId) {
+    if (requireJtf && !jtfId) {
       toast.error("Select a JTF for this role");
       return;
     }
@@ -119,11 +132,12 @@ export function UserFormDialog({
     try {
       const url = isEdit ? `/api/admin/users/${initial!.id}` : "/api/admin/users";
       const method = isEdit ? "PATCH" : "POST";
+      const resolvedJtfId = showJtf && jtfId && jtfId !== NO_JTF_VALUE ? jtfId : null;
       const body = isEdit
         ? {
             name,
             role,
-            jtfId: needsJtf ? jtfId : null,
+            jtfId: resolvedJtfId,
             warfightingFunction: needsWfc ? warfightingFunction : null,
             ...(password ? { password } : {}),
           }
@@ -132,7 +146,7 @@ export function UserFormDialog({
             email,
             password,
             role,
-            jtfId: needsJtf ? jtfId : undefined,
+            jtfId: resolvedJtfId ?? undefined,
             warfightingFunction: needsWfc ? warfightingFunction : undefined,
           };
 
@@ -198,7 +212,14 @@ export function UserFormDialog({
               <Select
                 items={roleItems}
                 value={role}
-                onValueChange={(v: string | null) => v && setRole(v as Role)}
+                onValueChange={(v: string | null) => {
+                  if (!v) return;
+                  // The "Command-wide" sentinel only means something for
+                  // VIEWER — clear it so switching to a JTF-required role
+                  // doesn't leave a stale, unmatched selection behind.
+                  if (v !== "VIEWER" && jtfId === NO_JTF_VALUE) setJtfId("");
+                  setRole(v as Role);
+                }}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -212,14 +233,17 @@ export function UserFormDialog({
                 </SelectContent>
               </Select>
             </div>
-            {needsJtf && (
+            {showJtf && (
               <div className="flex flex-col gap-2">
-                <Label>JTF</Label>
+                <Label>JTF{!requireJtf && " (optional — leave as Command-wide to read everything)"}</Label>
                 <Select items={jtfItems} value={jtfId} onValueChange={(v: string | null) => setJtfId(v ?? "")}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select JTF" />
                   </SelectTrigger>
                   <SelectContent>
+                    {role === "VIEWER" && (
+                      <SelectItem value={NO_JTF_VALUE}>Command-wide (no JTF)</SelectItem>
+                    )}
                     {jtfOptions.map((jtf) => (
                       <SelectItem key={jtf.id} value={jtf.id}>
                         {jtf.name}

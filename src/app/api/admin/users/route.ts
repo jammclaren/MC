@@ -37,9 +37,14 @@ const createUserSchema = z
     warfightingFunction: warfightingFunctionSchema.optional(),
   })
   .refine(
-    (data) => data.role === "ADMIN" || data.role === "COMMAND" || data.role === "WFC_STAFF" || !!data.jtfId,
+    (data) =>
+      data.role === "ADMIN" ||
+      data.role === "COMMAND" ||
+      data.role === "WFC_STAFF" ||
+      data.role === "VIEWER" || // VIEWER may be command-wide (no jtfId) or scoped to one
+      !!data.jtfId,
     {
-      message: "jtfId is required for JTF_COMMANDER, JTF_STAFF, BRIGADE_STAFF, and VIEWER roles",
+      message: "jtfId is required for JTF_COMMANDER, JTF_STAFF, and BRIGADE_STAFF roles",
       path: ["jtfId"],
     }
   )
