@@ -8,17 +8,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { UserFormDialog } from "@/components/user-form-dialog";
-import { DeleteButton } from "@/components/delete-button";
+import { UsersTable } from "@/components/users-table";
 
 export default async function AdminUsersPage() {
   const user = await getSessionUser();
@@ -65,56 +57,20 @@ export default async function AdminUsersPage() {
           <CardDescription>{users.length} account(s).</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>JTF / Function</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell>{row.name}</TableCell>
-                  <TableCell>{row.email}</TableCell>
-                  <TableCell>{row.role}</TableCell>
-                  <TableCell>
-                    {row.jtf?.name ?? row.warfightingFunction?.replaceAll("_", " ") ?? "—"}
-                  </TableCell>
-                  <TableCell>{row.createdAt.toLocaleDateString()}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <UserFormDialog
-                        jtfOptions={jtfOptions}
-                        initial={{
-                          id: row.id,
-                          name: row.name,
-                          role: row.role,
-                          jtfId: row.jtfId,
-                          warfightingFunction: row.warfightingFunction,
-                        }}
-                        trigger={
-                          <Button variant="ghost" size="sm">
-                            Edit
-                          </Button>
-                        }
-                      />
-                      {row.id !== user.id && (
-                        <DeleteButton
-                          url={`/api/admin/users/${row.id}`}
-                          confirmMessage={`Delete user ${row.name}? This cannot be undone.`}
-                        />
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <UsersTable
+            users={users.map((row) => ({
+              id: row.id,
+              name: row.name,
+              email: row.email,
+              role: row.role,
+              jtfId: row.jtfId,
+              jtfName: row.jtf?.name ?? null,
+              warfightingFunction: row.warfightingFunction,
+              createdAtLabel: row.createdAt.toLocaleDateString(),
+            }))}
+            jtfOptions={jtfOptions}
+            currentUserId={user.id}
+          />
         </CardContent>
       </Card>
     </div>
