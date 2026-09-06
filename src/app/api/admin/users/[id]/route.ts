@@ -12,7 +12,7 @@ const roleSchema = z.enum([
   "COMMAND",
   "JTF_COMMANDER",
   "JTF_STAFF",
-  "BATTALION_STAFF",
+  "BRIGADE_STAFF",
   "VIEWER",
   "WFC_STAFF",
 ]);

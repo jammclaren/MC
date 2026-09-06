@@ -51,10 +51,10 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const user = await requireSessionUser();
-    // Deployment is one of the two pages BATTALION_STAFF has no access to
+    // Deployment is one of the two pages BRIGADE_STAFF has no access to
     // at all (see rbac.ts canAccessPage) — block the API too, not just the
     // page/nav link.
-    if (user.role === "BATTALION_STAFF") {
+    if (user.role === "BRIGADE_STAFF") {
       throw new ForbiddenError("Not authorized to write deployment data");
     }
     const body = createDeploymentSchema.parse(await request.json());

@@ -1,0 +1,6 @@
+UPDATE "User" SET "role" = 'BRIGADE_STAFF' WHERE "role" = 'BATTALION_STAFF';
+
+ALTER TYPE "Role" RENAME TO "Role_old";
+CREATE TYPE "Role" AS ENUM ('ADMIN', 'COMMAND', 'JTF_COMMANDER', 'JTF_STAFF', 'VIEWER', 'WFC_STAFF', 'BRIGADE_STAFF');
+ALTER TABLE "User" ALTER COLUMN "role" TYPE "Role" USING ("role"::text::"Role");
+DROP TYPE "Role_old";

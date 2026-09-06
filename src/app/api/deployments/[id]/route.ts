@@ -36,7 +36,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const user = await requireSessionUser();
-    if (user.role === "BATTALION_STAFF") {
+    if (user.role === "BRIGADE_STAFF") {
       throw new ForbiddenError("Not authorized to write deployment data");
     }
     const existing = await loadDeploymentOrThrow(id);
@@ -68,7 +68,7 @@ export async function DELETE(
   try {
     const { id } = await params;
     const user = await requireSessionUser();
-    if (user.role === "BATTALION_STAFF") {
+    if (user.role === "BRIGADE_STAFF") {
       throw new ForbiddenError("Not authorized to write deployment data");
     }
     const existing = await loadDeploymentOrThrow(id);

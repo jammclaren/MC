@@ -12,7 +12,7 @@ const roleSchema = z.enum([
   "COMMAND",
   "JTF_COMMANDER",
   "JTF_STAFF",
-  "BATTALION_STAFF",
+  "BRIGADE_STAFF",
   "VIEWER",
   "WFC_STAFF",
 ]);
@@ -39,7 +39,7 @@ const createUserSchema = z
   .refine(
     (data) => data.role === "ADMIN" || data.role === "COMMAND" || data.role === "WFC_STAFF" || !!data.jtfId,
     {
-      message: "jtfId is required for JTF_COMMANDER, JTF_STAFF, BATTALION_STAFF, and VIEWER roles",
+      message: "jtfId is required for JTF_COMMANDER, JTF_STAFF, BRIGADE_STAFF, and VIEWER roles",
       path: ["jtfId"],
     }
   )

@@ -26,19 +26,19 @@ export function canReadJtf(user: SessionUser, targetJtfId: string | null): boole
   return user.jtfId === targetJtfId;
 }
 
-/** Only ADMIN, and JTF_COMMANDER/JTF_STAFF/BATTALION_STAFF within their own
- * JTF, may write. BATTALION_STAFF is scoped identically to JTF_STAFF — the
+/** Only ADMIN, and JTF_COMMANDER/JTF_STAFF/BRIGADE_STAFF within their own
+ * JTF, may write. BRIGADE_STAFF is scoped identically to JTF_STAFF — the
  * difference between them is which pages/nav links are visible at all (see
  * canAccessPage), not what a write within an allowed page may touch. */
 export function canWriteJtf(user: SessionUser, targetJtfId: string): boolean {
   if (user.role === "ADMIN") return true;
-  if (user.role === "JTF_COMMANDER" || user.role === "JTF_STAFF" || user.role === "BATTALION_STAFF") {
+  if (user.role === "JTF_COMMANDER" || user.role === "JTF_STAFF" || user.role === "BRIGADE_STAFF") {
     return user.jtfId === targetJtfId;
   }
   return false;
 }
 
-/** JTF_STAFF/BATTALION_STAFF may only edit/delete entries they created
+/** JTF_STAFF/BRIGADE_STAFF may only edit/delete entries they created
  * themselves. */
 export function canModifyEntry(
   user: SessionUser,
@@ -47,25 +47,25 @@ export function canModifyEntry(
 ): boolean {
   if (user.role === "ADMIN") return true;
   if (user.role === "JTF_COMMANDER") return user.jtfId === targetJtfId;
-  if (user.role === "JTF_STAFF" || user.role === "BATTALION_STAFF") {
+  if (user.role === "JTF_STAFF" || user.role === "BRIGADE_STAFF") {
     return user.jtfId === targetJtfId && user.id === createdById;
   }
   return false;
 }
 
 /**
- * BATTALION_STAFF has the narrowest nav/page surface of any JTF-scoped
+ * BRIGADE_STAFF has the narrowest nav/page surface of any JTF-scoped
  * role: Overview, Monitored Incidents, Election Status, and Election
  * Profile only — no Situation Map, no Deployment. Every other role keeps
  * its existing full access to these four pages; this only ever removes
  * access, never grants it beyond what a role already had.
  */
-const BATTALION_STAFF_BLOCKED_PAGES = ["situation-map", "deployment"] as const;
-type RestrictablePage = (typeof BATTALION_STAFF_BLOCKED_PAGES)[number];
+const BRIGADE_STAFF_BLOCKED_PAGES = ["situation-map", "deployment"] as const;
+type RestrictablePage = (typeof BRIGADE_STAFF_BLOCKED_PAGES)[number];
 
 export function canAccessPage(user: SessionUser, page: RestrictablePage): boolean {
-  if (user.role === "BATTALION_STAFF") {
-    return !BATTALION_STAFF_BLOCKED_PAGES.includes(page);
+  if (user.role === "BRIGADE_STAFF") {
+    return !BRIGADE_STAFF_BLOCKED_PAGES.includes(page);
   }
   return true;
 }

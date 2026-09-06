@@ -18,7 +18,7 @@ enum Role {
   VIEWER
   WFC_STAFF // Warfighting Function Cell staff — cross-JTF, functional (not
   // JTF) scope. Read-only, command-wide, same as COMMAND; see rbac.ts.
-  BATTALION_STAFF // JTF-scoped like JTF_STAFF (same read/write rules —
+  BRIGADE_STAFF // JTF-scoped like JTF_STAFF (same read/write rules —
   // own JTF only), but a narrower nav/page surface: Overview, Monitored
   // Incidents, Election Status, Election Profile only — no Situation Map,
   // no Deployment. See canAccessPage in rbac.ts.
