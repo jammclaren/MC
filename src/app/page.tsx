@@ -54,7 +54,7 @@ export default async function OverviewPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         <StatTile
           label="Registered Voters (BARMM)"
           value={data.totalRegisteredVoters.toLocaleString()}
