@@ -1,6 +1,7 @@
 "use client";
 
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { truncateLabel } from "@/lib/text";
 
 export interface ActivityTrendDatum {
   date: string; // YYYY-MM-DD
@@ -16,17 +17,11 @@ const LINE_COLORS = [
   "var(--chart-5)",
 ];
 
-// Activity is free text — some reports carry a short label ("Rally"), others
-// a full narrative paragraph. Recharts' own <Legend>/Tooltip don't
-// truncate, so a long one blows past the chart's box and overlaps whatever
-// is below it (same class of bug as the Report Log table). Truncate for
-// *display* only — the raw label still drives the actual dataKey/grouping.
-const MAX_LABEL_LENGTH = 28;
-
-function truncateLabel(label: string): string {
-  return label.length > MAX_LABEL_LENGTH ? `${label.slice(0, MAX_LABEL_LENGTH)}…` : label;
-}
-
+// Activity type is free text — usually short, but nothing stops a longer
+// one. Recharts' own <Legend>/Tooltip don't truncate, so a long one blows
+// past the chart's box and overlaps whatever is below it (same class of bug
+// as the Report Log table). Truncate for *display* only — the raw label
+// still drives the actual dataKey/grouping.
 function formatDay(dateStr: unknown): string {
   if (typeof dateStr !== "string") return "";
   const d = new Date(dateStr + "T00:00:00Z");

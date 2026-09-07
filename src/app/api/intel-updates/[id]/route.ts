@@ -9,11 +9,11 @@ import { parseMgrs } from "@/lib/mgrs";
 
 const updateIntelUpdateSchema = z.object({
   category: z.enum(["NON_VIOLENT", "VIOLENT"]).optional(),
-  activity: z.string().trim().min(1).max(4000).optional(),
+  activityType: z.string().trim().min(1).max(120).nullable().optional(),
+  narrative: z.string().trim().min(1).max(4000).optional(),
   threatGroup: z.string().trim().max(120).nullable().optional(),
   province: z.string().trim().min(1).max(120).optional(),
   locationLabel: z.string().trim().min(1).max(200).optional(),
-  source: z.string().trim().max(120).nullable().optional(),
   mgrs: z.string().trim().min(1).optional(),
   date: z.coerce.date().optional(),
 });

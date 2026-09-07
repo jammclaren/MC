@@ -1,6 +1,9 @@
 export interface TopIncidentTypeDatum {
   label: string;
   count: number;
+  /** Untruncated text for the hover tooltip, when `label` has already been
+   * shortened for display — defaults to `label` when omitted. */
+  fullLabel?: string;
 }
 
 /**
@@ -29,7 +32,7 @@ export function TopIncidentTypesChart({
         const widthPct = (d.count / max) * 100;
         return (
           <div key={d.label} className="flex flex-col gap-1.5">
-            <span className="truncate text-sm text-foreground" title={d.label}>
+            <span className="truncate text-sm text-foreground" title={d.fullLabel ?? d.label}>
               {d.label}
             </span>
             <div className="flex items-center gap-3">

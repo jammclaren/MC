@@ -350,9 +350,10 @@ function IntelMarkerItems({ markers }: { markers: IntelMarker[] }) {
             <Popup>
               <div className="text-xs">
                 <div className="font-medium">
-                  {marker.category === "VIOLENT" ? "Violent" : "Non-Violent"} Activity
+                  {marker.activityType ??
+                    (marker.category === "VIOLENT" ? "Violent" : "Non-Violent") + " Activity"}
                 </div>
-                <div>{marker.activity}</div>
+                <div>{marker.narrative}</div>
                 {marker.threatGroup && <div>Threat group: {marker.threatGroup}</div>}
                 <div>{marker.province}</div>
               </div>

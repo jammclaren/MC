@@ -1,7 +1,7 @@
 // Deterministic "Overall Analysis & Assessment" for the Intelligence Update
 // page — same no-fabrication stance as daily-assessment.ts: every line is a
 // count, a threshold, or a verbatim-quoted field, never an NLP summary of
-// `activity` free text.
+// `narrative` free text.
 import type { IntelUpdateRow } from "@/lib/queries/intel-updates";
 
 const TREND_WINDOW_DAYS = 14;
@@ -51,6 +51,16 @@ export function computeIntelAssessment(rows: IntelUpdateRow[]): IntelAssessment 
   const trend = trendFrom(rows);
   analysis.push(`${TREND_WINDOW_DAYS}-day reporting trend is ${trend}.`);
 
+  const topActivityTypes = topByFrequency(
+    rows.map((r) => r.activityType),
+    3
+  );
+  if (topActivityTypes.length > 0) {
+    analysis.push(
+      `Most-cited activity type(s): ${topActivityTypes.map((t) => `${t.label} (${t.count})`).join(", ")}.`
+    );
+  }
+
   const topThreatGroups = topByFrequency(
     rows.map((r) => r.threatGroup),
     3
@@ -73,8 +83,9 @@ export function computeIntelAssessment(rows: IntelUpdateRow[]): IntelAssessment 
 
   const mostRecentViolent = violent[0];
   if (mostRecentViolent) {
+    const label = mostRecentViolent.activityType ?? mostRecentViolent.narrative;
     analysis.push(
-      `Most recent violent activity: ${mostRecentViolent.activity} in ${mostRecentViolent.province} on ${new Date(mostRecentViolent.date).toLocaleDateString()}.`
+      `Most recent violent activity: ${label} in ${mostRecentViolent.province} on ${new Date(mostRecentViolent.date).toLocaleDateString()}.`
     );
   } else {
     analysis.push("No violent activity on file.");

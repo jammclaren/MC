@@ -16,11 +16,15 @@ import { Button } from "@/components/ui/button";
 import { StatTile } from "@/components/stat-tile";
 import { LabeledBarChart } from "@/components/charts/labeled-bar-chart";
 import { SeverityMixChart } from "@/components/charts/severity-mix-chart";
-import { TopIncidentTypesChart } from "@/components/charts/top-incident-types-chart";
+import {
+  TopIncidentTypesChart,
+  type TopIncidentTypeDatum,
+} from "@/components/charts/top-incident-types-chart";
 import { ActivityTrendChart, type ActivityTrendDatum } from "@/components/charts/activity-trend-chart";
 import { IntelUpdateFormDialog } from "@/components/intel-update-form-dialog";
 import { IntelUpdatesPanel } from "@/components/intel-updates-panel";
 import type { IntelUpdateRow } from "@/lib/queries/intel-updates";
+import { truncateLabel } from "@/lib/text";
 import { FileWarning, ShieldAlert, Radar, CalendarClock } from "lucide-react";
 
 const ACTIVITY_TREND_WINDOW_DAYS = 14;
@@ -35,6 +39,14 @@ function topCounts(values: (string | null)[], limit: number): { label: string; c
     .sort((a, b) => b[1] - a[1])
     .slice(0, limit)
     .map(([label, count]) => ({ label, count }));
+}
+
+/** Shortens each label for the Top Activities charts specifically — a
+ * manually-typed Type of Activity isn't guaranteed to stay short, and a
+ * long one makes the ranked list look cluttered. Full text stays on hover
+ * via `fullLabel`. */
+function withShortLabels(items: { label: string; count: number }[]): TopIncidentTypeDatum[] {
+  return items.map((i) => ({ label: truncateLabel(i.label), count: i.count, fullLabel: i.label }));
 }
 
 /** Daily count per activity label over the trailing window — feeds
@@ -58,8 +70,8 @@ function buildActivityTrend(
     map.set(key, entry);
   }
   for (const row of rows) {
-    const label = row.activity.trim();
-    if (!labels.includes(label)) continue;
+    const label = row.activityType?.trim();
+    if (!label || !labels.includes(label)) continue;
     const key = row.date.slice(0, 10);
     const entry = map.get(key);
     if (entry) entry[label] = (entry[label] as number) + 1;
@@ -113,11 +125,11 @@ export default async function IntelUpdatePage() {
     7
   );
   const topNonViolentActivities = topCounts(
-    nonViolent.map((r) => r.activity),
+    nonViolent.map((r) => r.activityType),
     5
   );
   const topViolentActivities = topCounts(
-    violent.map((r) => r.activity),
+    violent.map((r) => r.activityType),
     5
   );
   const nonViolentActivityLabels = topNonViolentActivities.map((a) => a.label);
@@ -230,7 +242,7 @@ export default async function IntelUpdatePage() {
             <CardDescription>e.g. rally, sighting — most-recorded non-violent activity types.</CardDescription>
           </CardHeader>
           <CardContent>
-            <TopIncidentTypesChart data={topNonViolentActivities} total={nonViolent.length} />
+            <TopIncidentTypesChart data={withShortLabels(topNonViolentActivities)} total={nonViolent.length} />
           </CardContent>
         </Card>
 
@@ -240,7 +252,7 @@ export default async function IntelUpdatePage() {
             <CardDescription>e.g. bombing, shooting incident — most-recorded violent activity types.</CardDescription>
           </CardHeader>
           <CardContent>
-            <TopIncidentTypesChart data={topViolentActivities} total={violent.length} />
+            <TopIncidentTypesChart data={withShortLabels(topViolentActivities)} total={violent.length} />
           </CardContent>
         </Card>
       </div>

@@ -7,11 +7,11 @@ export type IntelCategory = "NON_VIOLENT" | "VIOLENT";
 export interface IntelUpdateRow {
   id: string;
   category: IntelCategory;
-  activity: string;
+  activityType: string | null;
+  narrative: string;
   threatGroup: string | null;
   province: string;
   locationLabel: string;
-  source: string | null;
   lat: number;
   lng: number;
   mgrs: string;
@@ -29,11 +29,11 @@ export async function listIntelUpdates(user: SessionUser): Promise<IntelUpdateRo
   return rows.map((r) => ({
     id: r.id,
     category: r.category,
-    activity: r.activity,
+    activityType: r.activityType,
+    narrative: r.narrative,
     threatGroup: r.threatGroup,
     province: r.province,
     locationLabel: r.locationLabel,
-    source: r.source,
     lat: r.lat,
     lng: r.lng,
     mgrs: toMgrs(r.lat, r.lng),

@@ -286,15 +286,25 @@ enum IntelCategory {
 model IntelUpdate {
   id            String        @id @default(cuid())
   category      IntelCategory
-  activity      String
+  // Closed, category-dependent vocabulary (e.g. "Ambush" for VIOLENT,
+  // "Campaign Rally" for NON_VIOLENT — see ACTIVITY_TYPES_BY_CATEGORY in
+  // lib/intel-suggestions.ts) — unlike threatGroup below, this one is a
+  // real enum-like closed list the user supplied, not a suggestion.
+  // Required on the form going forward; nullable at the DB level only for
+  // reports logged before this field existed (same convention as
+  // Incident.locationLabel). Replaces the free-text `source` field this
+  // model started with — dropped per explicit request rather than kept
+  // alongside it.
+  activityType  String?
+  // Free-text narrative of the report — was named `activity` (renamed once
+  // activityType took over "what kind of activity" duty, to stop the two
+  // fields from reading as near-duplicates).
+  narrative     String
   // Free text (e.g. "DI", "BIFF", "NPA") — suggestions only, not a closed
   // enum, since the set of named threat groups shifts over time.
   threatGroup   String?
   province      String
   locationLabel String
-  // Free text (e.g. "HUMINT", "OSINT") — same suggestions-only reasoning
-  // as threatGroup.
-  source        String?
   // Entered as MGRS and converted to lat/lng at write time, same convention
   // as Incident.lat/lng above — MGRS itself isn't stored since it's
   // derivable (see lib/mgrs.ts's toMgrs for the reverse conversion used to

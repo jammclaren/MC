@@ -34,7 +34,7 @@ export function IntelUpdatesPanel({
     const q = search.trim().toLowerCase();
     if (!q) return rows;
     return rows.filter((r) =>
-      [r.activity, r.threatGroup, r.locationLabel, r.source, r.province, r.mgrs]
+      [r.narrative, r.activityType, r.threatGroup, r.locationLabel, r.province, r.mgrs]
         .filter(Boolean)
         .some((field) => field!.toLowerCase().includes(q))
     );
@@ -56,7 +56,7 @@ export function IntelUpdatesPanel({
   return (
     <div className="flex flex-col gap-4">
       <Input
-        placeholder="Search by activity, threat group, location, source, province, or grid reference..."
+        placeholder="Search by narrative, activity type, threat group, location, province, or grid reference..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="max-w-md border-2 border-status-warning"
@@ -90,22 +90,25 @@ export function IntelUpdatesPanel({
                     className="flex flex-col gap-2 rounded-md border border-border p-3"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <Badge variant={row.category === "VIOLENT" ? "critical" : "warning"}>
-                        {row.category === "VIOLENT" ? "Violent" : "Non-Violent"}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={row.category === "VIOLENT" ? "critical" : "warning"}>
+                          {row.category === "VIOLENT" ? "Violent" : "Non-Violent"}
+                        </Badge>
+                        {row.activityType && (
+                          <span className="text-sm font-medium text-foreground">
+                            {row.activityType}
+                          </span>
+                        )}
+                      </div>
                       <span className="text-xs whitespace-nowrap text-muted-foreground">
                         {new Date(row.date).toLocaleDateString()}
                       </span>
                     </div>
-                    <p className="text-sm break-words whitespace-normal">{row.activity}</p>
+                    <p className="text-sm break-words whitespace-normal">{row.narrative}</p>
                     <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                      <div className="break-words">
+                      <div className="col-span-2 break-words">
                         <span className="font-medium text-foreground">Threat Group: </span>
                         {row.threatGroup ?? "—"}
-                      </div>
-                      <div className="break-words">
-                        <span className="font-medium text-foreground">Source: </span>
-                        {row.source ?? "—"}
                       </div>
                       <div className="col-span-2 break-words">
                         <span className="font-medium text-foreground">Location: </span>
@@ -123,13 +126,13 @@ export function IntelUpdatesPanel({
                           provinceOptions={provinceOptions}
                           initial={{
                             id: row.id,
-                            activity: row.activity,
+                            activityType: row.activityType ?? "",
+                            narrative: row.narrative,
                             threatGroup: row.threatGroup ?? "",
                             lat: row.lat,
                             lng: row.lng,
                             province: row.province,
                             locationLabel: row.locationLabel,
-                            source: row.source ?? "",
                             date: row.date.slice(0, 10),
                           }}
                           trigger={

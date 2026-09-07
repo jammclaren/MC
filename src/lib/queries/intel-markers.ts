@@ -4,7 +4,8 @@ import { canAccessIntelligenceUpdate, type SessionUser } from "@/lib/rbac";
 export interface IntelMarker {
   id: string;
   category: "NON_VIOLENT" | "VIOLENT";
-  activity: string;
+  activityType: string | null;
+  narrative: string;
   threatGroup: string | null;
   province: string;
   lat: number;
@@ -27,7 +28,8 @@ export async function getIntelMarkers(user: SessionUser): Promise<IntelMarker[]>
   return rows.map((r) => ({
     id: r.id,
     category: r.category,
-    activity: r.activity,
+    activityType: r.activityType,
+    narrative: r.narrative,
     threatGroup: r.threatGroup,
     province: r.province,
     lat: r.lat,
