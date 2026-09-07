@@ -3,6 +3,10 @@
     {
       "path": "/api/social-posts/sync",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/jtf-assessments/purge",
+      "schedule": "0 9 * * *"
     }
   ]
 }
