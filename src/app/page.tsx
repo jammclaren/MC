@@ -2,12 +2,8 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import { getOverviewData } from "@/lib/queries/overview";
 import { getIncidentMarkers } from "@/lib/queries/incident-markers";
-import {
-  listJtfAssessments,
-  listRecentJtfAssessmentsForDailyAnalysis,
-} from "@/lib/queries/jtf-assessments";
+import { listJtfAssessments } from "@/lib/queries/jtf-assessments";
 import { canAccessPage, canWriteJtf } from "@/lib/rbac";
-import { computeDefconStatus, toneForDefconLevel } from "@/lib/defcon";
 import { nowMs } from "@/lib/time";
 import {
   Card,
@@ -40,7 +36,6 @@ import {
   Ship,
   Building2,
   Radar,
-  Siren,
 } from "lucide-react";
 
 export default async function OverviewPage() {
@@ -49,19 +44,17 @@ export default async function OverviewPage() {
     redirect("/login");
   }
 
-  const [data, incidentMarkers, jtfAssessments, recentAssessmentsForDefcon] = await Promise.all([
+  const [data, incidentMarkers, jtfAssessments] = await Promise.all([
     getOverviewData(user),
     getIncidentMarkers(user),
     listJtfAssessments(user),
-    listRecentJtfAssessmentsForDailyAnalysis(),
   ]);
   const now = nowMs();
   const canSubmitAssessment = !!user.jtfId && canWriteJtf(user, user.jtfId);
-  const defcon = computeDefconStatus(data, recentAssessmentsForDefcon);
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         <StatTile
           label="Registered Voters (BARMM)"
           value={data.totalRegisteredVoters.toLocaleString()}
@@ -105,22 +98,6 @@ export default async function OverviewPage() {
           icon={Crosshair}
           tone={data.priorityAreaCount > 0 ? "critical" : "good"}
           hint="score ≥ Red-hotspot baseline"
-        />
-        <StatTile
-          label="AOR Readiness Condition"
-          value={`DEFCON ${defcon.level}`}
-          icon={Siren}
-          tone={toneForDefconLevel(defcon.level)}
-          hint={`${defcon.name} — ${defcon.category}`}
-          title={[
-            `Readiness posture: ${defcon.readiness} — ${defcon.readinessActions}`,
-            ...defcon.reasons,
-            `JTF assessments on file (last 7d): ${defcon.assessmentCoverage.reporting}/${defcon.assessmentCoverage.total}${
-              defcon.assessmentCoverage.mostRecentAt
-                ? `, most recent ${new Date(defcon.assessmentCoverage.mostRecentAt).toLocaleDateString()}`
-                : ""
-            }`,
-          ].join("\n")}
         />
       </div>
 

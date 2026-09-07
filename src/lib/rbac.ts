@@ -118,15 +118,13 @@ export function assertCanAccessSocialMonitor(user: SessionUser): void {
 }
 
 /**
- * Situation Report is restricted to ADMIN and WFC Intelligence (M2) only —
- * explicitly not COMMAND, not CMO, and not any JTF-scoped role.
+ * Situation Report is ADMIN-only — WFC Intelligence (M2) previously had
+ * access too, but per the WFC-Intelligence account scope-down (see
+ * canAccessIntelligenceUpdate, which replaces this for that account), it no
+ * longer does. Explicitly not COMMAND, not CMO, and not any JTF-scoped role.
  */
 export function canAccessSituationReport(user: SessionUser): boolean {
-  if (user.role === "ADMIN") return true;
-  if (user.role === "WFC_STAFF") {
-    return user.warfightingFunction === "INTELLIGENCE";
-  }
-  return false;
+  return user.role === "ADMIN";
 }
 
 export function assertCanAccessSituationReport(user: SessionUser): void {
