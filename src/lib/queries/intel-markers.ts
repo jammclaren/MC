@@ -12,7 +12,7 @@ export interface IntelMarker {
   createdAt: string;
 }
 
-/** Feeds the Situation Map's "Intelligence Activity" layer — returns an
+/** Feeds the Situation Map's "Enemy Activity" layer — returns an
  * empty list for any role without canAccessIntelligenceUpdate rather than
  * throwing, so the map page can fetch this unconditionally and simply
  * render nothing for roles that shouldn't see it (same posture as the

@@ -7,14 +7,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,68 +78,74 @@ export function IntelUpdatesPanel({
               </div>
             </AccordionTrigger>
             <AccordionContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Activity</TableHead>
-                      <TableHead>Threat Group</TableHead>
-                      <TableHead>Grid (MGRS)</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>Source</TableHead>
-                      <TableHead>Date</TableHead>
-                      {canWrite && <TableHead className="text-right">Actions</TableHead>}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {group.rows.map((row) => (
-                      <TableRow key={row.id}>
-                        <TableCell>
-                          <Badge variant={row.category === "VIOLENT" ? "critical" : "warning"}>
-                            {row.category === "VIOLENT" ? "Violent" : "Non-Violent"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="max-w-xs">{row.activity}</TableCell>
-                        <TableCell>{row.threatGroup ?? "—"}</TableCell>
-                        <TableCell className="font-mono text-xs">{row.mgrs}</TableCell>
-                        <TableCell>{row.locationLabel}</TableCell>
-                        <TableCell>{row.source ?? "—"}</TableCell>
-                        <TableCell>{new Date(row.date).toLocaleDateString()}</TableCell>
-                        {canWrite && (
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
-                              <IntelUpdateFormDialog
-                                category={row.category}
-                                provinceOptions={provinceOptions}
-                                initial={{
-                                  id: row.id,
-                                  activity: row.activity,
-                                  threatGroup: row.threatGroup ?? "",
-                                  lat: row.lat,
-                                  lng: row.lng,
-                                  province: row.province,
-                                  locationLabel: row.locationLabel,
-                                  source: row.source ?? "",
-                                  date: row.date.slice(0, 10),
-                                }}
-                                trigger={
-                                  <Button variant="ghost" size="sm">
-                                    Edit
-                                  </Button>
-                                }
-                              />
-                              <DeleteButton
-                                url={`/api/intel-updates/${row.id}`}
-                                confirmMessage="Delete this intelligence report? This cannot be undone."
-                              />
-                            </div>
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+              {/* A multi-column table forces long free-text Activity/
+                  Location reports (some are full narrative paragraphs) into
+                  cramped columns no matter how the cells wrap or how wide
+                  the viewport is — a stacked card per report sidesteps
+                  table column sizing entirely instead of fighting it. */}
+              <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+                {group.rows.map((row) => (
+                  <div
+                    key={row.id}
+                    className="flex flex-col gap-2 rounded-md border border-border p-3"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <Badge variant={row.category === "VIOLENT" ? "critical" : "warning"}>
+                        {row.category === "VIOLENT" ? "Violent" : "Non-Violent"}
+                      </Badge>
+                      <span className="text-xs whitespace-nowrap text-muted-foreground">
+                        {new Date(row.date).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-sm break-words whitespace-normal">{row.activity}</p>
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      <div className="break-words">
+                        <span className="font-medium text-foreground">Threat Group: </span>
+                        {row.threatGroup ?? "—"}
+                      </div>
+                      <div className="break-words">
+                        <span className="font-medium text-foreground">Source: </span>
+                        {row.source ?? "—"}
+                      </div>
+                      <div className="col-span-2 break-words">
+                        <span className="font-medium text-foreground">Location: </span>
+                        {row.locationLabel}
+                      </div>
+                      <div className="col-span-2 break-words">
+                        <span className="font-medium text-foreground">Grid: </span>
+                        <span className="font-mono">{row.mgrs}</span>
+                      </div>
+                    </div>
+                    {canWrite && (
+                      <div className="flex justify-end gap-1 border-t border-border/60 pt-2">
+                        <IntelUpdateFormDialog
+                          category={row.category}
+                          provinceOptions={provinceOptions}
+                          initial={{
+                            id: row.id,
+                            activity: row.activity,
+                            threatGroup: row.threatGroup ?? "",
+                            lat: row.lat,
+                            lng: row.lng,
+                            province: row.province,
+                            locationLabel: row.locationLabel,
+                            source: row.source ?? "",
+                            date: row.date.slice(0, 10),
+                          }}
+                          trigger={
+                            <Button variant="ghost" size="sm">
+                              Edit
+                            </Button>
+                          }
+                        />
+                        <DeleteButton
+                          url={`/api/intel-updates/${row.id}`}
+                          confirmMessage="Delete this intelligence report? This cannot be undone."
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </AccordionContent>
           </AccordionItem>

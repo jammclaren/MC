@@ -319,7 +319,7 @@ function IncidentMarkerItems({
   );
 }
 
-// Intelligence Activity layer — same pulse/blink pipeline as
+// Enemy Activity layer (sourced from Intelligence Update reports) — same pulse/blink pipeline as
 // IncidentMarkerItems (isLatestIncident/buildIncidentIcon), just a
 // different color per category and a read-only popup (editing happens on
 // the Intelligence Update page, not from the map). Only ADMIN/COMMAND/WFC
@@ -632,7 +632,7 @@ export function PriorityMap({
             );
           })}
           {intelMarkers.length > 0 && (
-            <LayersControl.Overlay checked name="Intelligence Activity">
+            <LayersControl.Overlay checked name="Enemy Activity">
               <LayerGroup>
                 <IntelMarkerItems markers={intelMarkers} />
               </LayerGroup>
