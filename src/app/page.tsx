@@ -125,6 +125,7 @@ export default async function OverviewPage() {
             <CardTitle>Troop Deployment Recapitulation</CardTitle>
             <CardDescription>
               {data.totalDeployed.toLocaleString()} deployed to polling precincts ·{" "}
+              {data.totalDeployedToPollingCenters.toLocaleString()} to polling centers ·{" "}
               {data.totalQrf.toLocaleString()} QRF
             </CardDescription>
           </CardHeader>
@@ -135,6 +136,7 @@ export default async function OverviewPage() {
                 <TableRow>
                   <TableHead>JTF</TableHead>
                   <TableHead className="text-right">Deployed to Polling Precincts</TableHead>
+                  <TableHead className="text-right">Deployed to Polling Centers</TableHead>
                   <TableHead className="text-right">QRF</TableHead>
                 </TableRow>
               </TableHeader>
@@ -145,12 +147,15 @@ export default async function OverviewPage() {
                     <TableCell className="text-right">
                       {row.deployedToPolling.toLocaleString()}
                     </TableCell>
+                    <TableCell className="text-right">
+                      {row.deployedToPollingCenters.toLocaleString()}
+                    </TableCell>
                     <TableCell className="text-right">{row.qrf.toLocaleString()}</TableCell>
                   </TableRow>
                 ))}
                 {data.jtfDeployments.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center text-muted-foreground">
+                    <TableCell colSpan={4} className="text-center text-muted-foreground">
                       No deployment data yet.
                     </TableCell>
                   </TableRow>
