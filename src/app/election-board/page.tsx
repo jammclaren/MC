@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
@@ -7,7 +7,7 @@ import {
   listElectionProvinces,
   PROVINCE_TO_JTF,
 } from "@/lib/queries/election-board";
-import { canWriteJtf } from "@/lib/rbac";
+import { canAccessPage, canWriteJtf } from "@/lib/rbac";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -46,6 +46,9 @@ export default async function ElectionBoardPage({
   const user = await getSessionUser();
   if (!user) {
     redirect("/login");
+  }
+  if (!canAccessPage(user, "election-profile")) {
+    notFound();
   }
 
   const provinces = await listElectionProvinces(user);

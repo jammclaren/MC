@@ -1,4 +1,4 @@
-import { toPoint } from "mgrs";
+import { forward, toPoint } from "mgrs";
 
 /** Parses an MGRS string into a [lat, lng] pair, or returns an error
  * message. `mgrs.toPoint` throws on malformed input, so this wraps that in
@@ -12,4 +12,11 @@ export function parseMgrs(raw: string): { lat: number; lng: number } | { error: 
   } catch {
     return { error: "Not a valid MGRS reference (e.g. 51NUA6789054321)" };
   }
+}
+
+/** Inverse of parseMgrs — renders stored lat/lng back to an MGRS grid
+ * reference for display (nothing stores the raw MGRS string, see
+ * IntelUpdate/Incident schema comments). */
+export function toMgrs(lat: number, lng: number): string {
+  return forward([lng, lat]);
 }

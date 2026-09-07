@@ -20,6 +20,7 @@ import {
 } from "react-leaflet";
 import type { ScoredArea } from "@/lib/queries/priority-areas";
 import type { IncidentMarker } from "@/lib/queries/incident-markers";
+import type { IntelMarker } from "@/lib/queries/intel-markers";
 import {
   IncidentMarkerFormDialog,
   type ElectionAreaOption,
@@ -318,9 +319,55 @@ function IncidentMarkerItems({
   );
 }
 
+// Intelligence Activity layer — same pulse/blink pipeline as
+// IncidentMarkerItems (isLatestIncident/buildIncidentIcon), just a
+// different color per category and a read-only popup (editing happens on
+// the Intelligence Update page, not from the map). Only ADMIN/COMMAND/WFC
+// Intelligence ever receive a non-empty `markers` list here — see
+// getIntelMarkers, which returns [] for everyone else.
+const INTEL_CATEGORY_COLOR: Record<IntelMarker["category"], string> = {
+  VIOLENT: "var(--status-critical)",
+  NON_VIOLENT: "var(--status-warning)",
+};
+
+function IntelMarkerItems({ markers }: { markers: IntelMarker[] }) {
+  const zoom = useCurrentZoom();
+  return (
+    <>
+      {markers.map((marker) => {
+        const isRecent = isLatestIncident(marker.createdAt);
+        return (
+          <Marker
+            key={marker.id}
+            position={[marker.lat, marker.lng]}
+            icon={buildIncidentIcon(
+              isRecent ? "PULSE" : "NONE",
+              zoom,
+              INTEL_CATEGORY_COLOR[marker.category]
+            )}
+            zIndexOffset={isRecent ? 1000 : 0}
+          >
+            <Popup>
+              <div className="text-xs">
+                <div className="font-medium">
+                  {marker.category === "VIOLENT" ? "Violent" : "Non-Violent"} Activity
+                </div>
+                <div>{marker.activity}</div>
+                {marker.threatGroup && <div>Threat group: {marker.threatGroup}</div>}
+                <div>{marker.province}</div>
+              </div>
+            </Popup>
+          </Marker>
+        );
+      })}
+    </>
+  );
+}
+
 export function PriorityMap({
   areas,
   markers,
+  intelMarkers,
   jtfOptions,
   areaOptions,
   lockJtfId,
@@ -328,6 +375,7 @@ export function PriorityMap({
 }: {
   areas: ScoredArea[];
   markers: IncidentMarker[];
+  intelMarkers: IntelMarker[];
   jtfOptions: JtfOption[];
   areaOptions: ElectionAreaOption[];
   lockJtfId?: string;
@@ -583,6 +631,13 @@ export function PriorityMap({
               </LayersControl.Overlay>
             );
           })}
+          {intelMarkers.length > 0 && (
+            <LayersControl.Overlay checked name="Intelligence Activity">
+              <LayerGroup>
+                <IntelMarkerItems markers={intelMarkers} />
+              </LayerGroup>
+            </LayersControl.Overlay>
+          )}
         </LayersControl>
         {provinces && <FitToBounds data={provinces} />}
       </MapContainer>

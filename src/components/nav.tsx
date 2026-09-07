@@ -1,15 +1,20 @@
 import { getSessionUser } from "@/lib/session";
 import { NavTopBar } from "@/components/nav-topbar";
 import { prisma } from "@/lib/prisma";
-import { canAccessPage, canAccessSituationReport, canAccessSocialMonitor } from "@/lib/rbac";
+import {
+  canAccessIntelligenceUpdate,
+  canAccessPage,
+  canAccessSituationReport,
+  canAccessSocialMonitor,
+} from "@/lib/rbac";
 
 const NAV_LINKS = [
   { href: "/", label: "Overview" },
   { href: "/priority-map", label: "Situation Map", page: "situation-map" },
   { href: "/incidents", label: "Monitored Incidents" },
   { href: "/bpe-deployment", label: "Deployment", page: "deployment" },
-  { href: "/election-ops", label: "Election Status" },
-  { href: "/election-board", label: "Election Profile" },
+  { href: "/election-ops", label: "Election Status", page: "election-status" },
+  { href: "/election-board", label: "Election Profile", page: "election-profile" },
 ] as const;
 
 const ADMIN_LINKS = [
@@ -38,6 +43,9 @@ export async function Nav() {
       : []),
     ...(canAccessSituationReport(user)
       ? [{ href: "/situation-report", label: "Situation Report" }]
+      : []),
+    ...(canAccessIntelligenceUpdate(user)
+      ? [{ href: "/intel-update", label: "Intelligence Update" }]
       : []),
     ...visibleAdminLinks.map((l) => ({ href: l.href, label: l.label })),
   ];

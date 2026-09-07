@@ -32,16 +32,24 @@ function iconSizeForZoom(zoom: number | undefined): number {
 const RECENT_SIZE_MULTIPLIER = 1.6;
 const PREVIOUS_SIZE_MULTIPLIER = 0.7;
 
-function pulseDotHtml(): string {
-  return `<span style="position:relative;display:block;width:100%;height:100%;border-radius:9999px;background:var(--status-critical);box-shadow:0 0 6px rgba(0,0,0,0.7);"></span>`;
+function pulseDotHtml(color: string): string {
+  return `<span style="position:relative;display:block;width:100%;height:100%;border-radius:9999px;background:${color};box-shadow:0 0 6px rgba(0,0,0,0.7);"></span>`;
 }
 
 /** Small animated dot icon for an incident marker — the animation is
  * applied to inner elements, never the outer Leaflet positioning wrapper,
  * so it never fights Leaflet's own transform. Pass the map's current zoom
  * so the dot shrinks at wide zoom levels; omit it for always-full-size
- * (e.g. a legend swatch). */
-export function buildIncidentIcon(style: IncidentMarker["markerStyle"], zoom?: number): L.DivIcon {
+ * (e.g. a legend swatch). `color` defaults to the incident-red used
+ * everywhere today — pass a different CSS color (e.g. var(--status-warning))
+ * for a non-incident layer that needs the same pulse/blink treatment in a
+ * different hue, such as the Intelligence Update map layer's non-violent
+ * vs violent split. */
+export function buildIncidentIcon(
+  style: IncidentMarker["markerStyle"],
+  zoom?: number,
+  color = "var(--status-critical)"
+): L.DivIcon {
   const baseSize = iconSizeForZoom(zoom);
 
   if (style === "PULSE") {
@@ -49,10 +57,12 @@ export function buildIncidentIcon(style: IncidentMarker["markerStyle"], zoom?: n
     const half = size / 2;
     // A static dot with one soft, expanding-and-fading ring behind it —
     // a "live ping" pulse — rather than the dot itself scaling up and
-    // down in place.
+    // down in place. The ring's own CSS class only supplies the animation;
+    // its color is set inline so it can differ per marker/layer.
+    const ringGradient = `radial-gradient(circle, ${color} 0%, ${color} 45%, transparent 72%)`;
     const html = `<span style="position:relative;display:block;width:${size}px;height:${size}px;">
-      <span class="incident-marker-pulse-ring"></span>
-      ${pulseDotHtml()}
+      <span class="incident-marker-pulse-ring" style="background:${ringGradient};"></span>
+      ${pulseDotHtml(color)}
     </span>`;
     return L.divIcon({
       className: "incident-marker-icon",
@@ -68,7 +78,7 @@ export function buildIncidentIcon(style: IncidentMarker["markerStyle"], zoom?: n
   const animClass = style === "BLINK" ? "incident-marker-blink" : "";
   return L.divIcon({
     className: "incident-marker-icon",
-    html: `<span style="display:block;width:${size}px;height:${size}px;border-radius:9999px;background:var(--status-critical);border:${border}px solid #fff;box-shadow:0 0 6px rgba(0,0,0,0.7);" class="${animClass}"></span>`,
+    html: `<span style="display:block;width:${size}px;height:${size}px;border-radius:9999px;background:${color};border:${border}px solid #fff;box-shadow:0 0 6px rgba(0,0,0,0.7);" class="${animClass}"></span>`,
     iconSize: [size, size],
     iconAnchor: [half, half],
   });

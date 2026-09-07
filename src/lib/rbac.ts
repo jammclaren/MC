@@ -61,11 +61,25 @@ export function canModifyEntry(
  * access, never grants it beyond what a role already had.
  */
 const BRIGADE_STAFF_BLOCKED_PAGES = ["situation-map", "deployment"] as const;
-type RestrictablePage = (typeof BRIGADE_STAFF_BLOCKED_PAGES)[number];
+
+/**
+ * WFC Intelligence (M2) is scoped down to Overview, Monitored Incidents,
+ * Situation Map, and its own Intelligence Update page — no Deployment,
+ * Election Status, or Election Profile (those belong to logistics/election
+ * ops, not intelligence).
+ */
+const WFC_INTELLIGENCE_BLOCKED_PAGES = ["deployment", "election-status", "election-profile"] as const;
+
+type RestrictablePage =
+  | (typeof BRIGADE_STAFF_BLOCKED_PAGES)[number]
+  | (typeof WFC_INTELLIGENCE_BLOCKED_PAGES)[number];
 
 export function canAccessPage(user: SessionUser, page: RestrictablePage): boolean {
   if (user.role === "BRIGADE_STAFF") {
-    return !BRIGADE_STAFF_BLOCKED_PAGES.includes(page);
+    return !(BRIGADE_STAFF_BLOCKED_PAGES as readonly string[]).includes(page);
+  }
+  if (user.role === "WFC_STAFF" && user.warfightingFunction === "INTELLIGENCE") {
+    return !(WFC_INTELLIGENCE_BLOCKED_PAGES as readonly string[]).includes(page);
   }
   return true;
 }
@@ -118,6 +132,38 @@ export function canAccessSituationReport(user: SessionUser): boolean {
 export function assertCanAccessSituationReport(user: SessionUser): void {
   if (!canAccessSituationReport(user)) {
     throw new ForbiddenError("Not authorized to access the Situation Report");
+  }
+}
+
+/**
+ * Intelligence Update is viewable by ADMIN, COMMAND (read-only rollup —
+ * same posture COMMAND already has on other aggregate views), and WFC
+ * Intelligence (M2). Writing (create/edit/delete reports) is narrower:
+ * ADMIN and WFC Intelligence only — COMMAND can see the picture but not
+ * change it.
+ */
+export function canAccessIntelligenceUpdate(user: SessionUser): boolean {
+  if (user.role === "ADMIN" || user.role === "COMMAND") return true;
+  if (user.role === "WFC_STAFF") {
+    return user.warfightingFunction === "INTELLIGENCE";
+  }
+  return false;
+}
+
+export function assertCanAccessIntelligenceUpdate(user: SessionUser): void {
+  if (!canAccessIntelligenceUpdate(user)) {
+    throw new ForbiddenError("Not authorized to access Intelligence Update");
+  }
+}
+
+export function canWriteIntelligenceUpdate(user: SessionUser): boolean {
+  if (user.role === "ADMIN") return true;
+  return user.role === "WFC_STAFF" && user.warfightingFunction === "INTELLIGENCE";
+}
+
+export function assertCanWriteIntelligenceUpdate(user: SessionUser): void {
+  if (!canWriteIntelligenceUpdate(user)) {
+    throw new ForbiddenError("Not authorized to modify Intelligence Update reports");
   }
 }
 

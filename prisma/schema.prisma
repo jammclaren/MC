@@ -90,6 +90,7 @@ model User {
   jtfAssessments      JtfAssessment[]
   socialMediaPosts    SocialMediaPost[]
   situationReports    SituationReport[]
+  intelUpdates        IntelUpdate[]
 
   @@index([jtfId])
 }
@@ -269,6 +270,44 @@ model Incident {
 
   @@index([jtfId])
   @@index([electionAreaId])
+  @@index([date])
+}
+
+// WFC Intelligence (M2) threat-activity reporting — see rbac.ts
+// canAccessIntelligenceUpdate/canWriteIntelligenceUpdate. Command-wide (no
+// jtfId): WFC_STAFF is itself a command-wide role, and the owning JTF is
+// trivially derivable from `province` via PROVINCE_TO_JTF
+// (queries/election-board.ts) if ever needed, so it isn't denormalized here.
+enum IntelCategory {
+  NON_VIOLENT
+  VIOLENT
+}
+
+model IntelUpdate {
+  id            String        @id @default(cuid())
+  category      IntelCategory
+  activity      String
+  // Free text (e.g. "DI", "BIFF", "NPA") — suggestions only, not a closed
+  // enum, since the set of named threat groups shifts over time.
+  threatGroup   String?
+  province      String
+  locationLabel String
+  // Free text (e.g. "HUMINT", "OSINT") — same suggestions-only reasoning
+  // as threatGroup.
+  source        String?
+  // Entered as MGRS and converted to lat/lng at write time, same convention
+  // as Incident.lat/lng above — MGRS itself isn't stored since it's
+  // derivable (see lib/mgrs.ts's toMgrs for the reverse conversion used to
+  // display it).
+  lat           Float
+  lng           Float
+  date          DateTime
+  createdById   String
+  createdBy     User          @relation(fields: [createdById], references: [id])
+  createdAt     DateTime      @default(now())
+
+  @@index([category])
+  @@index([province])
   @@index([date])
 }
 

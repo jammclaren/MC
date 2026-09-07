@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import type { ScoredArea } from "@/lib/queries/priority-areas";
 import type { IncidentMarker } from "@/lib/queries/incident-markers";
+import type { IntelMarker } from "@/lib/queries/intel-markers";
 import type { ElectionAreaOption, JtfOption } from "@/components/incident-marker-form-dialog";
 
 // Leaflet touches window/document at load time, so it can't be
@@ -21,6 +22,7 @@ const PriorityMap = dynamic(
 export function PriorityMapLoader({
   areas,
   markers,
+  intelMarkers,
   jtfOptions,
   areaOptions,
   lockJtfId,
@@ -28,6 +30,7 @@ export function PriorityMapLoader({
 }: {
   areas: ScoredArea[];
   markers: IncidentMarker[];
+  intelMarkers: IntelMarker[];
   jtfOptions: JtfOption[];
   areaOptions: ElectionAreaOption[];
   lockJtfId?: string;
@@ -37,6 +40,7 @@ export function PriorityMapLoader({
     <PriorityMap
       areas={areas}
       markers={markers}
+      intelMarkers={intelMarkers}
       jtfOptions={jtfOptions}
       areaOptions={areaOptions}
       lockJtfId={lockJtfId}

@@ -3,6 +3,7 @@ import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { getScoredAreas } from "@/lib/queries/priority-areas";
 import { getIncidentMarkers } from "@/lib/queries/incident-markers";
+import { getIntelMarkers } from "@/lib/queries/intel-markers";
 import { canAccessPage, canWriteJtf } from "@/lib/rbac";
 import { getBarangayIndex } from "@/lib/barangay-index";
 import { PriorityMapLoader } from "@/components/priority-map-loader";
@@ -41,10 +42,11 @@ export default async function PriorityMapPage() {
     notFound();
   }
 
-  const [areas, jtfs, markers, electionAreas] = await Promise.all([
+  const [areas, jtfs, markers, intelMarkers, electionAreas] = await Promise.all([
     getScoredAreas(user),
     prisma.jTF.findMany({ orderBy: { name: "asc" } }),
     getIncidentMarkers(user),
+    getIntelMarkers(user),
     prisma.electionArea.findMany({
       select: { id: true, jtfId: true, barangay: true, municipality: true, province: true },
     }),
@@ -89,6 +91,7 @@ export default async function PriorityMapPage() {
           <PriorityMapLoader
             areas={areas}
             markers={markers}
+            intelMarkers={intelMarkers}
             jtfOptions={jtfOptions}
             areaOptions={areaOptions}
             lockJtfId={writableJtfId}

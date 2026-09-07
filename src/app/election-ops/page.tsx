@@ -1,8 +1,8 @@
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { listElectionOpsAreas } from "@/lib/queries/election-ops";
-import { canWriteJtf } from "@/lib/rbac";
+import { canAccessPage, canWriteJtf } from "@/lib/rbac";
 import { getBarangayIndex } from "@/lib/barangay-index";
 import {
   Card,
@@ -23,6 +23,9 @@ export default async function ElectionOpsPage({
   const user = await getSessionUser();
   if (!user) {
     redirect("/login");
+  }
+  if (!canAccessPage(user, "election-status")) {
+    notFound();
   }
 
   const { jtfId } = await searchParams;
