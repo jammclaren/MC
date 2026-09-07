@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { StatTile } from "@/components/stat-tile";
-import { Users, ShieldAlert } from "lucide-react";
+import { Users, ShieldAlert, Building2, Plane, Ship } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DeploymentFormDialog } from "@/components/deployment-form-dialog";
 import { DeploymentRowsAccordion } from "@/components/deployment-rows-accordion";
@@ -109,9 +109,15 @@ export default async function BpeDeploymentPage({
               </CardHeader>
               <CardContent className="flex flex-col gap-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Deployed to Polling</span>
+                  <span className="text-muted-foreground">Deployed to Polling Precincts</span>
                   <span className="font-medium">
                     {card.deployedToPolling.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Deployed to Polling Centers</span>
+                  <span className="font-medium">
+                    {card.deployedToPollingCenters.toLocaleString()}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -125,6 +131,14 @@ export default async function BpeDeploymentPage({
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">WAVs/TAV</span>
                   <span className="font-medium">{card.wavsTav.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Air Assets</span>
+                  <span className="font-medium">{card.airAssetCount.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Naval Assets</span>
+                  <span className="font-medium">{card.navalAssetCount.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Voter Coverage</span>
@@ -145,13 +159,20 @@ export default async function BpeDeploymentPage({
         <h2 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
           Recapitulation — command-wide, auto-computed from unit reports
         </h2>
-        <div className="grid grid-cols-2 gap-4 sm:max-w-md">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           <StatTile
-            label="Deployed to Polling"
+            label="Deployed to Polling Precincts"
             value={data.totalDeployed.toLocaleString()}
             icon={Users}
           />
+          <StatTile
+            label="Deployed to Polling Centers"
+            value={data.totalDeployedToPollingCenters.toLocaleString()}
+            icon={Building2}
+          />
           <StatTile label="QRF" value={data.totalQrf.toLocaleString()} icon={ShieldAlert} />
+          <StatTile label="Air Assets" value={data.totalAirAssets.toLocaleString()} icon={Plane} />
+          <StatTile label="Naval Assets" value={data.totalNavalAssets.toLocaleString()} icon={Ship} />
         </div>
       </div>
 

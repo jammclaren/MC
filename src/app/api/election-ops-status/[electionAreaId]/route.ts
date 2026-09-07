@@ -12,6 +12,7 @@ const upsertStatusSchema = z.object({
   paraphDeliveredTreasurer: z.number().int().nonnegative().nullable().optional(),
   paraphTotalPrecinct: z.number().int().nonnegative().nullable().optional(),
   paraphDeliveredPrecinct: z.number().int().nonnegative().nullable().optional(),
+  paraphLocation: z.string().trim().max(200).nullable().optional(),
   acmTestedSealed: z.boolean().optional(),
   votingStarted: z.boolean().optional(),
   votingClosed: z.boolean().optional(),

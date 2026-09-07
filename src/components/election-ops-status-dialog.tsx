@@ -14,12 +14,34 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+// Stages of the paraphernalia's physical journey — distinct from the
+// delivered/total counts above (those track *how much*, this tracks
+// *where*), so a stalled shipment shows up even when the numbers alone
+// wouldn't flag it.
+const PARAPH_LOCATIONS = [
+  "At COMELEC/Regional Office",
+  "In Transit to Treasurer",
+  "At Municipal/City Treasurer",
+  "In Transit to Precinct",
+  "At Precinct/Polling Place",
+  "Delivered & Confirmed",
+] as const;
+const NO_LOCATION_VALUE = "__none__";
 
 export interface ElectionOpsStatusValues {
   paraphTotalTreasurer: number | null;
   paraphDeliveredTreasurer: number | null;
   paraphTotalPrecinct: number | null;
   paraphDeliveredPrecinct: number | null;
+  paraphLocation: string | null;
   acmTestedSealed: boolean;
   votingStarted: boolean;
   votingClosed: boolean;
@@ -35,6 +57,7 @@ const EMPTY_STATUS: ElectionOpsStatusValues = {
   paraphDeliveredTreasurer: null,
   paraphTotalPrecinct: null,
   paraphDeliveredPrecinct: null,
+  paraphLocation: null,
   acmTestedSealed: false,
   votingStarted: false,
   votingClosed: false,
@@ -146,6 +169,34 @@ export function ElectionOpsStatusDialog({
                   }))
                 }
               />
+            </div>
+            <div className="col-span-2 flex flex-col gap-2">
+              <Label>Paraphernalia — current location</Label>
+              <Select
+                items={[
+                  { value: NO_LOCATION_VALUE, label: "Unspecified" },
+                  ...PARAPH_LOCATIONS.map((loc) => ({ value: loc, label: loc })),
+                ]}
+                value={values.paraphLocation ?? NO_LOCATION_VALUE}
+                onValueChange={(v: string | null) =>
+                  setValues((prev) => ({
+                    ...prev,
+                    paraphLocation: !v || v === NO_LOCATION_VALUE ? null : v,
+                  }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Unspecified" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_LOCATION_VALUE}>Unspecified</SelectItem>
+                  {PARAPH_LOCATIONS.map((loc) => (
+                    <SelectItem key={loc} value={loc}>
+                      {loc}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <label className="flex items-center gap-2 text-sm">

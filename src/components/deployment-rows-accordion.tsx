@@ -82,7 +82,8 @@ export function DeploymentRowsAccordion({
                   <TableRow>
                     <TableHead>Unit</TableHead>
                     <TableHead>Area</TableHead>
-                    <TableHead className="text-right">Polling</TableHead>
+                    <TableHead className="text-right">Precincts</TableHead>
+                    <TableHead className="text-right">Centers</TableHead>
                     <TableHead className="text-right">QRF</TableHead>
                     <TableHead className="text-right">AFP Off.</TableHead>
                     <TableHead className="text-right">AFP Enl.</TableHead>
@@ -91,6 +92,8 @@ export function DeploymentRowsAccordion({
                     <TableHead className="text-right">PNP Off.</TableHead>
                     <TableHead className="text-right">PNP Enl.</TableHead>
                     <TableHead className="text-right">Checkpoints</TableHead>
+                    <TableHead>Air Asset</TableHead>
+                    <TableHead>Naval Asset</TableHead>
                     <TableHead>Reported</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -101,6 +104,7 @@ export function DeploymentRowsAccordion({
                       <TableCell>{row.unitLabel ?? "—"}</TableCell>
                       <TableCell>{row.areaLabel ?? "—"}</TableCell>
                       <TableCell className="text-right">{row.deployedToPolling}</TableCell>
+                      <TableCell className="text-right">{row.deployedToPollingCenters}</TableCell>
                       <TableCell className="text-right">{row.qrf}</TableCell>
                       <TableCell className="text-right">{row.afpOfficers}</TableCell>
                       <TableCell className="text-right">{row.afpEnlisted}</TableCell>
@@ -109,6 +113,16 @@ export function DeploymentRowsAccordion({
                       <TableCell className="text-right">{row.pnpOfficers}</TableCell>
                       <TableCell className="text-right">{row.pnpEnlisted}</TableCell>
                       <TableCell className="text-right">{row.checkpointOps}</TableCell>
+                      <TableCell>
+                        {row.airAssetCount > 0
+                          ? `${row.airAssetCount}${row.airAssetType ? ` × ${row.airAssetType}` : ""}`
+                          : "—"}
+                      </TableCell>
+                      <TableCell>
+                        {row.navalAssetCount > 0
+                          ? `${row.navalAssetCount}${row.navalAssetType ? ` × ${row.navalAssetType}` : ""}`
+                          : "—"}
+                      </TableCell>
                       <TableCell>{row.reportedAt.toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
                         {row.canEdit && (
@@ -122,6 +136,7 @@ export function DeploymentRowsAccordion({
                                 electionAreaId: row.electionAreaId ?? undefined,
                                 unitLabel: row.unitLabel ?? "",
                                 deployedToPolling: row.deployedToPolling,
+                                deployedToPollingCenters: row.deployedToPollingCenters,
                                 qrf: row.qrf,
                                 afpOfficers: row.afpOfficers,
                                 afpEnlisted: row.afpEnlisted,
@@ -130,6 +145,10 @@ export function DeploymentRowsAccordion({
                                 pnpOfficers: row.pnpOfficers,
                                 pnpEnlisted: row.pnpEnlisted,
                                 checkpointOps: row.checkpointOps,
+                                airAssetType: row.airAssetType ?? "",
+                                airAssetCount: row.airAssetCount,
+                                navalAssetType: row.navalAssetType ?? "",
+                                navalAssetCount: row.navalAssetCount,
                               }}
                               trigger={
                                 <Button variant="ghost" size="sm">

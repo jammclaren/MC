@@ -204,22 +204,32 @@ model ElectionArea {
 }
 
 model TroopDeployment {
-  id                String        @id @default(cuid())
-  jtfId             String
-  jtf               JTF           @relation(fields: [jtfId], references: [id])
-  electionAreaId    String?
-  electionArea      ElectionArea? @relation(fields: [electionAreaId], references: [id])
-  unitLabel         String?
-  deployedToPolling Int           @default(0)
-  qrf               Int           @default(0)
-  afpOfficers       Int           @default(0)
-  afpEnlisted       Int           @default(0)
-  caa               Int           @default(0)
-  wavsTav           Int           @default(0)
-  pnpOfficers       Int           @default(0)
-  pnpEnlisted       Int           @default(0)
-  checkpointOps     Int           @default(0)
-  reportedAt        DateTime      @default(now())
+  id                       String        @id @default(cuid())
+  jtfId                    String
+  jtf                      JTF           @relation(fields: [jtfId], references: [id])
+  electionAreaId           String?
+  electionArea             ElectionArea? @relation(fields: [electionAreaId], references: [id])
+  unitLabel                String?
+  // "Deployed to Polling Precincts" in the UI — the original field, kept
+  // as-is at the DB level (existing reports already mean this) alongside
+  // the newer, distinct polling-center count below.
+  deployedToPolling        Int           @default(0)
+  deployedToPollingCenters Int           @default(0)
+  qrf                      Int           @default(0)
+  afpOfficers              Int           @default(0)
+  afpEnlisted              Int           @default(0)
+  caa                      Int           @default(0)
+  wavsTav                  Int           @default(0)
+  pnpOfficers              Int           @default(0)
+  pnpEnlisted              Int           @default(0)
+  checkpointOps            Int           @default(0)
+  // Free-text type (e.g. "UH-1H Huey", "Rigid Hull Inflatable Boat") since
+  // units report whatever asset they actually have, not a fixed catalog.
+  airAssetType             String?
+  airAssetCount            Int           @default(0)
+  navalAssetType           String?
+  navalAssetCount          Int           @default(0)
+  reportedAt               DateTime      @default(now())
 
   @@index([jtfId])
   @@index([electionAreaId])
@@ -266,6 +276,13 @@ model ElectionOpsStatus {
   paraphDeliveredTreasurer Int?
   paraphTotalPrecinct      Int?
   paraphDeliveredPrecinct  Int?
+  // Current physical location/stage of the paraphernalia (e.g. "At
+  // COMELEC/Regional Office", "In Transit to Treasurer", "At Municipal
+  // Treasurer", "In Transit to Precinct", "At Precinct", "Delivered &
+  // Confirmed") — free text like transmissionStatus below, distinct from
+  // the delivered/total counts above (this tracks *where*, those track
+  // *how much*).
+  paraphLocation           String?
   acmTestedSealed          Boolean      @default(false)
   votingStarted            Boolean      @default(false)
   votingClosed             Boolean      @default(false)

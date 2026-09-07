@@ -39,6 +39,7 @@ export interface DeploymentFormValues {
   electionAreaId?: string;
   unitLabel: string;
   deployedToPolling: number;
+  deployedToPollingCenters: number;
   qrf: number;
   afpOfficers: number;
   afpEnlisted: number;
@@ -47,11 +48,16 @@ export interface DeploymentFormValues {
   pnpOfficers: number;
   pnpEnlisted: number;
   checkpointOps: number;
+  airAssetType: string;
+  airAssetCount: number;
+  navalAssetType: string;
+  navalAssetCount: number;
 }
 
 const EMPTY: Omit<DeploymentFormValues, "jtfId"> = {
   unitLabel: "",
   deployedToPolling: 0,
+  deployedToPollingCenters: 0,
   qrf: 0,
   afpOfficers: 0,
   afpEnlisted: 0,
@@ -60,6 +66,10 @@ const EMPTY: Omit<DeploymentFormValues, "jtfId"> = {
   pnpOfficers: 0,
   pnpEnlisted: 0,
   checkpointOps: 0,
+  airAssetType: "",
+  airAssetCount: 0,
+  navalAssetType: "",
+  navalAssetCount: 0,
 };
 
 function numField(value: string): number {
@@ -114,9 +124,16 @@ export function DeploymentFormDialog({
     try {
       const url = isEdit ? `/api/deployments/${initial!.id}` : "/api/deployments";
       const method = isEdit ? "PATCH" : "POST";
-      const { id: _id, jtfId, ...rest } = values;
+      const { id: _id, jtfId, airAssetType, navalAssetType, ...rest } = values;
       void _id;
-      const body = isEdit ? rest : { jtfId, ...rest };
+      // Create's schema wants the key omitted (not null) when blank; update's
+      // schema is nullable, so an explicit null there clears a prior value.
+      const normalized = {
+        ...rest,
+        airAssetType: airAssetType.trim() || (isEdit ? null : undefined),
+        navalAssetType: navalAssetType.trim() || (isEdit ? null : undefined),
+      };
+      const body = isEdit ? normalized : { jtfId, ...normalized };
 
       const res = await fetch(url, {
         method,
@@ -138,7 +155,8 @@ export function DeploymentFormDialog({
   }
 
   const numberFields: { key: keyof DeploymentFormValues; label: string }[] = [
-    { key: "deployedToPolling", label: "Deployed to Polling" },
+    { key: "deployedToPolling", label: "Deployed to Polling Precincts" },
+    { key: "deployedToPollingCenters", label: "Deployed to Polling Centers" },
     { key: "qrf", label: "QRF" },
     { key: "afpOfficers", label: "AFP Officers" },
     { key: "afpEnlisted", label: "AFP Enlisted" },
@@ -224,6 +242,44 @@ export function DeploymentFormDialog({
                 />
               </div>
             ))}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="airAssetType">Air Asset Type</Label>
+              <Input
+                id="airAssetType"
+                placeholder="e.g. UH-1H Huey"
+                value={values.airAssetType}
+                onChange={(e) => setField("airAssetType", e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="airAssetCount">Air Asset Count</Label>
+              <Input
+                id="airAssetCount"
+                type="number"
+                min={0}
+                value={values.airAssetCount}
+                onChange={(e) => setField("airAssetCount", numField(e.target.value))}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="navalAssetType">Naval Asset Type</Label>
+              <Input
+                id="navalAssetType"
+                placeholder="e.g. Rigid Hull Inflatable Boat"
+                value={values.navalAssetType}
+                onChange={(e) => setField("navalAssetType", e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="navalAssetCount">Naval Asset Count</Label>
+              <Input
+                id="navalAssetCount"
+                type="number"
+                min={0}
+                value={values.navalAssetCount}
+                onChange={(e) => setField("navalAssetCount", numField(e.target.value))}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button type="submit" disabled={submitting}>

@@ -44,6 +44,7 @@ export async function listElectionOpsAreas(user: SessionUser, jtfId?: string) {
               status.paraphDeliveredPrecinct,
               status.paraphTotalPrecinct
             ),
+            paraphLocation: status.paraphLocation,
             acmTestedSealed: status.acmTestedSealed,
             votingStarted: status.votingStarted,
             votingClosed: status.votingClosed,

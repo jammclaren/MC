@@ -91,6 +91,7 @@ export function ElectionAreasAccordion({
                     <TableHead>JTF</TableHead>
                     <TableHead className="text-right">Treasurer %</TableHead>
                     <TableHead className="text-right">Precinct %</TableHead>
+                    <TableHead>Paraph. Location</TableHead>
                     <TableHead>ACM</TableHead>
                     <TableHead>Voting</TableHead>
                     <TableHead>Transmission</TableHead>
@@ -112,6 +113,7 @@ export function ElectionAreasAccordion({
                         <TableCell className="text-right">
                           {pctLabel(s?.paraphPrecinctPct ?? null)}
                         </TableCell>
+                        <TableCell>{s?.paraphLocation ?? "—"}</TableCell>
                         <TableCell>
                           {s?.acmTestedSealed ? (
                             <Badge variant="good">Sealed</Badge>
@@ -148,6 +150,7 @@ export function ElectionAreasAccordion({
                                         paraphDeliveredTreasurer: s.paraphDeliveredTreasurer,
                                         paraphTotalPrecinct: s.paraphTotalPrecinct,
                                         paraphDeliveredPrecinct: s.paraphDeliveredPrecinct,
+                                        paraphLocation: s.paraphLocation,
                                         acmTestedSealed: s.acmTestedSealed,
                                         votingStarted: s.votingStarted,
                                         votingClosed: s.votingClosed,

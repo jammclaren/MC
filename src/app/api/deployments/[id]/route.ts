@@ -9,6 +9,7 @@ import { withAudit } from "@/lib/audit";
 const updateDeploymentSchema = z.object({
   unitLabel: z.string().optional(),
   deployedToPolling: z.number().int().nonnegative().optional(),
+  deployedToPollingCenters: z.number().int().nonnegative().optional(),
   qrf: z.number().int().nonnegative().optional(),
   afpOfficers: z.number().int().nonnegative().optional(),
   afpEnlisted: z.number().int().nonnegative().optional(),
@@ -17,6 +18,10 @@ const updateDeploymentSchema = z.object({
   pnpOfficers: z.number().int().nonnegative().optional(),
   pnpEnlisted: z.number().int().nonnegative().optional(),
   checkpointOps: z.number().int().nonnegative().optional(),
+  airAssetType: z.string().trim().max(120).nullable().optional(),
+  airAssetCount: z.number().int().nonnegative().optional(),
+  navalAssetType: z.string().trim().max(120).nullable().optional(),
+  navalAssetCount: z.number().int().nonnegative().optional(),
 });
 
 async function loadDeploymentOrThrow(id: string) {

@@ -51,7 +51,7 @@ export default async function OverviewPage() {
           icon={Vote}
         />
         <StatTile
-          label="Deployed to Polling"
+          label="Deployed to Polling Precincts"
           value={data.totalDeployed.toLocaleString()}
           icon={Users}
         />
@@ -94,7 +94,7 @@ export default async function OverviewPage() {
           <CardHeader>
             <CardTitle>Troop Deployment Recapitulation</CardTitle>
             <CardDescription>
-              {data.totalDeployed.toLocaleString()} deployed to polling ·{" "}
+              {data.totalDeployed.toLocaleString()} deployed to polling precincts ·{" "}
               {data.totalQrf.toLocaleString()} QRF
             </CardDescription>
           </CardHeader>
@@ -104,7 +104,7 @@ export default async function OverviewPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>JTF</TableHead>
-                  <TableHead className="text-right">Deployed to Polling</TableHead>
+                  <TableHead className="text-right">Deployed to Polling Precincts</TableHead>
                   <TableHead className="text-right">QRF</TableHead>
                 </TableRow>
               </TableHeader>

@@ -11,6 +11,7 @@ const createDeploymentSchema = z.object({
   electionAreaId: z.string().optional(),
   unitLabel: z.string().optional(),
   deployedToPolling: z.number().int().nonnegative().default(0),
+  deployedToPollingCenters: z.number().int().nonnegative().default(0),
   qrf: z.number().int().nonnegative().default(0),
   afpOfficers: z.number().int().nonnegative().default(0),
   afpEnlisted: z.number().int().nonnegative().default(0),
@@ -19,6 +20,10 @@ const createDeploymentSchema = z.object({
   pnpOfficers: z.number().int().nonnegative().default(0),
   pnpEnlisted: z.number().int().nonnegative().default(0),
   checkpointOps: z.number().int().nonnegative().default(0),
+  airAssetType: z.string().trim().max(120).optional(),
+  airAssetCount: z.number().int().nonnegative().default(0),
+  navalAssetType: z.string().trim().max(120).optional(),
+  navalAssetCount: z.number().int().nonnegative().default(0),
 });
 
 export async function GET(request: NextRequest) {
