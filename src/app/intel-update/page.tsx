@@ -116,10 +116,17 @@ export default async function IntelUpdatePage() {
   const since30d = nowMs() - 30 * 24 * 60 * 60 * 1000;
   const recent30d = rows.filter((r) => new Date(r.date).getTime() >= since30d);
 
+  // Only these two get shortened — the rest of the tracked provinces
+  // (Basilan, Tawi-Tawi, Lanao del Sur, Cotabato City, SGA-BARMM) are
+  // already short enough for the chart's axis labels.
+  const PROVINCE_CHART_ABBREVIATIONS: Record<string, string> = {
+    "Maguindanao del Sur": "MDS",
+    "Maguindanao del Norte": "MDN",
+  };
   const byProvince = topCounts(
     rows.map((r) => r.province),
     7
-  );
+  ).map((p) => ({ ...p, label: PROVINCE_CHART_ABBREVIATIONS[p.label] ?? p.label }));
   const byThreatGroup = topCounts(
     rows.map((r) => r.threatGroup),
     7
