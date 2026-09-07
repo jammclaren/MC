@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { StatTile } from "@/components/stat-tile";
-import { Users, ShieldAlert, Building2, Plane, Ship } from "lucide-react";
+import { Users, ShieldAlert, Building2, Plane, Ship, Radar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DeploymentFormDialog } from "@/components/deployment-form-dialog";
 import { DeploymentRowsAccordion } from "@/components/deployment-rows-accordion";
@@ -141,6 +141,10 @@ export default async function BpeDeploymentPage({
                   <span className="font-medium">{card.navalAssetCount.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
+                  <span className="text-muted-foreground">ISR Assets</span>
+                  <span className="font-medium">{card.isrAssetCount.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-muted-foreground">Voter Coverage</span>
                   <span className="font-medium">
                     {coveragePct === null ? "—" : `${coveragePct.toFixed(1)}%`}
@@ -159,7 +163,7 @@ export default async function BpeDeploymentPage({
         <h2 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
           Recapitulation — command-wide, auto-computed from unit reports
         </h2>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           <StatTile
             label="Deployed to Polling Precincts"
             value={data.totalDeployed.toLocaleString()}
@@ -173,6 +177,7 @@ export default async function BpeDeploymentPage({
           <StatTile label="QRF" value={data.totalQrf.toLocaleString()} icon={ShieldAlert} />
           <StatTile label="Air Assets" value={data.totalAirAssets.toLocaleString()} icon={Plane} />
           <StatTile label="Naval Assets" value={data.totalNavalAssets.toLocaleString()} icon={Ship} />
+          <StatTile label="ISR Assets" value={data.totalIsrAssets.toLocaleString()} icon={Radar} />
         </div>
       </div>
 

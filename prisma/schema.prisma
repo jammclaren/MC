@@ -229,6 +229,10 @@ model TroopDeployment {
   airAssetCount            Int           @default(0)
   navalAssetType           String?
   navalAssetCount          Int           @default(0)
+  // ISR = Intelligence, Surveillance & Reconnaissance (e.g. "RQ-11 Raven UAV",
+  // "Fixed CCTV Node") — same free-text-type-plus-count shape as air/naval.
+  isrAssetType             String?
+  isrAssetCount            Int           @default(0)
   reportedAt               DateTime      @default(now())
 
   @@index([jtfId])

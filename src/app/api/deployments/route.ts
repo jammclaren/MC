@@ -24,6 +24,8 @@ const createDeploymentSchema = z.object({
   airAssetCount: z.number().int().nonnegative().default(0),
   navalAssetType: z.string().trim().max(120).optional(),
   navalAssetCount: z.number().int().nonnegative().default(0),
+  isrAssetType: z.string().trim().max(120).optional(),
+  isrAssetCount: z.number().int().nonnegative().default(0),
 });
 
 export async function GET(request: NextRequest) {

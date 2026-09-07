@@ -11,6 +11,7 @@ export interface JtfDeploymentCard {
   wavsTav: number;
   airAssetCount: number;
   navalAssetCount: number;
+  isrAssetCount: number;
   numPrecincts: number;
   registeredVoters: number;
 }
@@ -36,6 +37,8 @@ export interface DeploymentRow {
   airAssetCount: number;
   navalAssetType: string | null;
   navalAssetCount: number;
+  isrAssetType: string | null;
+  isrAssetCount: number;
   reportedAt: Date;
 }
 
@@ -46,6 +49,7 @@ export interface DeploymentData {
   totalQrf: number;
   totalAirAssets: number;
   totalNavalAssets: number;
+  totalIsrAssets: number;
   rows: DeploymentRow[];
 }
 
@@ -75,6 +79,7 @@ export async function getDeploymentData(
         wavsTav: true,
         airAssetCount: true,
         navalAssetCount: true,
+        isrAssetCount: true,
       },
     }),
     prisma.troopDeployment.findMany({
@@ -102,6 +107,7 @@ export async function getDeploymentData(
       wavsTav: deployRows.reduce((sum, r) => sum + r.wavsTav, 0),
       airAssetCount: deployRows.reduce((sum, r) => sum + r.airAssetCount, 0),
       navalAssetCount: deployRows.reduce((sum, r) => sum + r.navalAssetCount, 0),
+      isrAssetCount: deployRows.reduce((sum, r) => sum + r.isrAssetCount, 0),
       numPrecincts: areaAgg?._sum.numPrecincts ?? 0,
       registeredVoters: areaAgg?._sum.registeredVoters ?? 0,
     };
@@ -132,6 +138,8 @@ export async function getDeploymentData(
     airAssetCount: d.airAssetCount,
     navalAssetType: d.navalAssetType,
     navalAssetCount: d.navalAssetCount,
+    isrAssetType: d.isrAssetType,
+    isrAssetCount: d.isrAssetCount,
     reportedAt: d.reportedAt,
   }));
 
@@ -142,6 +150,7 @@ export async function getDeploymentData(
     totalQrf: jtfCards.reduce((sum, c) => sum + c.qrf, 0),
     totalAirAssets: jtfCards.reduce((sum, c) => sum + c.airAssetCount, 0),
     totalNavalAssets: jtfCards.reduce((sum, c) => sum + c.navalAssetCount, 0),
+    totalIsrAssets: jtfCards.reduce((sum, c) => sum + c.isrAssetCount, 0),
     rows,
   };
 }

@@ -22,6 +22,8 @@ const updateDeploymentSchema = z.object({
   airAssetCount: z.number().int().nonnegative().optional(),
   navalAssetType: z.string().trim().max(120).nullable().optional(),
   navalAssetCount: z.number().int().nonnegative().optional(),
+  isrAssetType: z.string().trim().max(120).nullable().optional(),
+  isrAssetCount: z.number().int().nonnegative().optional(),
 });
 
 async function loadDeploymentOrThrow(id: string) {

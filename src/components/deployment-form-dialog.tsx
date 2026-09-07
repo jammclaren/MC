@@ -52,6 +52,8 @@ export interface DeploymentFormValues {
   airAssetCount: number;
   navalAssetType: string;
   navalAssetCount: number;
+  isrAssetType: string;
+  isrAssetCount: number;
 }
 
 const EMPTY: Omit<DeploymentFormValues, "jtfId"> = {
@@ -70,6 +72,8 @@ const EMPTY: Omit<DeploymentFormValues, "jtfId"> = {
   airAssetCount: 0,
   navalAssetType: "",
   navalAssetCount: 0,
+  isrAssetType: "",
+  isrAssetCount: 0,
 };
 
 function numField(value: string): number {
@@ -124,7 +128,7 @@ export function DeploymentFormDialog({
     try {
       const url = isEdit ? `/api/deployments/${initial!.id}` : "/api/deployments";
       const method = isEdit ? "PATCH" : "POST";
-      const { id: _id, jtfId, airAssetType, navalAssetType, ...rest } = values;
+      const { id: _id, jtfId, airAssetType, navalAssetType, isrAssetType, ...rest } = values;
       void _id;
       // Create's schema wants the key omitted (not null) when blank; update's
       // schema is nullable, so an explicit null there clears a prior value.
@@ -132,6 +136,7 @@ export function DeploymentFormDialog({
         ...rest,
         airAssetType: airAssetType.trim() || (isEdit ? null : undefined),
         navalAssetType: navalAssetType.trim() || (isEdit ? null : undefined),
+        isrAssetType: isrAssetType.trim() || (isEdit ? null : undefined),
       };
       const body = isEdit ? normalized : { jtfId, ...normalized };
 
@@ -278,6 +283,25 @@ export function DeploymentFormDialog({
                 min={0}
                 value={values.navalAssetCount}
                 onChange={(e) => setField("navalAssetCount", numField(e.target.value))}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="isrAssetType">ISR Asset Type</Label>
+              <Input
+                id="isrAssetType"
+                placeholder="e.g. RQ-11 Raven UAV"
+                value={values.isrAssetType}
+                onChange={(e) => setField("isrAssetType", e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="isrAssetCount">ISR Asset Count</Label>
+              <Input
+                id="isrAssetCount"
+                type="number"
+                min={0}
+                value={values.isrAssetCount}
+                onChange={(e) => setField("isrAssetCount", numField(e.target.value))}
               />
             </div>
           </div>

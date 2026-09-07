@@ -35,6 +35,7 @@ import {
   Plane,
   Ship,
   Building2,
+  Radar,
 } from "lucide-react";
 
 export default async function OverviewPage() {
@@ -79,6 +80,11 @@ export default async function OverviewPage() {
           label="Total Naval Assets Deployed"
           value={data.totalNavalAssets.toLocaleString()}
           icon={Ship}
+        />
+        <StatTile
+          label="Total ISR Assets Deployed"
+          value={data.totalIsrAssets.toLocaleString()}
+          icon={Radar}
         />
         <StatTile
           label="Incidents (30d)"

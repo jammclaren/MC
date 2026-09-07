@@ -15,6 +15,7 @@ export interface JtfDeploymentTotal {
   qrf: number;
   airAssetCount: number;
   navalAssetCount: number;
+  isrAssetCount: number;
 }
 
 export interface RecentIncidentRow {
@@ -55,6 +56,7 @@ export interface OverviewData {
   totalQrf: number;
   totalAirAssets: number;
   totalNavalAssets: number;
+  totalIsrAssets: number;
   totalRegisteredVoters: number;
   recentIncidents: RecentIncidentRow[];
   recentIncidentCount30d: number;
@@ -107,6 +109,7 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
         qrf: true,
         airAssetCount: true,
         navalAssetCount: true,
+        isrAssetCount: true,
       },
     }),
     prisma.incident.findMany({
@@ -221,6 +224,7 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
       qrf: rows.reduce((sum, r) => sum + r.qrf, 0),
       airAssetCount: rows.reduce((sum, r) => sum + r.airAssetCount, 0),
       navalAssetCount: rows.reduce((sum, r) => sum + r.navalAssetCount, 0),
+      isrAssetCount: rows.reduce((sum, r) => sum + r.isrAssetCount, 0),
     };
   });
 
@@ -270,6 +274,7 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     totalQrf: jtfDeployments.reduce((sum, d) => sum + d.qrf, 0),
     totalAirAssets: jtfDeployments.reduce((sum, d) => sum + d.airAssetCount, 0),
     totalNavalAssets: jtfDeployments.reduce((sum, d) => sum + d.navalAssetCount, 0),
+    totalIsrAssets: jtfDeployments.reduce((sum, d) => sum + d.isrAssetCount, 0),
     totalRegisteredVoters,
     recentIncidents: recentIncidentRows,
     recentIncidentCount30d,

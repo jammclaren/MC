@@ -94,6 +94,7 @@ export function DeploymentRowsAccordion({
                     <TableHead className="text-right">Checkpoints</TableHead>
                     <TableHead>Air Asset</TableHead>
                     <TableHead>Naval Asset</TableHead>
+                    <TableHead>ISR Asset</TableHead>
                     <TableHead>Reported</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -123,6 +124,11 @@ export function DeploymentRowsAccordion({
                           ? `${row.navalAssetCount}${row.navalAssetType ? ` × ${row.navalAssetType}` : ""}`
                           : "—"}
                       </TableCell>
+                      <TableCell>
+                        {row.isrAssetCount > 0
+                          ? `${row.isrAssetCount}${row.isrAssetType ? ` × ${row.isrAssetType}` : ""}`
+                          : "—"}
+                      </TableCell>
                       <TableCell>{row.reportedAt.toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
                         {row.canEdit && (
@@ -149,6 +155,8 @@ export function DeploymentRowsAccordion({
                                 airAssetCount: row.airAssetCount,
                                 navalAssetType: row.navalAssetType ?? "",
                                 navalAssetCount: row.navalAssetCount,
+                                isrAssetType: row.isrAssetType ?? "",
+                                isrAssetCount: row.isrAssetCount,
                               }}
                               trigger={
                                 <Button variant="ghost" size="sm">
