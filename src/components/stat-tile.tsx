@@ -6,14 +6,17 @@ export interface StatTileProps {
   value: string | number;
   unit?: string;
   icon?: LucideIcon;
-  tone?: "default" | "good" | "warning" | "critical";
+  tone?: "default" | "good" | "warning" | "serious" | "critical";
   hint?: string;
+  /** Native hover tooltip for detail that doesn't fit the tile itself. */
+  title?: string;
 }
 
 const TONE_CLASSES: Record<NonNullable<StatTileProps["tone"]>, string> = {
   default: "text-primary",
   good: "text-status-good",
   warning: "text-status-warning",
+  serious: "text-status-serious",
   critical: "text-status-critical",
 };
 
@@ -28,9 +31,13 @@ export function StatTile({
   icon: Icon,
   tone = "default",
   hint,
+  title,
 }: StatTileProps) {
   return (
-    <div className="relative flex flex-col gap-1 overflow-hidden rounded-md border-t-2 border-t-primary/60 bg-card px-4 py-3 ring-1 ring-foreground/10">
+    <div
+      title={title}
+      className="relative flex flex-col gap-1 overflow-hidden rounded-md border-t-2 border-t-primary/60 bg-card px-4 py-3 ring-1 ring-foreground/10"
+    >
       <div className="flex items-center justify-between">
         <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
           {label}
