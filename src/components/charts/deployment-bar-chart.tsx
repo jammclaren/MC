@@ -14,6 +14,7 @@ import {
 export interface DeploymentBarChartDatum {
   jtfName: string;
   deployedToPolling: number;
+  deployedToPollingCenters: number;
   qrf: number;
 }
 
@@ -39,8 +40,14 @@ export function DeploymentBarChart({ data }: { data: DeploymentBarChartDatum[] }
         <Legend wrapperStyle={{ fontSize: 12, color: "var(--muted-foreground)" }} />
         <Bar
           dataKey="deployedToPolling"
-          name="Deployed to Polling"
+          name="Deployed to Polling Precincts"
           fill="var(--chart-1)"
+          radius={[2, 2, 0, 0]}
+        />
+        <Bar
+          dataKey="deployedToPollingCenters"
+          name="Deployed to Polling Centers"
+          fill="var(--chart-3)"
           radius={[2, 2, 0, 0]}
         />
         <Bar dataKey="qrf" name="QRF" fill="var(--chart-2)" radius={[2, 2, 0, 0]} />
