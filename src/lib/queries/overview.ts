@@ -12,6 +12,8 @@ export interface JtfDeploymentTotal {
   jtfName: string;
   deployedToPolling: number;
   qrf: number;
+  airAssetCount: number;
+  navalAssetCount: number;
 }
 
 export interface RecentIncidentRow {
@@ -49,6 +51,8 @@ export interface OverviewData {
   jtfDeployments: JtfDeploymentTotal[];
   totalDeployed: number;
   totalQrf: number;
+  totalAirAssets: number;
+  totalNavalAssets: number;
   totalRegisteredVoters: number;
   recentIncidents: RecentIncidentRow[];
   recentIncidentCount30d: number;
@@ -94,7 +98,13 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     }),
     prisma.troopDeployment.findMany({
       where: { jtfId: rollupScopeJtfId },
-      select: { jtfId: true, deployedToPolling: true, qrf: true },
+      select: {
+        jtfId: true,
+        deployedToPolling: true,
+        qrf: true,
+        airAssetCount: true,
+        navalAssetCount: true,
+      },
     }),
     prisma.incident.findMany({
       where: { jtfId: detailScopeJtfId },
@@ -205,6 +215,8 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
       jtfName: jtf.name,
       deployedToPolling: rows.reduce((sum, r) => sum + r.deployedToPolling, 0),
       qrf: rows.reduce((sum, r) => sum + r.qrf, 0),
+      airAssetCount: rows.reduce((sum, r) => sum + r.airAssetCount, 0),
+      navalAssetCount: rows.reduce((sum, r) => sum + r.navalAssetCount, 0),
     };
   });
 
@@ -248,6 +260,8 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     jtfDeployments,
     totalDeployed: jtfDeployments.reduce((sum, d) => sum + d.deployedToPolling, 0),
     totalQrf: jtfDeployments.reduce((sum, d) => sum + d.qrf, 0),
+    totalAirAssets: jtfDeployments.reduce((sum, d) => sum + d.airAssetCount, 0),
+    totalNavalAssets: jtfDeployments.reduce((sum, d) => sum + d.navalAssetCount, 0),
     totalRegisteredVoters,
     recentIncidents: recentIncidentRows,
     recentIncidentCount30d,

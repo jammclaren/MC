@@ -26,7 +26,7 @@ import { FunnelPanel } from "@/components/funnel-panel";
 import { DailyAssessmentPanel } from "@/components/daily-assessment-panel";
 import { JtfAssessmentCard } from "@/components/jtf-assessment-card";
 import { OverviewIncidentOpsPanel } from "@/components/overview-incident-ops-panel";
-import { Users, ShieldAlert, TriangleAlert, Crosshair, Vote } from "lucide-react";
+import { Users, ShieldAlert, TriangleAlert, Crosshair, Vote, Plane, Ship } from "lucide-react";
 
 export default async function OverviewPage() {
   const user = await getSessionUser();
@@ -44,7 +44,7 @@ export default async function OverviewPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
         <StatTile
           label="Registered Voters (BARMM)"
           value={data.totalRegisteredVoters.toLocaleString()}
@@ -56,6 +56,16 @@ export default async function OverviewPage() {
           icon={Users}
         />
         <StatTile label="QRF" value={data.totalQrf.toLocaleString()} icon={ShieldAlert} />
+        <StatTile
+          label="Total Air Assets Deployed"
+          value={data.totalAirAssets.toLocaleString()}
+          icon={Plane}
+        />
+        <StatTile
+          label="Total Naval Assets Deployed"
+          value={data.totalNavalAssets.toLocaleString()}
+          icon={Ship}
+        />
         <StatTile
           label="Incidents (30d)"
           value={data.recentIncidentCount30d.toLocaleString()}
