@@ -59,7 +59,7 @@ export function IntelUpdatesPanel({
         placeholder="Search by activity, threat group, location, source, province, or grid reference..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="max-w-md"
+        className="max-w-md border-2 border-status-warning"
       />
 
       {groups.length === 0 && (
