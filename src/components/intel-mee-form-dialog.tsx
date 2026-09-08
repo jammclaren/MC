@@ -2,9 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { forward } from "mgrs";
 import { toast } from "sonner";
-import { parseMgrs } from "@/lib/mgrs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,16 +33,16 @@ export interface IntelMeeFormInitial {
   name: string;
   assetType: string;
   quantity: number;
-  lat: number;
-  lng: number;
 }
 
 export function IntelMeeFormDialog({
   jtfOptions,
+  lockJtfId,
   initial,
   trigger,
 }: {
   jtfOptions: JtfOption[];
+  lockJtfId?: string;
   initial?: IntelMeeFormInitial;
   trigger: React.ReactElement;
 }) {
@@ -52,15 +50,11 @@ export function IntelMeeFormDialog({
   const isEdit = !!initial;
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [jtfId, setJtfId] = useState(initial?.jtfId ?? jtfOptions[0]?.id ?? "");
+  const [jtfId, setJtfId] = useState(initial?.jtfId ?? lockJtfId ?? jtfOptions[0]?.id ?? "");
   const [name, setName] = useState(initial?.name ?? "");
   const [assetType, setAssetType] = useState(initial?.assetType ?? "");
   const [quantity, setQuantity] = useState(initial?.quantity.toString() ?? "0");
-  const [mgrsInput, setMgrsInput] = useState(
-    initial ? forward([initial.lng, initial.lat]) : ""
-  );
 
-  const parsed = useMemo(() => parseMgrs(mgrsInput), [mgrsInput]);
   const jtfItems = useMemo(
     () => jtfOptions.map((jtf) => ({ value: jtf.id, label: jtf.name })),
     [jtfOptions]
@@ -68,10 +62,6 @@ export function IntelMeeFormDialog({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if ("error" in parsed) {
-      toast.error(parsed.error);
-      return;
-    }
     setSubmitting(true);
     try {
       const url = isEdit ? `/api/intel-updates/mee/${initial!.id}` : "/api/intel-updates/mee";
@@ -81,7 +71,6 @@ export function IntelMeeFormDialog({
         name,
         assetType,
         quantity: Number(quantity) || 0,
-        mgrs: mgrsInput,
       };
 
       const res = await fetch(url, {
@@ -99,7 +88,6 @@ export function IntelMeeFormDialog({
         setName("");
         setAssetType("");
         setQuantity("0");
-        setMgrsInput("");
       }
       router.refresh();
     } catch (error) {
@@ -118,21 +106,27 @@ export function IntelMeeFormDialog({
             <DialogTitle>{isEdit ? "Edit" : "Log"} MEE Entry</DialogTitle>
           </DialogHeader>
           <div className="flex max-h-[65vh] flex-col gap-4 overflow-y-auto py-4">
-            <div className="flex flex-col gap-2">
-              <Label>JTF</Label>
-              <Select items={jtfItems} value={jtfId} onValueChange={(v: string | null) => setJtfId(v ?? "")}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select JTF" />
-                </SelectTrigger>
-                <SelectContent>
-                  {jtfOptions.map((jtf) => (
-                    <SelectItem key={jtf.id} value={jtf.id}>
-                      {jtf.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {!lockJtfId && (
+              <div className="flex flex-col gap-2">
+                <Label>JTF</Label>
+                <Select
+                  items={jtfItems}
+                  value={jtfId}
+                  onValueChange={(v: string | null) => setJtfId(v ?? "")}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select JTF" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {jtfOptions.map((jtf) => (
+                      <SelectItem key={jtf.id} value={jtf.id}>
+                        {jtf.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="name">Name</Label>
@@ -166,23 +160,6 @@ export function IntelMeeFormDialog({
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
               />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="mgrs">Grid Coordinate (MGRS)</Label>
-              <Input
-                id="mgrs"
-                required
-                placeholder="e.g. 51NUA6789054321"
-                className="font-mono uppercase"
-                value={mgrsInput}
-                onChange={(e) => setMgrsInput(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                {"error" in parsed
-                  ? mgrsInput.trim() && <span className="text-status-critical">{parsed.error}</span>
-                  : `${parsed.lat.toFixed(5)}, ${parsed.lng.toFixed(5)}`}
-              </p>
             </div>
           </div>
           <DialogFooter>

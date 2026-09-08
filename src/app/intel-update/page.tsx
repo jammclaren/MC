@@ -29,7 +29,7 @@ import { IntelOverallAssessmentFormDialog } from "@/components/intel-overall-ass
 import { IntelOverallAssessmentList } from "@/components/intel-overall-assessment-list";
 import { IntelUpdatesPanel } from "@/components/intel-updates-panel";
 import { IntelMeeFormDialog } from "@/components/intel-mee-form-dialog";
-import { IntelMeeAccordion } from "@/components/intel-mee-accordion";
+import { IntelMeeCards } from "@/components/intel-mee-cards";
 import type { IntelUpdateRow } from "@/lib/queries/intel-updates";
 import { truncateLabel } from "@/lib/text";
 import { FileWarning, ShieldAlert, Radar, CalendarClock } from "lucide-react";
@@ -196,6 +196,26 @@ export default async function IntelUpdatePage() {
         )}
       </div>
 
+      <Card>
+        <CardHeader>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <CardTitle>Intel Mission Essential Equipment (MEE)</CardTitle>
+              <CardDescription>Tracked equipment on file, grouped by JTF.</CardDescription>
+            </div>
+            {canWrite && (
+              <IntelMeeFormDialog
+                jtfOptions={jtfOptions}
+                trigger={<Button variant="outline">Log Equipment</Button>}
+              />
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <IntelMeeCards rows={meeAssets} jtfOptions={jtfOptions} canWrite={canWrite} />
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatTile label="Total Reports" value={rows.length.toLocaleString()} icon={Radar} />
         <StatTile
@@ -340,26 +360,6 @@ export default async function IntelUpdatePage() {
         </CardHeader>
         <CardContent>
           <IntelUpdatesPanel rows={rows} provinceOptions={provinceOptions} canWrite={canWrite} />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <CardTitle>Intel Mission Essential Equipment (MEE)</CardTitle>
-              <CardDescription>Tracked equipment on file, grouped by JTF.</CardDescription>
-            </div>
-            {canWrite && (
-              <IntelMeeFormDialog
-                jtfOptions={jtfOptions}
-                trigger={<Button variant="outline">Log Equipment</Button>}
-              />
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <IntelMeeAccordion rows={meeAssets} jtfOptions={jtfOptions} canWrite={canWrite} />
         </CardContent>
       </Card>
 

@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { assertCanAccessIntelligenceUpdate, type SessionUser } from "@/lib/rbac";
-import { toMgrs } from "@/lib/mgrs";
 
 export interface IntelMeeAssetRow {
   id: string;
@@ -9,9 +8,6 @@ export interface IntelMeeAssetRow {
   name: string;
   assetType: string;
   quantity: number;
-  lat: number;
-  lng: number;
-  mgrs: string;
   createdAt: string;
 }
 
@@ -28,9 +24,6 @@ export async function listIntelMeeAssets(user: SessionUser): Promise<IntelMeeAss
     name: r.name,
     assetType: r.assetType,
     quantity: r.quantity,
-    lat: r.lat,
-    lng: r.lng,
-    mgrs: toMgrs(r.lat, r.lng),
     createdAt: r.createdAt.toISOString(),
   }));
 }
