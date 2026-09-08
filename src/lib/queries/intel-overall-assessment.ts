@@ -6,6 +6,9 @@ export interface IntelOverallAssessmentRow {
   summary: string;
   authorName: string;
   createdAt: string;
+  /** Set once the daily 1700H purge stamps it — null means "still active,
+   * shown by default"; a stamped row only shows under the History toggle. */
+  purgedAt: string | null;
 }
 
 export async function listIntelOverallAssessments(
@@ -21,5 +24,6 @@ export async function listIntelOverallAssessments(
     summary: r.summary,
     authorName: r.author.name,
     createdAt: r.createdAt.toISOString(),
+    purgedAt: r.purgedAt?.toISOString() ?? null,
   }));
 }

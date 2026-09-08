@@ -34,7 +34,11 @@ export function IntelUpdatesPanel({
     const q = search.trim().toLowerCase();
     if (!q) return rows;
     return rows.filter((r) =>
-      [r.narrative, r.activityType, r.threatGroup, r.locationLabel, r.province, r.mgrs]
+      [
+        r.activityType,
+        new Date(r.date).toLocaleDateString(),
+        new Date(r.createdAt).toLocaleDateString(),
+      ]
         .filter(Boolean)
         .some((field) => field!.toLowerCase().includes(q))
     );
@@ -56,7 +60,7 @@ export function IntelUpdatesPanel({
   return (
     <div className="flex flex-col gap-4">
       <Input
-        placeholder="Search by narrative, activity type, threat group, location, province, or grid reference..."
+        placeholder="Search by type of activity, date reported, or date of activity..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="max-w-md border-2 border-status-warning"
@@ -106,6 +110,14 @@ export function IntelUpdatesPanel({
                     </div>
                     <p className="text-sm break-words whitespace-normal">{row.narrative}</p>
                     <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      <div className="break-words">
+                        <span className="font-medium text-foreground">Date of Activity: </span>
+                        {new Date(row.date).toLocaleDateString()}
+                      </div>
+                      <div className="break-words">
+                        <span className="font-medium text-foreground">Date Reported: </span>
+                        {new Date(row.createdAt).toLocaleDateString()}
+                      </div>
                       <div className="col-span-2 break-words">
                         <span className="font-medium text-foreground">Threat Group: </span>
                         {row.threatGroup ?? "—"}

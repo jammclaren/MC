@@ -1,12 +1,13 @@
 import { redirect, notFound } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
+import { prisma } from "@/lib/prisma";
 import { canAccessIntelligenceUpdate, canWriteIntelligenceUpdate } from "@/lib/rbac";
 import { listIntelUpdates } from "@/lib/queries/intel-updates";
 import { listIntelOverallAssessments } from "@/lib/queries/intel-overall-assessment";
+import { listIntelMeeAssets } from "@/lib/queries/intel-mee";
 import { computeIntelAssessment } from "@/lib/intel-assessment";
 import { PROVINCE_TO_JTF } from "@/lib/queries/election-board";
 import { nowMs } from "@/lib/time";
-import { formatTimestamp24h } from "@/lib/datetime";
 import {
   Card,
   CardContent,
@@ -25,7 +26,10 @@ import {
 import { ActivityTrendChart, type ActivityTrendDatum } from "@/components/charts/activity-trend-chart";
 import { IntelUpdateFormDialog } from "@/components/intel-update-form-dialog";
 import { IntelOverallAssessmentFormDialog } from "@/components/intel-overall-assessment-form-dialog";
+import { IntelOverallAssessmentList } from "@/components/intel-overall-assessment-list";
 import { IntelUpdatesPanel } from "@/components/intel-updates-panel";
+import { IntelMeeFormDialog } from "@/components/intel-mee-form-dialog";
+import { IntelMeeAccordion } from "@/components/intel-mee-accordion";
 import type { IntelUpdateRow } from "@/lib/queries/intel-updates";
 import { truncateLabel } from "@/lib/text";
 import { FileWarning, ShieldAlert, Radar, CalendarClock } from "lucide-react";
@@ -108,10 +112,13 @@ export default async function IntelUpdatePage() {
     notFound();
   }
 
-  const [rows, overallAssessments] = await Promise.all([
+  const [rows, overallAssessments, meeAssets, jtfs] = await Promise.all([
     listIntelUpdates(user),
     listIntelOverallAssessments(user),
+    listIntelMeeAssets(user),
+    prisma.jTF.findMany({ orderBy: { name: "asc" } }),
   ]);
+  const jtfOptions = jtfs.map((jtf) => ({ id: jtf.id, name: jtf.name }));
   const canWrite = canWriteIntelligenceUpdate(user);
   const provinceOptions = Object.keys(PROVINCE_TO_JTF);
   const assessment = computeIntelAssessment(rows);
@@ -336,6 +343,26 @@ export default async function IntelUpdatePage() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <CardTitle>Intel Mission Essential Equipment (MEE)</CardTitle>
+              <CardDescription>Tracked equipment on file, grouped by JTF.</CardDescription>
+            </div>
+            {canWrite && (
+              <IntelMeeFormDialog
+                jtfOptions={jtfOptions}
+                trigger={<Button variant="outline">Log Equipment</Button>}
+              />
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <IntelMeeAccordion rows={meeAssets} jtfOptions={jtfOptions} canWrite={canWrite} />
+        </CardContent>
+      </Card>
+
       <Card className="border-primary/30">
         <CardHeader>
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -360,26 +387,7 @@ export default async function IntelUpdatePage() {
             ))}
           </ul>
 
-          {overallAssessments.length > 0 && (
-            <div className="flex flex-col gap-2 border-t border-border pt-4">
-              <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-                Manually Submitted
-              </span>
-              {overallAssessments.map((a) => (
-                <div key={a.id} className="rounded-md border border-border p-3">
-                  <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <span className="text-xs text-muted-foreground">
-                      {a.authorName} · {formatTimestamp24h(a.createdAt)}
-                    </span>
-                  </div>
-                  <p className="mt-1.5 text-sm whitespace-pre-wrap">{a.summary}</p>
-                </div>
-              ))}
-              <p className="text-xs text-muted-foreground">
-                Cleared automatically at 1700H daily.
-              </p>
-            </div>
-          )}
+          <IntelOverallAssessmentList assessments={overallAssessments} canWrite={canWrite} />
         </CardContent>
       </Card>
     </div>

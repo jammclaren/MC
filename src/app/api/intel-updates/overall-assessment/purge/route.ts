@@ -8,11 +8,13 @@ import { withAudit } from "@/lib/audit";
  * Daily 1700H (Asia/Manila) reset of WFC-Intelligence's manually-entered
  * Overall Assessment — same cadence/reasoning as
  * api/jtf-assessments/purge (see vercel.json's "0 9 * * *" entry there
- * and here). Vercel Cron sends a GET carrying
- * `Authorization: Bearer $CRON_SECRET`; an ADMIN may also trigger it
- * manually, never anyone else — a blanket delete is too destructive to
- * leave open to the same write access (ADMIN + WFC-Intelligence) that
- * can create these.
+ * and here). Unlike that one, this is a soft delete (purgedAt stamped,
+ * row kept) so the page's "History" toggle has something to show — see
+ * the IntelOverallAssessment schema comment. Vercel Cron sends a GET
+ * carrying `Authorization: Bearer $CRON_SECRET`; an ADMIN may also
+ * trigger it manually, never anyone else — a blanket purge is too
+ * disruptive to leave open to the same write access (ADMIN +
+ * WFC-Intelligence) that can create these.
  */
 async function isAuthorized(request: NextRequest): Promise<boolean> {
   const cronSecret = process.env.CRON_SECRET;
@@ -39,16 +41,24 @@ async function purge() {
   }
 
   const existing = await prisma.intelOverallAssessment.findMany({
+    where: { purgedAt: null },
     select: { id: true, authorId: true },
   });
 
-  const result = await withAudit((tx) => tx.intelOverallAssessment.deleteMany({}), {
-    userId: systemUser.id,
-    action: "DELETE",
-    entity: "IntelOverallAssessment",
-    entityId: "daily-1700h-purge",
-    diff: { deletedCount: existing.length, deletedIds: existing.map((e) => e.id) },
-  });
+  const result = await withAudit(
+    (tx) =>
+      tx.intelOverallAssessment.updateMany({
+        where: { purgedAt: null },
+        data: { purgedAt: new Date() },
+      }),
+    {
+      userId: systemUser.id,
+      action: "UPDATE",
+      entity: "IntelOverallAssessment",
+      entityId: "daily-1700h-purge",
+      diff: { purgedCount: existing.length, purgedIds: existing.map((e) => e.id) },
+    }
+  );
 
   return result.count;
 }

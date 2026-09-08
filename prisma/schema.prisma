@@ -92,6 +92,7 @@ model User {
   situationReports    SituationReport[]
   intelUpdates        IntelUpdate[]
   intelOverallAssessments IntelOverallAssessment[]
+  intelMeeAssets      IntelMeeAsset[]
 
   @@index([jtfId])
 }
@@ -109,6 +110,7 @@ model JTF {
   electionAreas   ElectionArea[]
   candidates      Candidate[]
   assessments     JtfAssessment[]
+  meeAssets       IntelMeeAsset[]
 }
 
 model Unit {
@@ -325,17 +327,45 @@ model IntelUpdate {
 // WFC-Intelligence's manually-typed overall assessment — sits alongside
 // (never replaces) the deterministic computeIntelAssessment output on the
 // Intelligence Update page, same "auto stats + human narrative" split as
-// JtfAssessment does for the Command Overview's Daily Analysis. Purged
+// JtfAssessment does for the Command Overview's Daily Analysis. "Purged"
 // daily at 1700H alongside JtfAssessment — see
-// api/intel-updates/overall-assessment/purge.
+// api/intel-updates/overall-assessment/purge — but soft-deleted (purgedAt
+// stamped, row kept) rather than actually removed, since the page's
+// "History" toggle needs something to show. JtfAssessment stays a real
+// hard-delete; only this one needed history, so only this one gained the
+// column, keeping the two purge routes' semantics honestly different
+// rather than bolting an unused purgedAt onto JtfAssessment too.
 model IntelOverallAssessment {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   summary     String
   authorId    String
-  author      User     @relation(fields: [authorId], references: [id])
-  createdAt   DateTime @default(now())
+  author      User      @relation(fields: [authorId], references: [id])
+  createdAt   DateTime  @default(now())
+  purgedAt    DateTime?
 
   @@index([createdAt])
+  @@index([purgedAt])
+}
+
+// Intel Mission Essential Equipment on file per JTF — unlike IntelUpdate
+// reports (command-wide, province-based), this is tied to a specific JTF's
+// area, matching TroopDeployment's per-JTF convention.
+model IntelMeeAsset {
+  id          String   @id @default(cuid())
+  jtfId       String
+  jtf         JTF      @relation(fields: [jtfId], references: [id])
+  name        String
+  assetType   String
+  quantity    Int
+  // Entered as MGRS and converted to lat/lng at write time — same
+  // convention as IntelUpdate/Incident lat/lng above.
+  lat         Float
+  lng         Float
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([jtfId])
 }
 
 model ElectionOpsStatus {
