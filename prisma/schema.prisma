@@ -91,6 +91,7 @@ model User {
   socialMediaPosts    SocialMediaPost[]
   situationReports    SituationReport[]
   intelUpdates        IntelUpdate[]
+  intelOverallAssessments IntelOverallAssessment[]
 
   @@index([jtfId])
 }
@@ -319,6 +320,22 @@ model IntelUpdate {
   @@index([category])
   @@index([province])
   @@index([date])
+}
+
+// WFC-Intelligence's manually-typed overall assessment — sits alongside
+// (never replaces) the deterministic computeIntelAssessment output on the
+// Intelligence Update page, same "auto stats + human narrative" split as
+// JtfAssessment does for the Command Overview's Daily Analysis. Purged
+// daily at 1700H alongside JtfAssessment — see
+// api/intel-updates/overall-assessment/purge.
+model IntelOverallAssessment {
+  id          String   @id @default(cuid())
+  summary     String
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
 }
 
 model ElectionOpsStatus {

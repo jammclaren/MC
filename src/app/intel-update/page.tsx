@@ -2,9 +2,11 @@ import { redirect, notFound } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import { canAccessIntelligenceUpdate, canWriteIntelligenceUpdate } from "@/lib/rbac";
 import { listIntelUpdates } from "@/lib/queries/intel-updates";
+import { listIntelOverallAssessments } from "@/lib/queries/intel-overall-assessment";
 import { computeIntelAssessment } from "@/lib/intel-assessment";
 import { PROVINCE_TO_JTF } from "@/lib/queries/election-board";
 import { nowMs } from "@/lib/time";
+import { formatTimestamp24h } from "@/lib/datetime";
 import {
   Card,
   CardContent,
@@ -22,6 +24,7 @@ import {
 } from "@/components/charts/top-incident-types-chart";
 import { ActivityTrendChart, type ActivityTrendDatum } from "@/components/charts/activity-trend-chart";
 import { IntelUpdateFormDialog } from "@/components/intel-update-form-dialog";
+import { IntelOverallAssessmentFormDialog } from "@/components/intel-overall-assessment-form-dialog";
 import { IntelUpdatesPanel } from "@/components/intel-updates-panel";
 import type { IntelUpdateRow } from "@/lib/queries/intel-updates";
 import { truncateLabel } from "@/lib/text";
@@ -105,7 +108,10 @@ export default async function IntelUpdatePage() {
     notFound();
   }
 
-  const rows = await listIntelUpdates(user);
+  const [rows, overallAssessments] = await Promise.all([
+    listIntelUpdates(user),
+    listIntelOverallAssessments(user),
+  ]);
   const canWrite = canWriteIntelligenceUpdate(user);
   const provinceOptions = Object.keys(PROVINCE_TO_JTF);
   const assessment = computeIntelAssessment(rows);
@@ -332,10 +338,19 @@ export default async function IntelUpdatePage() {
 
       <Card className="border-primary/30">
         <CardHeader>
-          <CardTitle>Overall Analysis &amp; Assessment</CardTitle>
-          <CardDescription>Auto-generated from on-file reports — recomputed on load.</CardDescription>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <CardTitle>Overall Analysis &amp; Assessment</CardTitle>
+              <CardDescription>Auto-generated from on-file reports — recomputed on load.</CardDescription>
+            </div>
+            {canWrite && (
+              <IntelOverallAssessmentFormDialog
+                trigger={<Button variant="outline">Manual Entry</Button>}
+              />
+            )}
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-5">
           <ul className="flex flex-col gap-2 text-sm">
             {assessment.analysis.map((line, i) => (
               <li key={i} className="flex gap-2">
@@ -344,6 +359,27 @@ export default async function IntelUpdatePage() {
               </li>
             ))}
           </ul>
+
+          {overallAssessments.length > 0 && (
+            <div className="flex flex-col gap-2 border-t border-border pt-4">
+              <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+                Manually Submitted
+              </span>
+              {overallAssessments.map((a) => (
+                <div key={a.id} className="rounded-md border border-border p-3">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      {a.authorName} · {formatTimestamp24h(a.createdAt)}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-sm whitespace-pre-wrap">{a.summary}</p>
+                </div>
+              ))}
+              <p className="text-xs text-muted-foreground">
+                Cleared automatically at 1700H daily.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

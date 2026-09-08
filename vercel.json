@@ -7,6 +7,10 @@
     {
       "path": "/api/jtf-assessments/purge",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/intel-updates/overall-assessment/purge",
+      "schedule": "0 9 * * *"
     }
   ]
 }

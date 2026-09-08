@@ -3,6 +3,16 @@ import { auth } from "@/lib/auth";
 
 const PUBLIC_PATHS = ["/login", "/manifest.webmanifest"];
 
+// Vercel Cron triggers these with no browser session, only a shared-secret
+// bearer token — each route verifies that (or a signed-in, authorized
+// user) independently, so the proxy just needs to not reject it purely
+// for lacking a session cookie.
+const CRON_PATHS = [
+  "/api/social-posts/sync",
+  "/api/jtf-assessments/purge",
+  "/api/intel-updates/overall-assessment/purge",
+];
+
 export default auth((req) => {
   const { pathname } = req.nextUrl;
   const isLoggedIn = !!req.auth;
@@ -19,11 +29,7 @@ export default auth((req) => {
   }
 
   if (pathname.startsWith("/api/")) {
-    // Vercel Cron triggers these with no browser session, only a
-    // shared-secret bearer token — the route itself verifies that (or a
-    // signed-in, authorized user) independently, so the proxy just needs
-    // to not reject it purely for lacking a session cookie.
-    if (pathname === "/api/social-posts/sync" || pathname === "/api/jtf-assessments/purge") {
+    if (CRON_PATHS.includes(pathname)) {
       return NextResponse.next();
     }
     if (!isLoggedIn) {

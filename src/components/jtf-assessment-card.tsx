@@ -13,17 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { JtfAssessmentRow } from "@/lib/queries/jtf-assessments";
-
-function formatTimestamp(iso: string): string {
-  return new Date(iso).toLocaleString("en-PH", {
-    timeZone: "Asia/Manila",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-}
+import { formatTimestamp24h } from "@/lib/datetime";
 
 /**
  * A JTF's own narrative "overall assessment" — separate from the rule-based
@@ -102,7 +92,7 @@ export function JtfAssessmentCard({
                   {a.jtfName}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {a.authorName} · {formatTimestamp(a.createdAt)}
+                  {a.authorName} · {formatTimestamp24h(a.createdAt)}
                 </span>
               </div>
               <p className="mt-1.5 text-sm whitespace-pre-wrap">{a.summary}</p>
