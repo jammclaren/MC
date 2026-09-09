@@ -8,11 +8,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
+export function LoginForm({
+  callbackUrl,
+  initialError,
+}: {
+  callbackUrl: string;
+  initialError?: string;
+}) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    initialError === "device_kicked" ? "This device's access was revoked by an administrator." : null
+  );
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(event: React.FormEvent) {
@@ -29,7 +37,11 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
     setSubmitting(false);
 
     if (result?.error) {
-      setError("Invalid email or password.");
+      setError(
+        result.code === "device_kicked"
+          ? "This device's access was revoked by an administrator."
+          : "Invalid email or password."
+      );
       return;
     }
 

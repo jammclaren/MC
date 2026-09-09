@@ -15,6 +15,15 @@ import {
 export interface NavLinkItem {
   href: string;
   label: string;
+  badgeCount?: number;
+}
+
+function NavBadge({ count }: { count: number }) {
+  return (
+    <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-status-warning px-1 text-[10px] font-bold text-background">
+      {count}
+    </span>
+  );
 }
 
 const GAP_PX = 20; // matches gap-5 below
@@ -95,8 +104,9 @@ export function NavLinks({ links }: { links: readonly NavLinkItem[] }) {
         className="pointer-events-none absolute top-0 left-0 flex items-center gap-5 opacity-0"
       >
         {links.map((link) => (
-          <span key={link.href} className={ITEM_CLASS}>
+          <span key={link.href} className={cn(ITEM_CLASS, "flex items-center")}>
             {link.label}
+            {!!link.badgeCount && <NavBadge count={link.badgeCount} />}
           </span>
         ))}
         <span className={cn(ITEM_CLASS, "flex items-center gap-1")}>
@@ -112,7 +122,7 @@ export function NavLinks({ links }: { links: readonly NavLinkItem[] }) {
               key={link.href}
               href={link.href}
               className={cn(
-                "relative",
+                "relative flex items-center",
                 ITEM_CLASS,
                 "transition-colors",
                 active
@@ -121,6 +131,7 @@ export function NavLinks({ links }: { links: readonly NavLinkItem[] }) {
               )}
             >
               {link.label}
+              {!!link.badgeCount && <NavBadge count={link.badgeCount} />}
             </Link>
           );
         })}
@@ -140,6 +151,7 @@ export function NavLinks({ links }: { links: readonly NavLinkItem[] }) {
               {overflowLinks.map((link) => (
                 <DropdownMenuItem key={link.href} render={<Link href={link.href} />}>
                   {link.label}
+                  {!!link.badgeCount && <NavBadge count={link.badgeCount} />}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>

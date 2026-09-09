@@ -5,18 +5,18 @@ import { LoginForm } from "./LoginForm";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ callbackUrl?: string }>;
+  searchParams: Promise<{ callbackUrl?: string; error?: string }>;
 }) {
   const user = await getSessionUser();
   if (user) {
     redirect("/");
   }
 
-  const { callbackUrl } = await searchParams;
+  const { callbackUrl, error } = await searchParams;
 
   return (
     <div className="flex flex-1 items-center justify-center p-6">
-      <LoginForm callbackUrl={callbackUrl ?? "/"} />
+      <LoginForm callbackUrl={callbackUrl ?? "/"} initialError={error} />
     </div>
   );
 }

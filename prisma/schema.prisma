@@ -10,6 +10,40 @@ datasource db {
   provider = "postgresql"
 }
 
+// One row per browser/device a user has signed in from, keyed by a hash of
+// user agent + IP so repeat logins from the same device reuse the same row
+// instead of re-prompting. PENDING/APPROVED both allow access — the status
+// is informational until an Admin sets KICKED, which revokes that device's
+// access on its very next request (see proxy.ts) and blocks it from signing
+// in again until an Admin restores it. Rows created before this feature
+// shipped don't exist for still-active sessions from before the deploy —
+// those sessions carry no deviceId at all and are never checked or kickable.
+enum DeviceStatus {
+  PENDING
+  APPROVED
+  KICKED
+}
+
+model UserDevice {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id])
+  fingerprint String // sha256(userId + userAgent + ip) — dedupes repeat logins from the same browser
+  status      DeviceStatus @default(PENDING)
+  deviceLabel String // e.g. "Chrome on Windows"
+  deviceType  String // "Desktop" | "Mobile" | "Tablet"
+  userAgent   String
+  ipAddress   String?
+  location    String? // e.g. "Zamboanga City, Zamboanga del Sur, PH" — from Vercel's IP geolocation headers
+  firstSeenAt DateTime     @default(now())
+  lastSeenAt  DateTime     @default(now())
+  notifiedAt  DateTime? // admin email sent once per device — approve/kick actions are audited via AuditLog
+
+  @@unique([userId, fingerprint])
+  @@index([userId])
+  @@index([status])
+}
+
 enum Role {
   ADMIN
   COMMAND
@@ -93,6 +127,7 @@ model User {
   intelUpdates        IntelUpdate[]
   intelOverallAssessments IntelOverallAssessment[]
   intelMeeAssets      IntelMeeAsset[]
+  devices             UserDevice[]
 
   @@index([jtfId])
 }

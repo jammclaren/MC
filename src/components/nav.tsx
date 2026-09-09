@@ -8,6 +8,10 @@ import {
   canAccessSocialMonitor,
 } from "@/lib/rbac";
 
+async function pendingDeviceCount(): Promise<number> {
+  return prisma.userDevice.count({ where: { status: "PENDING" } });
+}
+
 const NAV_LINKS = [
   { href: "/", label: "Overview" },
   { href: "/priority-map", label: "Situation Map", page: "situation-map" },
@@ -36,6 +40,7 @@ export async function Nav() {
   const visibleAdminLinks = ADMIN_LINKS.filter((link) =>
     (link.roles as readonly string[]).includes(user.role)
   );
+  const devicesPending = user.role === "ADMIN" ? await pendingDeviceCount() : 0;
   const allLinks = [
     ...visibleNavLinks.map((l) => ({ href: l.href, label: l.label })),
     ...(canAccessSocialMonitor(user)
@@ -47,7 +52,11 @@ export async function Nav() {
     ...(canAccessIntelligenceUpdate(user)
       ? [{ href: "/intel-update", label: "Intelligence Update" }]
       : []),
-    ...visibleAdminLinks.map((l) => ({ href: l.href, label: l.label })),
+    ...visibleAdminLinks.map((l) => ({
+      href: l.href,
+      label: l.label,
+      badgeCount: l.href === "/admin/users" ? devicesPending : undefined,
+    })),
   ];
 
   const roleLine = `${user.role}${jtf ? ` · ${jtf.name.toUpperCase()}` : ""}${
