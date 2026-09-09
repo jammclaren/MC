@@ -59,14 +59,33 @@ export function IntelUpdatesPanel({
     return Array.from(map.values()).sort((a, b) => a.province.localeCompare(b.province));
   }, [filtered]);
 
+  // Controlled so one button can hide every province's entries at once,
+  // instead of collapsing each AccordionItem's trigger one by one. Starts
+  // empty (nothing expanded), same default as the previous uncontrolled
+  // accordion.
+  const [openProvinces, setOpenProvinces] = useState<string[]>([]);
+  const allProvinceKeys = useMemo(() => groups.map((g) => g.province), [groups]);
+  const allHidden = openProvinces.length === 0;
+
   return (
     <div className="flex flex-col gap-4">
-      <Input
-        placeholder="Search by type of activity, date, threat group, or keywords in the report..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="max-w-md border-2 border-status-warning"
-      />
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Input
+          placeholder="Search by type of activity, date, threat group, or keywords in the report..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-md border-2 border-status-warning"
+        />
+        {groups.length > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setOpenProvinces(allHidden ? allProvinceKeys : [])}
+          >
+            {allHidden ? "Show All Provinces" : "Hide All Provinces"}
+          </Button>
+        )}
+      </div>
 
       {groups.length === 0 && (
         <p className="py-6 text-center text-sm text-muted-foreground">
@@ -74,7 +93,11 @@ export function IntelUpdatesPanel({
         </p>
       )}
 
-      <Accordion multiple>
+      <Accordion
+        multiple
+        value={openProvinces}
+        onValueChange={(v) => setOpenProvinces(v as string[])}
+      >
         {groups.map((group) => (
           <AccordionItem key={group.province} value={group.province}>
             <AccordionTrigger>
