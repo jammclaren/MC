@@ -1,7 +1,7 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import L from "leaflet";
@@ -26,7 +26,7 @@ import {
   type ElectionAreaOption,
   type JtfOption,
 } from "@/components/incident-marker-form-dialog";
-import { buildIncidentIcon, isLatestIncident } from "@/lib/incident-marker-icon";
+import { buildIncidentIcon, iconSizeForZoom, isLatestIncident, MAX_ICON_SIZE } from "@/lib/incident-marker-icon";
 import {
   TacticalBlueprintPane,
   TACTICAL_BLUEPRINT_PANE,
@@ -132,6 +132,42 @@ function areaKey(
   barangay: string | null | undefined
 ) {
   return `${province ?? ""}||${municipality ?? ""}||${barangay ?? ""}`;
+}
+
+// Standard ray-casting point-in-polygon test, [lng, lat] order to match
+// GeoJSON's own coordinate order.
+function pointInRing(point: [number, number], ring: number[][]): boolean {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i];
+    const [xj, yj] = ring[j];
+    const intersects =
+      yi > point[1] !== yj > point[1] &&
+      point[0] < ((xj - xi) * (point[1] - yi)) / (yj - yi) + xi;
+    if (intersects) inside = !inside;
+  }
+  return inside;
+}
+
+function pointInPolygonRings(point: [number, number], rings: number[][][]): boolean {
+  if (!pointInRing(point, rings[0])) return false;
+  // A point inside a hole (any ring after the first) isn't actually inside
+  // the polygon.
+  for (let i = 1; i < rings.length; i++) {
+    if (pointInRing(point, rings[i])) return false;
+  }
+  return true;
+}
+
+function pointInGeometry(point: [number, number], geometry: GeoJSON.Geometry | null | undefined): boolean {
+  if (!geometry) return false;
+  if (geometry.type === "Polygon") {
+    return pointInPolygonRings(point, geometry.coordinates as number[][][]);
+  }
+  if (geometry.type === "MultiPolygon") {
+    return (geometry.coordinates as number[][][][]).some((rings) => pointInPolygonRings(point, rings));
+  }
+  return false;
 }
 
 function ProvinceLabel(feature: GeoJSON.Feature, layer: L.Layer) {
@@ -266,6 +302,65 @@ function useCurrentZoom(): number {
   const [zoom, setZoom] = useState(map.getZoom());
   useMapEvent("zoomend", () => setZoom(map.getZoom()));
   return zoom;
+}
+
+/** Point markers for areas with lat/lng that didn't get a matching (or
+ * spatially-contained) polygon. CircleMarker's radius is in screen pixels,
+ * not meters, so without zoom-based scaling a handful of these near each
+ * other read fine zoomed in but balloon into giant overlapping blobs when
+ * the map is zoomed out to show all of BARMM — same shrink-with-zoom curve
+ * already used for incident/intel marker icons, just applied to a radius
+ * instead of an icon size. */
+function UnmatchedAreaMarkers({ areas }: { areas: (ScoredArea & { lat: number; lng: number })[] }) {
+  const zoom = useCurrentZoom();
+  const zoomScale = iconSizeForZoom(zoom) / MAX_ICON_SIZE;
+
+  return (
+    <>
+      {areas.map((area) => {
+        const color = area.hotspotCategory
+          ? (HOTSPOT_COLORS[area.hotspotCategory] ?? DEFAULT_COLOR)
+          : DEFAULT_COLOR;
+        // Capped rather than scaling straight off priority score — a
+        // handful of these landing close together (common in a dense
+        // barangay cluster) no longer balloon into a solid overlapping
+        // blob at typical zoom levels. Dashed white outline marks these
+        // as "no boundary on file" pins, visually distinct from the
+        // solid-filled matched polygons underneath rather than reading
+        // as a duplicate of them.
+        const baseRadius = Math.min(6 + Math.max(0, area.priorityScore) * 1.2, 12);
+        const radius = Math.max(3, baseRadius * zoomScale);
+        const label = [area.barangay, area.municipality, area.province].filter(Boolean).join(", ");
+
+        return (
+          <CircleMarker
+            key={area.id}
+            center={[area.lat, area.lng]}
+            radius={radius}
+            pathOptions={{
+              color: "#f8fafc",
+              weight: 1.5,
+              dashArray: "3,2",
+              fillColor: color,
+              fillOpacity: 0.75,
+            }}
+          >
+            <Tooltip>
+              <div className="text-xs">
+                <div className="font-medium">{label}</div>
+                <div>Hotspot: {area.hotspotCategory ?? "unclassified"}</div>
+                <div>Priority score: {area.priorityScore.toFixed(1)}</div>
+                <div>Precincts: {area.numPrecincts ?? "—"}</div>
+                <div>Registered voters: {area.registeredVoters ?? "—"}</div>
+                <div>Deployed: {area.deployedToPolling}</div>
+                <div>Recent incidents (30d): {area.recentIncidentCount}</div>
+              </div>
+            </Tooltip>
+          </CircleMarker>
+        );
+      })}
+    </>
+  );
 }
 
 /** Shared marker rendering for every JTF's "Logged Incidents" overlay —
@@ -455,6 +550,57 @@ export function PriorityMap({
     return map;
   }, [areas]);
 
+  // Fallback for areas whose (province, municipality, barangay) string
+  // doesn't exactly match this boundary file's naming — rather than fall
+  // straight to a floating point marker, check whether the area's actual
+  // lat/lng lands inside one of the file's polygons that no other area's
+  // name already claimed. That still colors the real boundary shape (using
+  // this area's own category) instead of a dot sitting on top of it.
+  // Keyed by the polygon's own areaKey, same as the exact-name lookup.
+  const spatialFallback = useMemo(() => {
+    const map = new Map<string, ScoredArea>();
+    if (!barangays) return map;
+
+    const assigned = new Set<string>();
+    const candidates = areas.filter(
+      (a) =>
+        a.lat != null &&
+        a.lng != null &&
+        !(a.lat === 0 && a.lng === 0) &&
+        !areaByKey.has(areaKey(a.province, a.municipality, a.barangay))
+    );
+    if (candidates.length === 0) return map;
+
+    for (const feature of barangays.features) {
+      const p = feature.properties as
+        | { province?: string; municipality?: string | null; barangay?: string }
+        | undefined;
+      if (!p) continue;
+      const key = areaKey(p.province, p.municipality, p.barangay);
+      if (areaByKey.has(key)) continue; // already colored by an exact name match
+
+      const hit = candidates.find(
+        (a) => !assigned.has(a.id) && pointInGeometry([a.lng as number, a.lat as number], feature.geometry)
+      );
+      if (hit) {
+        map.set(key, hit);
+        assigned.add(hit.id);
+      }
+    }
+    return map;
+  }, [barangays, areas, areaByKey]);
+
+  const resolveAreaForFeature = useCallback(
+    (
+      p: { province?: string; municipality?: string | null; barangay?: string } | undefined
+    ): ScoredArea | undefined => {
+      if (!p) return undefined;
+      const key = areaKey(p.province, p.municipality, p.barangay);
+      return areaByKey.get(key) ?? spatialFallback.get(key);
+    },
+    [areaByKey, spatialFallback]
+  );
+
   const matchedIds = useMemo(() => {
     const ids = new Set<string>();
     if (!barangays) return ids;
@@ -462,11 +608,11 @@ export function PriorityMap({
       const p = feature.properties as
         | { province?: string; municipality?: string | null; barangay?: string }
         | undefined;
-      const area = p && areaByKey.get(areaKey(p.province, p.municipality, p.barangay));
+      const area = resolveAreaForFeature(p);
       if (area) ids.add(area.id);
     }
     return ids;
-  }, [barangays, areaByKey]);
+  }, [barangays, resolveAreaForFeature]);
 
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -494,7 +640,7 @@ export function PriorityMap({
     const p = feature?.properties as
       | { province?: string; municipality?: string | null; barangay?: string }
       | undefined;
-    const area = p && areaByKey.get(areaKey(p.province, p.municipality, p.barangay));
+    const area = resolveAreaForFeature(p);
     const color = area?.hotspotCategory
       ? (HOTSPOT_COLORS[area.hotspotCategory] ?? DEFAULT_COLOR)
       : DEFAULT_COLOR;
@@ -513,7 +659,9 @@ export function PriorityMap({
       | { province?: string; municipality?: string | null; barangay?: string }
       | undefined;
     if (!p) return;
-    const area = areaByKey.get(areaKey(p.province, p.municipality, p.barangay));
+    const key = areaKey(p.province, p.municipality, p.barangay);
+    const area = resolveAreaForFeature(p);
+    const matchedByLocation = !!area && !areaByKey.has(key);
     const label = [p.barangay, p.municipality, p.province].filter(Boolean).join(", ");
     const editable = !!area && writableJtfIds.includes(area.jtfId);
 
@@ -523,6 +671,9 @@ export function PriorityMap({
       lines.push(`<div>Priority score: ${area.priorityScore.toFixed(1)}</div>`);
       lines.push(`<div>Recent incidents (30d): ${area.recentIncidentCount}</div>`);
       lines.push(`<div>Deployed: ${area.deployedToPolling}</div>`);
+      if (matchedByLocation) {
+        lines.push(`<div class="italic">Matched by location — name on file doesn't match this boundary</div>`);
+      }
       if (editable) lines.push(`<div class="italic">Click to set category</div>`);
     } else {
       lines.push(`<div>No categorization data on file.</div>`);
@@ -615,49 +766,7 @@ export function PriorityMap({
                   style={styleBarangay}
                   onEachFeature={onEachBarangay}
                 />
-                {unmatchedPlottable.map((area) => {
-                  const color = area.hotspotCategory
-                    ? (HOTSPOT_COLORS[area.hotspotCategory] ?? DEFAULT_COLOR)
-                    : DEFAULT_COLOR;
-                  // Capped rather than scaling straight off priority score —
-                  // a handful of these landing close together (common in a
-                  // dense barangay cluster) no longer balloon into a solid
-                  // overlapping blob at typical zoom levels. Dashed white
-                  // outline marks these as "no boundary on file" pins,
-                  // visually distinct from the solid-filled matched polygons
-                  // underneath rather than reading as a duplicate of them.
-                  const radius = Math.min(6 + Math.max(0, area.priorityScore) * 1.2, 12);
-                  const label = [area.barangay, area.municipality, area.province]
-                    .filter(Boolean)
-                    .join(", ");
-
-                  return (
-                    <CircleMarker
-                      key={area.id}
-                      center={[area.lat, area.lng]}
-                      radius={radius}
-                      pathOptions={{
-                        color: "#f8fafc",
-                        weight: 1.5,
-                        dashArray: "3,2",
-                        fillColor: color,
-                        fillOpacity: 0.75,
-                      }}
-                    >
-                      <Tooltip>
-                        <div className="text-xs">
-                          <div className="font-medium">{label}</div>
-                          <div>Hotspot: {area.hotspotCategory ?? "unclassified"}</div>
-                          <div>Priority score: {area.priorityScore.toFixed(1)}</div>
-                          <div>Precincts: {area.numPrecincts ?? "—"}</div>
-                          <div>Registered voters: {area.registeredVoters ?? "—"}</div>
-                          <div>Deployed: {area.deployedToPolling}</div>
-                          <div>Recent incidents (30d): {area.recentIncidentCount}</div>
-                        </div>
-                      </Tooltip>
-                    </CircleMarker>
-                  );
-                })}
+                <UnmatchedAreaMarkers areas={unmatchedPlottable} />
               </LayerGroup>
             </LayersControl.Overlay>
           )}

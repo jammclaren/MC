@@ -16,10 +16,10 @@ export function isLatestIncident(createdAt: string): boolean {
 // MIN_ICON_SIZE by MIN_ZOOM_FOR_SHRINK.
 const REFERENCE_ZOOM = 12;
 const MIN_ZOOM_FOR_SHRINK = 5;
-const MAX_ICON_SIZE = 14;
+export const MAX_ICON_SIZE = 14;
 const MIN_ICON_SIZE = 6;
 
-function iconSizeForZoom(zoom: number | undefined): number {
+export function iconSizeForZoom(zoom: number | undefined): number {
   if (zoom == null || zoom >= REFERENCE_ZOOM) return MAX_ICON_SIZE;
   if (zoom <= MIN_ZOOM_FOR_SHRINK) return MIN_ICON_SIZE;
   const t = (zoom - MIN_ZOOM_FOR_SHRINK) / (REFERENCE_ZOOM - MIN_ZOOM_FOR_SHRINK);
