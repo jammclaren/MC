@@ -306,6 +306,13 @@ model IntelUpdate {
   // Free text (e.g. "DI", "BIFF", "NPA") — suggestions only, not a closed
   // enum, since the set of named threat groups shifts over time.
   threatGroup   String?
+  // Free text (e.g. "UBJP", "BFP", "BGC") — suggestions only, same
+  // reasoning as threatGroup. Deliberately its own field rather than
+  // parsed out of threatGroup (which sometimes embeds a party name
+  // alongside a militant group, e.g. "MILF-UBJP") — this app doesn't
+  // infer structured data from free text, see daily-assessment.ts's
+  // no-fabrication stance.
+  politicalParty String?
   province      String
   locationLabel String
   // Entered as MGRS and converted to lat/lng at write time, same convention
@@ -352,11 +359,13 @@ model IntelOverallAssessment {
 // area, matching TroopDeployment's per-JTF convention. No grid reference —
 // tracked by JTF area of operations only, not a precise point (dropped
 // per explicit request; the field originally mirrored IntelUpdate's MGRS
-// entry).
+// entry). jtfId is nullable: null means "TOW-WESTMIN" — equipment held by
+// WESMINCOM itself rather than any subordinate JTF, its own card in the
+// inventory grid alongside the real JTFs (see IntelMeeCards).
 model IntelMeeAsset {
   id          String   @id @default(cuid())
-  jtfId       String
-  jtf         JTF      @relation(fields: [jtfId], references: [id])
+  jtfId       String?
+  jtf         JTF?     @relation(fields: [jtfId], references: [id])
   name        String
   assetType   String
   quantity    Int

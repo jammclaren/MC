@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import { forward } from "mgrs";
 import { toast } from "sonner";
 import { parseMgrs } from "@/lib/mgrs";
-import { ACTIVITY_TYPES_BY_CATEGORY, THREAT_GROUP_SUGGESTIONS } from "@/lib/intel-suggestions";
+import {
+  ACTIVITY_TYPES_BY_CATEGORY,
+  THREAT_GROUP_SUGGESTIONS,
+  POLITICAL_PARTY_SUGGESTIONS,
+} from "@/lib/intel-suggestions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,6 +30,7 @@ export interface IntelUpdateFormInitial {
   activityType: string;
   narrative: string;
   threatGroup: string;
+  politicalParty: string;
   lat: number;
   lng: number;
   province: string;
@@ -51,6 +56,7 @@ export function IntelUpdateFormDialog({
   const [activityType, setActivityType] = useState(initial?.activityType ?? "");
   const [narrative, setNarrative] = useState(initial?.narrative ?? "");
   const [threatGroup, setThreatGroup] = useState(initial?.threatGroup ?? "");
+  const [politicalParty, setPoliticalParty] = useState(initial?.politicalParty ?? "");
   const [mgrsInput, setMgrsInput] = useState(
     initial ? forward([initial.lng, initial.lat]) : ""
   );
@@ -79,6 +85,7 @@ export function IntelUpdateFormDialog({
         activityType,
         narrative,
         threatGroup: threatGroup.trim() || (isEdit ? null : undefined),
+        politicalParty: politicalParty.trim() || (isEdit ? null : undefined),
         province,
         locationLabel,
         mgrs: mgrsInput,
@@ -101,6 +108,7 @@ export function IntelUpdateFormDialog({
         setActivityType("");
         setNarrative("");
         setThreatGroup("");
+        setPoliticalParty("");
         setMgrsInput("");
         setProvince("");
         setLocationLabel("");
@@ -166,6 +174,22 @@ export function IntelUpdateFormDialog({
               <datalist id="intel-threat-group-options">
                 {THREAT_GROUP_SUGGESTIONS.map((g) => (
                   <option key={g} value={g} />
+                ))}
+              </datalist>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="politicalParty">Political Party</Label>
+              <Input
+                id="politicalParty"
+                list="intel-political-party-options"
+                placeholder="e.g. UBJP, BFP, BGC"
+                value={politicalParty}
+                onChange={(e) => setPoliticalParty(e.target.value)}
+              />
+              <datalist id="intel-political-party-options">
+                {POLITICAL_PARTY_SUGGESTIONS.map((p) => (
+                  <option key={p} value={p} />
                 ))}
               </datalist>
             </div>

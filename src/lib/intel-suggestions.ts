@@ -7,6 +7,8 @@
 // validated enum.
 export const THREAT_GROUP_SUGGESTIONS = ["DI", "BIFF", "NPA", "ASG", "Unidentified"] as const;
 
+export const POLITICAL_PARTY_SUGGESTIONS = ["UBJP", "BFP", "BGC", "MNLF-BAF"] as const;
+
 export const ACTIVITY_TYPES_BY_CATEGORY = {
   VIOLENT: [
     "Encounter",

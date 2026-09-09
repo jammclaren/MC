@@ -128,6 +128,8 @@ export default async function IntelUpdatePage() {
   const nowIso = new Date(nowMs()).toISOString();
   const since30d = nowMs() - 30 * 24 * 60 * 60 * 1000;
   const recent30d = rows.filter((r) => new Date(r.date).getTime() >= since30d);
+  const since24h = nowMs() - 24 * 60 * 60 * 1000;
+  const recent24h = rows.filter((r) => new Date(r.createdAt).getTime() >= since24h);
 
   // Only these two get shortened — the rest of the tracked provinces
   // (Basilan, Tawi-Tawi, Lanao del Sur, Cotabato City, SGA-BARMM) are
@@ -142,6 +144,10 @@ export default async function IntelUpdatePage() {
   ).map((p) => ({ ...p, label: PROVINCE_CHART_ABBREVIATIONS[p.label] ?? p.label }));
   const byThreatGroup = topCounts(
     rows.map((r) => r.threatGroup),
+    7
+  );
+  const byPoliticalParty = topCounts(
+    rows.map((r) => r.politicalParty),
     7
   );
   const topNonViolentActivities = topCounts(
@@ -166,7 +172,6 @@ export default async function IntelUpdatePage() {
     ACTIVITY_TREND_WINDOW_DAYS,
     nowIso
   );
-  const nonViolentPersistence = daysActive(nonViolentActivityTrend, nonViolentActivityLabels);
   const violentPersistence = daysActive(violentActivityTrend, violentActivityLabels);
 
   return (
@@ -198,10 +203,18 @@ export default async function IntelUpdatePage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Report Log</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <IntelUpdatesPanel rows={rows} provinceOptions={provinceOptions} canWrite={canWrite} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <CardTitle>Intel Mission Essential Equipment (MEE)</CardTitle>
-              <CardDescription>Tracked equipment on file, grouped by JTF.</CardDescription>
             </div>
             {canWrite && (
               <IntelMeeFormDialog
@@ -217,7 +230,11 @@ export default async function IntelUpdatePage() {
       </Card>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatTile label="Total Reports" value={rows.length.toLocaleString()} icon={Radar} />
+        <StatTile
+          label="Total Reports for the Day (past 24 hrs)"
+          value={recent24h.length.toLocaleString()}
+          icon={Radar}
+        />
         <StatTile
           label="Violent"
           value={violent.length.toLocaleString()}
@@ -237,11 +254,10 @@ export default async function IntelUpdatePage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader>
             <CardTitle>Violent vs Non-Violent</CardTitle>
-            <CardDescription>Category mix across all reports on file.</CardDescription>
           </CardHeader>
           <CardContent>
             <SeverityMixChart
@@ -257,7 +273,6 @@ export default async function IntelUpdatePage() {
         <Card>
           <CardHeader>
             <CardTitle>Reports by Province</CardTitle>
-            <CardDescription>Where activity is being reported.</CardDescription>
           </CardHeader>
           <CardContent>
             <LabeledBarChart data={byProvince} color="var(--chart-2)" />
@@ -266,11 +281,19 @@ export default async function IntelUpdatePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Top Threat Groups</CardTitle>
-            <CardDescription>Most-cited groups across reports.</CardDescription>
+            <CardTitle>Threat Groups</CardTitle>
           </CardHeader>
           <CardContent>
             <LabeledBarChart data={byThreatGroup} color="var(--chart-3)" />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Activity by Political Party</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <LabeledBarChart data={byPoliticalParty} color="var(--chart-4)" />
           </CardContent>
         </Card>
       </div>
@@ -325,41 +348,12 @@ export default async function IntelUpdatePage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Most Persisting Non-Violent Activities</CardTitle>
-            <CardDescription>
-              Days active out of the last {ACTIVITY_TREND_WINDOW_DAYS} — the activity that keeps
-              recurring, not just the one with the biggest single-day spike.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <TopIncidentTypesChart data={nonViolentPersistence} total={ACTIVITY_TREND_WINDOW_DAYS} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Most Persisting Violent Activities</CardTitle>
-            <CardDescription>
-              Days active out of the last {ACTIVITY_TREND_WINDOW_DAYS} — the activity that keeps
-              recurring, not just the one with the biggest single-day spike.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <TopIncidentTypesChart data={violentPersistence} total={ACTIVITY_TREND_WINDOW_DAYS} />
-          </CardContent>
-        </Card>
-      </div>
-
       <Card>
         <CardHeader>
-          <CardTitle>Report Log</CardTitle>
-          <CardDescription>Search across all fields, grouped by province.</CardDescription>
+          <CardTitle>Most Persisting Violent Activities</CardTitle>
         </CardHeader>
         <CardContent>
-          <IntelUpdatesPanel rows={rows} provinceOptions={provinceOptions} canWrite={canWrite} />
+          <TopIncidentTypesChart data={violentPersistence} total={ACTIVITY_TREND_WINDOW_DAYS} />
         </CardContent>
       </Card>
 
@@ -368,7 +362,6 @@ export default async function IntelUpdatePage() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <CardTitle>Overall Analysis &amp; Assessment</CardTitle>
-              <CardDescription>Auto-generated from on-file reports — recomputed on load.</CardDescription>
             </div>
             {canWrite && (
               <IntelOverallAssessmentFormDialog

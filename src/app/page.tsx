@@ -28,6 +28,7 @@ import { JtfAssessmentCard } from "@/components/jtf-assessment-card";
 import { OverviewIncidentOpsPanel } from "@/components/overview-incident-ops-panel";
 import {
   Users,
+  Shield,
   ShieldAlert,
   TriangleAlert,
   Crosshair,
@@ -70,6 +71,7 @@ export default async function OverviewPage() {
           value={data.totalDeployedToPollingCenters.toLocaleString()}
           icon={Building2}
         />
+        <StatTile label="Total CAA Deployed" value={data.totalCaa.toLocaleString()} icon={Shield} />
         <StatTile label="QRF" value={data.totalQrf.toLocaleString()} icon={ShieldAlert} />
         <StatTile
           label="Total Air Assets Deployed"

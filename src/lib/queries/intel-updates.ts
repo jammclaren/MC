@@ -10,6 +10,7 @@ export interface IntelUpdateRow {
   activityType: string | null;
   narrative: string;
   threatGroup: string | null;
+  politicalParty: string | null;
   province: string;
   locationLabel: string;
   lat: number;
@@ -32,6 +33,7 @@ export async function listIntelUpdates(user: SessionUser): Promise<IntelUpdateRo
     activityType: r.activityType,
     narrative: r.narrative,
     threatGroup: r.threatGroup,
+    politicalParty: r.politicalParty,
     province: r.province,
     locationLabel: r.locationLabel,
     lat: r.lat,

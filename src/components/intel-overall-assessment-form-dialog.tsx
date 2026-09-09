@@ -78,15 +78,10 @@ export function IntelOverallAssessmentFormDialog({
               required
               rows={5}
               maxLength={4000}
-              placeholder="Your own overall assessment — this is added alongside the auto-generated analysis, not in place of it."
+              placeholder="Your own overall assessment"
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
             />
-            {!isEdit && (
-              <p className="text-xs text-muted-foreground">
-                Cleared automatically at 1700H daily, same as the auto-generated analysis above it.
-              </p>
-            )}
           </div>
           <DialogFooter>
             <Button type="submit" disabled={submitting || !summary.trim()}>

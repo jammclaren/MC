@@ -36,6 +36,8 @@ export function IntelUpdatesPanel({
     return rows.filter((r) =>
       [
         r.activityType,
+        r.threatGroup,
+        r.narrative,
         new Date(r.date).toLocaleDateString(),
         new Date(r.createdAt).toLocaleDateString(),
       ]
@@ -60,7 +62,7 @@ export function IntelUpdatesPanel({
   return (
     <div className="flex flex-col gap-4">
       <Input
-        placeholder="Search by type of activity, date reported, or date of activity..."
+        placeholder="Search by type of activity, date, threat group, or keywords in the report..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="max-w-md border-2 border-status-warning"
@@ -123,6 +125,10 @@ export function IntelUpdatesPanel({
                         {row.threatGroup ?? "—"}
                       </div>
                       <div className="col-span-2 break-words">
+                        <span className="font-medium text-foreground">Political Party: </span>
+                        {row.politicalParty ?? "—"}
+                      </div>
+                      <div className="col-span-2 break-words">
                         <span className="font-medium text-foreground">Location: </span>
                         {row.locationLabel}
                       </div>
@@ -141,6 +147,7 @@ export function IntelUpdatesPanel({
                             activityType: row.activityType ?? "",
                             narrative: row.narrative,
                             threatGroup: row.threatGroup ?? "",
+                            politicalParty: row.politicalParty ?? "",
                             lat: row.lat,
                             lng: row.lng,
                             province: row.province,

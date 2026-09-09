@@ -7,7 +7,7 @@ import { handleApiError } from "@/lib/api-error";
 import { withAudit } from "@/lib/audit";
 
 const updateSchema = z.object({
-  jtfId: z.string().min(1).optional(),
+  jtfId: z.string().min(1).nullable().optional(),
   name: z.string().trim().min(1).max(200).optional(),
   assetType: z.string().trim().min(1).max(120).optional(),
   quantity: z.number().int().nonnegative().optional(),

@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TOW_WESTMIN_LABEL } from "@/lib/queries/intel-mee";
 
 export interface JtfOption {
   id: string;
@@ -29,11 +30,15 @@ export interface JtfOption {
 
 export interface IntelMeeFormInitial {
   id: string;
-  jtfId: string;
+  jtfId: string | null;
   name: string;
   assetType: string;
   quantity: number;
 }
+
+// Sentinel Select value standing in for jtfId === null (TOW-WESTMIN) — the
+// Select component needs a real string, never null/undefined.
+const TOW_WESTMIN_VALUE = "__tow_westmin__";
 
 export function IntelMeeFormDialog({
   jtfOptions,
@@ -42,21 +47,30 @@ export function IntelMeeFormDialog({
   trigger,
 }: {
   jtfOptions: JtfOption[];
-  lockJtfId?: string;
+  /** Omit to let the user pick a JTF (or TOW-WESTMIN). Pass a JTF id, or
+   * `null` for TOW-WESTMIN, to lock the field (e.g. an "Add" button on one
+   * specific card). */
+  lockJtfId?: string | null;
   initial?: IntelMeeFormInitial;
   trigger: React.ReactElement;
 }) {
   const router = useRouter();
   const isEdit = !!initial;
+  const isLocked = lockJtfId !== undefined;
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [jtfId, setJtfId] = useState(initial?.jtfId ?? lockJtfId ?? jtfOptions[0]?.id ?? "");
+  const [jtfId, setJtfId] = useState<string | null>(
+    initial ? initial.jtfId : isLocked ? lockJtfId : jtfOptions[0]?.id ?? null
+  );
   const [name, setName] = useState(initial?.name ?? "");
   const [assetType, setAssetType] = useState(initial?.assetType ?? "");
   const [quantity, setQuantity] = useState(initial?.quantity.toString() ?? "0");
 
   const jtfItems = useMemo(
-    () => jtfOptions.map((jtf) => ({ value: jtf.id, label: jtf.name })),
+    () => [
+      ...jtfOptions.map((jtf) => ({ value: jtf.id, label: jtf.name })),
+      { value: TOW_WESTMIN_VALUE, label: TOW_WESTMIN_LABEL },
+    ],
     [jtfOptions]
   );
 
@@ -106,13 +120,15 @@ export function IntelMeeFormDialog({
             <DialogTitle>{isEdit ? "Edit" : "Log"} MEE Entry</DialogTitle>
           </DialogHeader>
           <div className="flex max-h-[65vh] flex-col gap-4 overflow-y-auto py-4">
-            {!lockJtfId && (
+            {!isLocked && (
               <div className="flex flex-col gap-2">
                 <Label>JTF</Label>
                 <Select
                   items={jtfItems}
-                  value={jtfId}
-                  onValueChange={(v: string | null) => setJtfId(v ?? "")}
+                  value={jtfId ?? TOW_WESTMIN_VALUE}
+                  onValueChange={(v: string | null) =>
+                    setJtfId(!v || v === TOW_WESTMIN_VALUE ? null : v)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select JTF" />
@@ -123,6 +139,7 @@ export function IntelMeeFormDialog({
                         {jtf.name}
                       </SelectItem>
                     ))}
+                    <SelectItem value={TOW_WESTMIN_VALUE}>{TOW_WESTMIN_LABEL}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

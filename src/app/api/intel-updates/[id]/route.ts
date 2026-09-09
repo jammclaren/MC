@@ -12,6 +12,7 @@ const updateIntelUpdateSchema = z.object({
   activityType: z.string().trim().min(1).max(120).nullable().optional(),
   narrative: z.string().trim().min(1).max(4000).optional(),
   threatGroup: z.string().trim().max(120).nullable().optional(),
+  politicalParty: z.string().trim().max(120).nullable().optional(),
   province: z.string().trim().min(1).max(120).optional(),
   locationLabel: z.string().trim().min(1).max(200).optional(),
   mgrs: z.string().trim().min(1).optional(),

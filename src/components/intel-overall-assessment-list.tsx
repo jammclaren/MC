@@ -23,20 +23,11 @@ export function IntelOverallAssessmentList({
 
   return (
     <div className="flex flex-col gap-2 border-t border-border pt-4">
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-          Manually Submitted
-        </span>
+      <div className="flex items-center justify-end gap-2">
         <Button variant="ghost" size="sm" onClick={() => setShowHistory((v) => !v)}>
           {showHistory ? "Hide History" : "View History"}
         </Button>
       </div>
-
-      {visible.length === 0 && (
-        <p className="text-sm text-muted-foreground">
-          Nothing active — cleared at 1700H. Toggle History to see prior entries.
-        </p>
-      )}
 
       {visible.map((a) => (
         <div key={a.id} className="rounded-md border border-border p-3">
@@ -64,12 +55,6 @@ export function IntelOverallAssessmentList({
           <p className="mt-1.5 text-sm whitespace-pre-wrap">{a.summary}</p>
         </div>
       ))}
-
-      <p className="text-xs text-muted-foreground">
-        {showHistory
-          ? "Showing all entries, including ones already cleared."
-          : "Cleared automatically at 1700H daily."}
-      </p>
     </div>
   );
 }

@@ -13,6 +13,7 @@ export interface JtfDeploymentTotal {
   deployedToPolling: number;
   deployedToPollingCenters: number;
   qrf: number;
+  caa: number;
   airAssetCount: number;
   navalAssetCount: number;
   isrAssetCount: number;
@@ -54,6 +55,7 @@ export interface OverviewData {
   totalDeployed: number;
   totalDeployedToPollingCenters: number;
   totalQrf: number;
+  totalCaa: number;
   totalAirAssets: number;
   totalNavalAssets: number;
   totalIsrAssets: number;
@@ -107,6 +109,7 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
         deployedToPolling: true,
         deployedToPollingCenters: true,
         qrf: true,
+        caa: true,
         airAssetCount: true,
         navalAssetCount: true,
         isrAssetCount: true,
@@ -222,6 +225,7 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
       deployedToPolling: rows.reduce((sum, r) => sum + r.deployedToPolling, 0),
       deployedToPollingCenters: rows.reduce((sum, r) => sum + r.deployedToPollingCenters, 0),
       qrf: rows.reduce((sum, r) => sum + r.qrf, 0),
+      caa: rows.reduce((sum, r) => sum + r.caa, 0),
       airAssetCount: rows.reduce((sum, r) => sum + r.airAssetCount, 0),
       navalAssetCount: rows.reduce((sum, r) => sum + r.navalAssetCount, 0),
       isrAssetCount: rows.reduce((sum, r) => sum + r.isrAssetCount, 0),
@@ -272,6 +276,7 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
       0
     ),
     totalQrf: jtfDeployments.reduce((sum, d) => sum + d.qrf, 0),
+    totalCaa: jtfDeployments.reduce((sum, d) => sum + d.caa, 0),
     totalAirAssets: jtfDeployments.reduce((sum, d) => sum + d.airAssetCount, 0),
     totalNavalAssets: jtfDeployments.reduce((sum, d) => sum + d.navalAssetCount, 0),
     totalIsrAssets: jtfDeployments.reduce((sum, d) => sum + d.isrAssetCount, 0),

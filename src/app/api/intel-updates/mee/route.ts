@@ -6,7 +6,9 @@ import { handleApiError } from "@/lib/api-error";
 import { withAudit } from "@/lib/audit";
 
 const createSchema = z.object({
-  jtfId: z.string().min(1),
+  // Absent/null jtfId means TOW-WESTMIN (WESMINCOM's own equipment, not a
+  // subordinate JTF's) — see IntelMeeAsset schema comment.
+  jtfId: z.string().min(1).nullable().optional(),
   name: z.string().trim().min(1).max(200),
   assetType: z.string().trim().min(1).max(120),
   quantity: z.number().int().nonnegative(),

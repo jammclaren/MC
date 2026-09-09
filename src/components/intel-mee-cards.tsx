@@ -12,10 +12,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { IntelMeeFormDialog, type JtfOption } from "@/components/intel-mee-form-dialog";
 import { DeleteButton } from "@/components/delete-button";
-import type { IntelMeeAssetRow } from "@/lib/queries/intel-mee";
+import { TOW_WESTMIN_LABEL, type IntelMeeAssetRow } from "@/lib/queries/intel-mee";
+
+const TOW_WESTMIN_KEY = "__tow_westmin__";
 
 interface JtfGroup {
-  jtfId: string;
+  jtfId: string | null;
   jtfName: string;
   rows: IntelMeeAssetRow[];
 }
@@ -38,12 +40,14 @@ export function IntelMeeCards({
     for (const jtf of jtfOptions) {
       map.set(jtf.id, { jtfId: jtf.id, jtfName: jtf.name, rows: [] });
     }
+    map.set(TOW_WESTMIN_KEY, { jtfId: null, jtfName: TOW_WESTMIN_LABEL, rows: [] });
     for (const row of rows) {
-      const existing = map.get(row.jtfId);
+      const key = row.jtfId ?? TOW_WESTMIN_KEY;
+      const existing = map.get(key);
       if (existing) {
         existing.rows.push(row);
       } else {
-        map.set(row.jtfId, { jtfId: row.jtfId, jtfName: row.jtfName, rows: [row] });
+        map.set(key, { jtfId: row.jtfId, jtfName: row.jtfName, rows: [row] });
       }
     }
     return Array.from(map.values()).sort((a, b) => a.jtfName.localeCompare(b.jtfName));
@@ -60,7 +64,7 @@ export function IntelMeeCards({
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {groups.map((group) => (
-        <Card key={group.jtfId}>
+        <Card key={group.jtfId ?? TOW_WESTMIN_KEY}>
           <CardHeader>
             <div className="flex items-center justify-between gap-2">
               <CardTitle className="text-base">{group.jtfName}</CardTitle>
