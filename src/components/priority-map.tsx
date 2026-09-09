@@ -550,6 +550,23 @@ export function PriorityMap({
     return map;
   }, [areas]);
 
+  // Every (province, municipality, barangay) name that actually exists as
+  // a polygon in the boundary file — used to tell "this area's name isn't
+  // in the file at all" apart from "this area's name IS in the file, it
+  // just happens to also be every area's own key in areaByKey" (which is
+  // trivially true for every area and so useless for that check).
+  const polygonKeys = useMemo(() => {
+    const set = new Set<string>();
+    if (!barangays) return set;
+    for (const feature of barangays.features) {
+      const p = feature.properties as
+        | { province?: string; municipality?: string | null; barangay?: string }
+        | undefined;
+      if (p) set.add(areaKey(p.province, p.municipality, p.barangay));
+    }
+    return set;
+  }, [barangays]);
+
   // Fallback for areas whose (province, municipality, barangay) string
   // doesn't exactly match this boundary file's naming — rather than fall
   // straight to a floating point marker, check whether the area's actual
@@ -567,7 +584,7 @@ export function PriorityMap({
         a.lat != null &&
         a.lng != null &&
         !(a.lat === 0 && a.lng === 0) &&
-        !areaByKey.has(areaKey(a.province, a.municipality, a.barangay))
+        !polygonKeys.has(areaKey(a.province, a.municipality, a.barangay))
     );
     if (candidates.length === 0) return map;
 
@@ -588,7 +605,7 @@ export function PriorityMap({
       }
     }
     return map;
-  }, [barangays, areas, areaByKey]);
+  }, [barangays, areas, areaByKey, polygonKeys]);
 
   const resolveAreaForFeature = useCallback(
     (
