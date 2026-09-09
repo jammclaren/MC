@@ -72,9 +72,6 @@ export default async function ElectionBoardPage({
           <h1 className="font-display text-2xl font-bold tracking-wide uppercase">
             BARMM Parliamentary Election Profile
           </h1>
-          <p className="text-sm text-muted-foreground">
-            2026 BARMM Parliamentary Election — Sept 14, 2026.
-          </p>
         </div>
         <Card>
           <CardContent className="pt-6 text-center text-sm text-muted-foreground">

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
   const router = useRouter();
@@ -41,7 +41,6 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string }) {
     <Card className="w-full max-w-sm">
       <CardHeader>
         <CardTitle>WESMINCOM Tactical C2</CardTitle>
-        <CardDescription>Sign in with your assigned account.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">

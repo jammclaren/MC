@@ -8,13 +8,7 @@ import { listIntelMeeAssets } from "@/lib/queries/intel-mee";
 import { computeIntelAssessment } from "@/lib/intel-assessment";
 import { PROVINCE_TO_JTF } from "@/lib/queries/election-board";
 import { nowMs } from "@/lib/time";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatTile } from "@/components/stat-tile";
 import { LabeledBarChart } from "@/components/charts/labeled-bar-chart";
@@ -301,10 +295,6 @@ export default async function IntelUpdatePage() {
         <Card>
           <CardHeader>
             <CardTitle>Non-Violent Activity Trend</CardTitle>
-            <CardDescription>
-              Daily count per top activity type, last {ACTIVITY_TREND_WINDOW_DAYS} days — shows which
-              activities keep recurring.
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <ActivityTrendChart data={nonViolentActivityTrend} activityLabels={nonViolentActivityLabels} />
@@ -314,10 +304,6 @@ export default async function IntelUpdatePage() {
         <Card>
           <CardHeader>
             <CardTitle>Violent Activity Trend</CardTitle>
-            <CardDescription>
-              Daily count per top activity type, last {ACTIVITY_TREND_WINDOW_DAYS} days — shows which
-              activities keep recurring.
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <ActivityTrendChart data={violentActivityTrend} activityLabels={violentActivityLabels} />

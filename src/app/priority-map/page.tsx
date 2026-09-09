@@ -7,13 +7,7 @@ import { getIntelMarkers } from "@/lib/queries/intel-markers";
 import { canAccessPage, canWriteJtf } from "@/lib/rbac";
 import { getBarangayIndex } from "@/lib/barangay-index";
 import { PriorityMapLoader } from "@/components/priority-map-loader";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -71,10 +65,6 @@ export default async function PriorityMapPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Situation Map</h1>
-          <p className="text-sm text-muted-foreground">
-            Areas of operation color-coded by hotspot category and computed priority
-            score. Click a marker for detail.
-          </p>
         </div>
         {canCreate && (
           <ElectionAreaFormDialog
@@ -103,13 +93,6 @@ export default async function PriorityMapPage() {
       <Card>
         <CardHeader>
           <CardTitle>Priority Areas (Top 10)</CardTitle>
-          <CardDescription>
-            Ranked by priority score — see{" "}
-            <code className="rounded bg-muted px-1 py-0.5 text-xs">
-              computePriorityScore
-            </code>{" "}
-            for the exact, editable formula.
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>

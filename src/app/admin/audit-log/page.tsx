@@ -1,13 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -61,9 +55,6 @@ export default async function AuditLogPage({
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Audit Log</h1>
-        <p className="text-sm text-muted-foreground">
-          Every data change: who, what, when. Read-only.
-        </p>
       </div>
 
       <Card>
@@ -124,7 +115,6 @@ export default async function AuditLogPage({
       <Card>
         <CardHeader>
           <CardTitle>Changes</CardTitle>
-          <CardDescription>{logs.length} shown (max 200).</CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           <Table>

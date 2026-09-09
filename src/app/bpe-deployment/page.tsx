@@ -59,9 +59,6 @@ export default async function BpeDeploymentPage({
           <h1 className="font-display text-2xl font-bold tracking-wide uppercase">
             Deployment
           </h1>
-          <p className="text-sm text-muted-foreground">
-            BARMM Parliamentary Election security operations, 30 Jul–14 Sep 2026.
-          </p>
         </div>
         {canCreate && (
           <DeploymentFormDialog
@@ -184,9 +181,6 @@ export default async function BpeDeploymentPage({
       <Card>
         <CardHeader>
           <CardTitle>Unit-Level Breakdown</CardTitle>
-          <CardDescription>
-            Most recently reported first. Click a JTF to show its units.
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <DeploymentRowsAccordion

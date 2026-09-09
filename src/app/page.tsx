@@ -5,13 +5,7 @@ import { getIncidentMarkers } from "@/lib/queries/incident-markers";
 import { listJtfAssessments } from "@/lib/queries/jtf-assessments";
 import { canAccessPage, canWriteJtf } from "@/lib/rbac";
 import { nowMs } from "@/lib/time";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -115,7 +109,6 @@ export default async function OverviewPage() {
         <Card>
           <CardHeader>
             <CardTitle>Status of Election Operations</CardTitle>
-            <CardDescription>Areas progressing through the BPE pipeline.</CardDescription>
           </CardHeader>
           <CardContent>
             <FunnelPanel stages={data.electionOpsFunnel} />
@@ -125,11 +118,6 @@ export default async function OverviewPage() {
         <Card>
           <CardHeader>
             <CardTitle>Troop Deployment Recapitulation</CardTitle>
-            <CardDescription>
-              {data.totalDeployed.toLocaleString()} deployed to polling precincts ·{" "}
-              {data.totalDeployedToPollingCenters.toLocaleString()} to polling centers ·{" "}
-              {data.totalQrf.toLocaleString()} QRF
-            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
             <DeploymentBarChart data={data.jtfDeployments} />

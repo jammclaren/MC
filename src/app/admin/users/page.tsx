@@ -1,13 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserFormDialog } from "@/components/user-form-dialog";
 import { UsersTable } from "@/components/users-table";
@@ -44,9 +38,6 @@ export default async function AdminUsersPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold tracking-wide uppercase">User Management</h1>
-          <p className="text-sm text-muted-foreground">
-            Create accounts and assign role + JTF scope.
-          </p>
         </div>
         <UserFormDialog jtfOptions={jtfOptions} trigger={<Button>Create User</Button>} />
       </div>
@@ -54,7 +45,6 @@ export default async function AdminUsersPage() {
       <Card>
         <CardHeader>
           <CardTitle>Users</CardTitle>
-          <CardDescription>{users.length} account(s).</CardDescription>
         </CardHeader>
         <CardContent>
           <UsersTable

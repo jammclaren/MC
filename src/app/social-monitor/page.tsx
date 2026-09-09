@@ -2,13 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import { canAccessSocialMonitor } from "@/lib/rbac";
 import { getSocialMonitorData } from "@/lib/queries/social-monitor";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatTile } from "@/components/stat-tile";
 import { SocialPostFormDialog } from "@/components/social-post-form-dialog";
 import { SocialSyncButton } from "@/components/social-sync-button";
@@ -43,10 +37,6 @@ export default async function SocialMonitorPage() {
           <h1 className="font-display text-2xl font-bold tracking-wide uppercase">
             Social Media Monitor
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Facebook posts related to the 2026 BARMM Parliamentary Election — synced hourly,
-            classified as Violent or Non-Violent, with significant activity flagged for review.
-          </p>
         </div>
         <div className="flex gap-2">
           <SocialSyncButton />
@@ -84,10 +74,6 @@ export default async function SocialMonitorPage() {
       <Card>
         <CardHeader>
           <CardTitle>Monitored Posts</CardTitle>
-          <CardDescription>
-            {data.totalCount} post(s) on file. Auto-fetched posts are classified by keyword match
-            on sync and always staff-correctable; logged posts default to Unclassified until set.
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <SocialMonitorFeed

@@ -1,13 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { IntelMeeFormDialog, type JtfOption } from "@/components/intel-mee-form-dialog";
@@ -71,7 +65,6 @@ export function IntelMeeCards({
               <CardTitle className="text-base">{group.jtfName}</CardTitle>
               <Badge variant="outline">{group.rows.length}</Badge>
             </div>
-            <CardDescription>Mission essential equipment on file.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-2 text-sm">
             {group.rows.length === 0 && (

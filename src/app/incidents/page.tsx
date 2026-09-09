@@ -3,13 +3,7 @@ import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { listIncidents } from "@/lib/queries/incidents";
 import { canWriteJtf, canModifyEntry } from "@/lib/rbac";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -135,7 +129,6 @@ export default async function IncidentsPage({
       <Card>
         <CardHeader>
           <CardTitle>Incidents</CardTitle>
-          <CardDescription>{incidents.length} shown (max 200).</CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           <Table>

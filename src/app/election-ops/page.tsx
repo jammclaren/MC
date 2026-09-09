@@ -4,13 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { listElectionOpsAreas } from "@/lib/queries/election-ops";
 import { canAccessPage, canWriteJtf } from "@/lib/rbac";
 import { getBarangayIndex } from "@/lib/barangay-index";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ElectionAreasAccordion } from "@/components/election-areas-accordion";
 import { ElectionAreaFormDialog } from "@/components/election-area-form-dialog";
@@ -47,10 +41,6 @@ export default async function ElectionOpsPage({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Election Status</h1>
-          <p className="text-sm text-muted-foreground">
-            Paraphernalia delivery, ACM sealing, voting, transmission, and canvassing per
-            area.
-          </p>
         </div>
         {canCreate && (
           <ElectionAreaFormDialog
@@ -87,9 +77,6 @@ export default async function ElectionOpsPage({
       <Card>
         <CardHeader>
           <CardTitle>Areas</CardTitle>
-          <CardDescription>
-            {areas.length} area(s) in scope. Click a municipality to show its barangays.
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <ElectionAreasAccordion

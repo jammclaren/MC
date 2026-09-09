@@ -3,13 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { JtfAssessmentRow } from "@/lib/queries/jtf-assessments";
@@ -59,11 +53,6 @@ export function JtfAssessmentCard({
     <Card>
       <CardHeader>
         <CardTitle>JTF Overall Assessment</CardTitle>
-        <CardDescription>
-          {canSubmit
-            ? "Submit your JTF's overall assessment for Command and WFC — feeds the Daily Analysis below as a source alongside the statistics."
-            : "Overall assessment entries submitted by each JTF."}
-        </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {canSubmit && (
