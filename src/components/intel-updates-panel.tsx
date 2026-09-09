@@ -64,11 +64,20 @@ export function IntelUpdatesPanel({
   // conditional render rather than the accordion's own expand/collapse.
   const [listHidden, setListHidden] = useState(false);
 
+  // Manually expanded provinces when there's no active search — the
+  // accordion still defaults to fully collapsed otherwise, same as before.
+  const [manualOpen, setManualOpen] = useState<string[]>([]);
+  // While searching, every matching province auto-expands — otherwise a
+  // match's header appears but its actual report cards stay collapsed
+  // until clicked, which reads as "the search found nothing."
+  const isSearching = search.trim().length > 0;
+  const openProvinces = isSearching ? groups.map((g) => g.province) : manualOpen;
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Input
-          placeholder="Search by type of activity, date, threat group, or keywords in the report..."
+          placeholder="Search by type of activity, threat group, or keywords..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-md border-2 border-status-warning"
@@ -87,7 +96,11 @@ export function IntelUpdatesPanel({
       )}
 
       {!listHidden && (
-      <Accordion multiple>
+      <Accordion
+        multiple
+        value={openProvinces}
+        onValueChange={(v) => setManualOpen(v as string[])}
+      >
         {groups.map((group) => (
           <AccordionItem key={group.province} value={group.province}>
             <AccordionTrigger>
