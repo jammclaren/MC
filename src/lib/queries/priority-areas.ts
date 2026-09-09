@@ -7,6 +7,7 @@ import {
 
 export interface ScoredArea {
   id: string;
+  jtfId: string;
   province: string;
   municipality: string | null;
   barangay: string | null;
@@ -56,6 +57,7 @@ export async function getScoredAreas(user: SessionUser): Promise<ScoredArea[]> {
       });
       return {
         id: area.id,
+        jtfId: area.jtfId,
         province: area.province,
         municipality: area.municipality,
         barangay: area.barangay,

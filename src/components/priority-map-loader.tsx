@@ -27,6 +27,7 @@ export function PriorityMapLoader({
   areaOptions,
   lockJtfId,
   canCreateMarker,
+  writableJtfIds,
 }: {
   areas: ScoredArea[];
   markers: IncidentMarker[];
@@ -35,6 +36,7 @@ export function PriorityMapLoader({
   areaOptions: ElectionAreaOption[];
   lockJtfId?: string;
   canCreateMarker: boolean;
+  writableJtfIds: string[];
 }) {
   return (
     <PriorityMap
@@ -45,6 +47,7 @@ export function PriorityMapLoader({
       areaOptions={areaOptions}
       lockJtfId={lockJtfId}
       canCreateMarker={canCreateMarker}
+      writableJtfIds={writableJtfIds}
     />
   );
 }

@@ -3,6 +3,7 @@
 import "leaflet/dist/leaflet.css";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import L from "leaflet";
 import {
   LayerGroup,
@@ -34,6 +35,13 @@ import {
 } from "@/components/tactical-blueprint-pane";
 import { Button } from "@/components/ui/button";
 import { DeleteButton } from "@/components/delete-button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { MapPin } from "lucide-react";
 
 // The base-layer switcher (bottom-left, under the zoom control) offers a
@@ -234,8 +242,85 @@ function Legend({ counts, total }: { counts: Record<string, number>; total: numb
           <span className="font-mono font-medium tabular-nums">{counts[cat] ?? 0}</span>
         </div>
       ))}
+      <div className="flex items-center gap-2 text-xs">
+        <span className="size-2.5 rounded-full" style={{ backgroundColor: DEFAULT_COLOR }} />
+        <span className="flex-1 text-muted-foreground">Unclassified</span>
+        <span className="font-mono font-medium tabular-nums">{counts.Unclassified ?? 0}</span>
+      </div>
       <div className="mt-1 border-t border-border/60 pt-1 text-[10px] text-muted-foreground">
         {total.toLocaleString()} areas mapped
+      </div>
+    </div>
+  );
+}
+
+const CATEGORY_SELECT_ITEMS = [
+  { value: "__none__", label: "Unclassified" },
+  ...CATEGORY_ORDER.map((c) => ({ value: c, label: c })),
+];
+
+/** Floating panel opened by clicking a writable barangay on the
+ * categorization layer — lets a JTF (for its own AOR) or ADMIN set that
+ * barangay's hotspot category directly from the map, instead of having to
+ * go find its row on the Election Status page. Only ever rendered for an
+ * area whose jtfId is in `writableJtfIds` (see styleBarangay/onEachBarangay
+ * below) — the PATCH route re-checks the same permission server-side
+ * regardless. */
+function CategoryEditPanel({
+  area,
+  onClose,
+  onSaved,
+}: {
+  area: { id: string; label: string; hotspotCategory: string | null };
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [value, setValue] = useState(area.hotspotCategory ?? "__none__");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSave() {
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/election-areas/${area.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hotspotCategory: value === "__none__" ? null : value }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "Update failed");
+      }
+      toast.success("Category updated");
+      onSaved();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Something went wrong");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="pointer-events-auto absolute bottom-3 right-3 z-[1000] flex w-64 flex-col gap-2 rounded-md border border-primary/30 bg-card/95 p-3 shadow-[0_0_16px_-4px_var(--primary)] backdrop-blur-sm">
+      <div className="text-xs font-medium">{area.label}</div>
+      <Select items={CATEGORY_SELECT_ITEMS} value={value} onValueChange={(v) => setValue(v ?? "__none__")}>
+        <SelectTrigger className="w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {CATEGORY_SELECT_ITEMS.map((item) => (
+            <SelectItem key={item.value} value={item.value}>
+              {item.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <div className="flex justify-end gap-1">
+        <Button variant="ghost" size="sm" onClick={onClose} disabled={submitting}>
+          Cancel
+        </Button>
+        <Button size="sm" onClick={handleSave} disabled={submitting}>
+          {submitting ? "Saving..." : "Save"}
+        </Button>
       </div>
     </div>
   );
@@ -373,6 +458,7 @@ export function PriorityMap({
   areaOptions,
   lockJtfId,
   canCreateMarker,
+  writableJtfIds,
 }: {
   areas: ScoredArea[];
   markers: IncidentMarker[];
@@ -381,10 +467,16 @@ export function PriorityMap({
   areaOptions: ElectionAreaOption[];
   lockJtfId?: string;
   canCreateMarker: boolean;
+  writableJtfIds: string[];
 }) {
   const router = useRouter();
   const [provinces, setProvinces] = useState<GeoJSON.FeatureCollection | null>(null);
   const [barangays, setBarangays] = useState<GeoJSON.FeatureCollection | null>(null);
+  const [editingArea, setEditingArea] = useState<{
+    id: string;
+    label: string;
+    hotspotCategory: string | null;
+  } | null>(null);
 
   // Another JTF's hotspot-category edit on the Election Status page (or
   // this one's own, from a different tab) doesn't push to this page —
@@ -473,11 +565,13 @@ export function PriorityMap({
     const color = area?.hotspotCategory
       ? (HOTSPOT_COLORS[area.hotspotCategory] ?? DEFAULT_COLOR)
       : DEFAULT_COLOR;
+    const editable = !!area && writableJtfIds.includes(area.jtfId);
     return {
       color,
       weight: 1,
       fillColor: color,
       fillOpacity: area?.hotspotCategory ? 0.45 : 0.1,
+      className: editable ? "cursor-pointer" : undefined,
     };
   }
 
@@ -488,6 +582,7 @@ export function PriorityMap({
     if (!p) return;
     const area = areaByKey.get(areaKey(p.province, p.municipality, p.barangay));
     const label = [p.barangay, p.municipality, p.province].filter(Boolean).join(", ");
+    const editable = !!area && writableJtfIds.includes(area.jtfId);
 
     const lines = [`<div class="font-medium">${label}</div>`];
     if (area) {
@@ -495,6 +590,7 @@ export function PriorityMap({
       lines.push(`<div>Priority score: ${area.priorityScore.toFixed(1)}</div>`);
       lines.push(`<div>Recent incidents (30d): ${area.recentIncidentCount}</div>`);
       lines.push(`<div>Deployed: ${area.deployedToPolling}</div>`);
+      if (editable) lines.push(`<div class="italic">Click to set category</div>`);
     } else {
       lines.push(`<div>No categorization data on file.</div>`);
     }
@@ -506,14 +602,26 @@ export function PriorityMap({
     layer.on("mouseout", () => {
       (layer as L.Path).setStyle(styleBarangay(feature));
     });
+
+    if (editable && area) {
+      layer.on("click", () => {
+        setEditingArea({ id: area.id, label, hotspotCategory: area.hotspotCategory });
+      });
+    }
   }
 
   // Areas with lat/lng that didn't get a matching polygon (e.g. a manually
   // added area without an official barangay boundary) still get a point
   // marker, so nothing with coordinates silently disappears from the map.
+  // (0, 0) is never a real BARMM location — it's what a never-geocoded
+  // row looks like — so it's treated the same as "no coordinates" here
+  // rather than plotted off the coast of Africa.
   const unmatchedPlottable = areas.filter(
     (area): area is ScoredArea & { lat: number; lng: number } =>
-      area.lat != null && area.lng != null && !matchedIds.has(area.id)
+      area.lat != null &&
+      area.lng != null &&
+      !(area.lat === 0 && area.lng === 0) &&
+      !matchedIds.has(area.id)
   );
 
   return (
@@ -585,7 +693,14 @@ export function PriorityMap({
                   const color = area.hotspotCategory
                     ? (HOTSPOT_COLORS[area.hotspotCategory] ?? DEFAULT_COLOR)
                     : DEFAULT_COLOR;
-                  const radius = 6 + Math.max(0, area.priorityScore) * 2;
+                  // Capped rather than scaling straight off priority score —
+                  // a handful of these landing close together (common in a
+                  // dense barangay cluster) no longer balloon into a solid
+                  // overlapping blob at typical zoom levels. Dashed white
+                  // outline marks these as "no boundary on file" pins,
+                  // visually distinct from the solid-filled matched polygons
+                  // underneath rather than reading as a duplicate of them.
+                  const radius = Math.min(6 + Math.max(0, area.priorityScore) * 1.2, 12);
                   const label = [area.barangay, area.municipality, area.province]
                     .filter(Boolean)
                     .join(", ");
@@ -595,7 +710,13 @@ export function PriorityMap({
                       key={area.id}
                       center={[area.lat, area.lng]}
                       radius={radius}
-                      pathOptions={{ color, fillColor: color, fillOpacity: 0.6 }}
+                      pathOptions={{
+                        color: "#f8fafc",
+                        weight: 1.5,
+                        dashArray: "3,2",
+                        fillColor: color,
+                        fillOpacity: 0.75,
+                      }}
                     >
                       <Tooltip>
                         <div className="text-xs">
@@ -644,6 +765,16 @@ export function PriorityMap({
       </MapContainer>
       <HudFrame />
       <Legend counts={categoryCounts} total={areas.length} />
+      {editingArea && (
+        <CategoryEditPanel
+          area={editingArea}
+          onClose={() => setEditingArea(null)}
+          onSaved={() => {
+            setEditingArea(null);
+            router.refresh();
+          }}
+        />
+      )}
       {canCreateMarker && (
         <div className="absolute bottom-3 left-3 z-[900]">
           <IncidentMarkerFormDialog

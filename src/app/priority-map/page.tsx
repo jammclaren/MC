@@ -59,6 +59,15 @@ export default async function PriorityMapPage() {
         ? user.jtfId
         : undefined;
   const canCreate = user.role === "ADMIN" || (!!user.jtfId && canWriteJtf(user, user.jtfId));
+  // Which JTFs' barangays are click-to-edit on the map's categorization
+  // layer — ADMIN gets every JTF (jtfOptions is already the full roster),
+  // a JTF-scoped writer gets just their own, everyone else gets none (the
+  // layer stays read-only, same hover tooltip as before).
+  const writableJtfIds = user.role === "ADMIN"
+    ? jtfOptions.map((jtf) => jtf.id)
+    : writableJtfId
+      ? [writableJtfId]
+      : [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -86,6 +95,7 @@ export default async function PriorityMapPage() {
             areaOptions={areaOptions}
             lockJtfId={writableJtfId}
             canCreateMarker={canCreate}
+            writableJtfIds={writableJtfIds}
           />
         </CardContent>
       </Card>
