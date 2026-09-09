@@ -86,23 +86,6 @@ function buildActivityTrend(
   return Array.from(map.values());
 }
 
-/** How many distinct days (out of the trend window) each activity label was
- * reported on at all — "persistence" rather than raw volume, so an activity
- * reported once a day for two weeks ranks above one reported ten times in a
- * single day, surfacing the one that keeps recurring rather than the one
- * with the single biggest spike. */
-function daysActive(
-  trend: ActivityTrendDatum[],
-  labels: string[]
-): { label: string; count: number }[] {
-  return labels
-    .map((label) => ({
-      label,
-      count: trend.filter((d) => (d[label] as number) > 0).length,
-    }))
-    .sort((a, b) => b.count - a.count);
-}
-
 export default async function IntelUpdatePage() {
   const user = await getSessionUser();
   if (!user) {
@@ -172,7 +155,6 @@ export default async function IntelUpdatePage() {
     ACTIVITY_TREND_WINDOW_DAYS,
     nowIso
   );
-  const violentPersistence = daysActive(violentActivityTrend, violentActivityLabels);
 
   return (
     <div className="flex flex-col gap-6">
@@ -301,8 +283,7 @@ export default async function IntelUpdatePage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Top Non-Violent Activities</CardTitle>
-            <CardDescription>e.g. rally, sighting — most-recorded non-violent activity types.</CardDescription>
+            <CardTitle>Non-Violent Activities</CardTitle>
           </CardHeader>
           <CardContent>
             <TopIncidentTypesChart data={withShortLabels(topNonViolentActivities)} total={nonViolent.length} />
@@ -311,8 +292,7 @@ export default async function IntelUpdatePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Top Violent Activities</CardTitle>
-            <CardDescription>e.g. bombing, shooting incident — most-recorded violent activity types.</CardDescription>
+            <CardTitle>Violent Activities</CardTitle>
           </CardHeader>
           <CardContent>
             <TopIncidentTypesChart data={withShortLabels(topViolentActivities)} total={violent.length} />
@@ -347,15 +327,6 @@ export default async function IntelUpdatePage() {
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Most Persisting Violent Activities</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <TopIncidentTypesChart data={violentPersistence} total={ACTIVITY_TREND_WINDOW_DAYS} />
-        </CardContent>
-      </Card>
 
       <Card className="border-primary/30">
         <CardHeader>
