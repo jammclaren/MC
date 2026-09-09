@@ -59,13 +59,10 @@ export function IntelUpdatesPanel({
     return Array.from(map.values()).sort((a, b) => a.province.localeCompare(b.province));
   }, [filtered]);
 
-  // Controlled so one button can hide every province's entries at once,
-  // instead of collapsing each AccordionItem's trigger one by one. Starts
-  // empty (nothing expanded), same default as the previous uncontrolled
-  // accordion.
-  const [openProvinces, setOpenProvinces] = useState<string[]>([]);
-  const allProvinceKeys = useMemo(() => groups.map((g) => g.province), [groups]);
-  const allHidden = openProvinces.length === 0;
+  // Hides the whole province list — headers (Basilan, Cotabato City, etc)
+  // included, not just each AccordionItem's collapsed content — a plain
+  // conditional render rather than the accordion's own expand/collapse.
+  const [listHidden, setListHidden] = useState(false);
 
   return (
     <div className="flex flex-col gap-4">
@@ -77,12 +74,8 @@ export function IntelUpdatesPanel({
           className="max-w-md border-2 border-status-warning"
         />
         {groups.length > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setOpenProvinces(allHidden ? allProvinceKeys : [])}
-          >
-            {allHidden ? "Show All Provinces" : "Hide All Provinces"}
+          <Button variant="outline" size="sm" onClick={() => setListHidden((v) => !v)}>
+            {listHidden ? "Show Provinces" : "Hide Provinces"}
           </Button>
         )}
       </div>
@@ -93,11 +86,8 @@ export function IntelUpdatesPanel({
         </p>
       )}
 
-      <Accordion
-        multiple
-        value={openProvinces}
-        onValueChange={(v) => setOpenProvinces(v as string[])}
-      >
+      {!listHidden && (
+      <Accordion multiple>
         {groups.map((group) => (
           <AccordionItem key={group.province} value={group.province}>
             <AccordionTrigger>
@@ -196,6 +186,7 @@ export function IntelUpdatesPanel({
           </AccordionItem>
         ))}
       </Accordion>
+      )}
     </div>
   );
 }
