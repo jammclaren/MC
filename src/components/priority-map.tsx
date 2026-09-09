@@ -12,7 +12,6 @@ import {
   CircleMarker,
   GeoJSON,
   Marker,
-  Polygon,
   Popup,
   TileLayer,
   Tooltip,
@@ -112,72 +111,6 @@ const PROVINCE_STYLE: L.PathOptions = {
   interactive: false,
   className: "province-outline-glow",
 };
-
-// Decorative topographic-style contour rings, not real elevation data —
-// each province outline scaled inward toward its own centroid a few times,
-// for the "hologram terrain" read of a Blue Force Tracking display.
-const CONTOUR_SCALES = [0.93, 0.85, 0.77, 0.69];
-type LatLngPair = [number, number];
-
-function ringCentroid(ring: number[][]): [number, number] {
-  let x = 0;
-  let y = 0;
-  for (const [lng, lat] of ring) {
-    x += lng;
-    y += lat;
-  }
-  return [x / ring.length, y / ring.length];
-}
-
-function scaleRing(ring: number[][], center: [number, number], scale: number): LatLngPair[] {
-  const [cx, cy] = center;
-  return ring.map(([lng, lat]) => [cy + (lat - cy) * scale, cx + (lng - cx) * scale]);
-}
-
-function buildContourRings(fc: GeoJSON.FeatureCollection): LatLngPair[][] {
-  const rings: LatLngPair[][] = [];
-  for (const feature of fc.features) {
-    const geom = feature.geometry;
-    if (!geom) continue;
-    const polygons: number[][][][] =
-      geom.type === "Polygon"
-        ? [geom.coordinates as number[][][]]
-        : geom.type === "MultiPolygon"
-          ? (geom.coordinates as number[][][][])
-          : [];
-    for (const poly of polygons) {
-      const outer = poly[0];
-      if (!outer || outer.length < 4) continue;
-      const center = ringCentroid(outer);
-      for (const scale of CONTOUR_SCALES) {
-        rings.push(scaleRing(outer, center, scale));
-      }
-    }
-  }
-  return rings;
-}
-
-function ContourRings({ data }: { data: GeoJSON.FeatureCollection }) {
-  const rings = useMemo(() => buildContourRings(data), [data]);
-  return (
-    <>
-      {rings.map((positions, i) => (
-        <Polygon
-          key={i}
-          positions={positions}
-          pathOptions={{
-            color: "#22d3ee",
-            weight: 1,
-            opacity: 0.2,
-            fill: false,
-            interactive: false,
-            className: "province-outline-glow",
-          }}
-        />
-      ))}
-    </>
-  );
-}
 
 /** Corner-bracket + reticle framing, purely decorative HUD chrome — sits
  * above the map but below the Legend panel. */
@@ -670,13 +603,6 @@ export function PriorityMap({
             <LayersControl.Overlay checked name="Province Outline">
               <LayerGroup>
                 <GeoJSON data={provinces} style={PROVINCE_STYLE} onEachFeature={ProvinceLabel} />
-              </LayerGroup>
-            </LayersControl.Overlay>
-          )}
-          {provinces && (
-            <LayersControl.Overlay checked name="Contour Rings">
-              <LayerGroup>
-                <ContourRings data={provinces} />
               </LayerGroup>
             </LayersControl.Overlay>
           )}
