@@ -33,7 +33,7 @@ export function IntelOverallAssessmentList({
         <div key={a.id} className="rounded-md border border-border p-3">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <span className="text-xs text-muted-foreground">
-              {a.authorName} · {formatTimestamp24h(a.createdAt)}
+              {a.authorName} · Date Posted: {formatTimestamp24h(a.createdAt)}
               {a.purgedAt && (
                 <>
                   {" "}

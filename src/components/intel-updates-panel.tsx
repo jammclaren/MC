@@ -62,7 +62,9 @@ export function IntelUpdatesPanel({
   // Hides the whole province list — headers (Basilan, Cotabato City, etc)
   // included, not just each AccordionItem's collapsed content — a plain
   // conditional render rather than the accordion's own expand/collapse.
-  const [listHidden, setListHidden] = useState(false);
+  // Hidden by default; search results still override this (see isSearching
+  // below) so a search never appears to silently find nothing.
+  const [listHidden, setListHidden] = useState(true);
 
   // Manually expanded provinces when there's no active search — the
   // accordion still defaults to fully collapsed otherwise, same as before.
