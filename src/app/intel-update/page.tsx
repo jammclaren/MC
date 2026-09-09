@@ -245,7 +245,7 @@ export default async function IntelUpdatePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Reports by Province</CardTitle>
+            <CardTitle>BY PROVINCE</CardTitle>
           </CardHeader>
           <CardContent>
             <LabeledBarChart data={byProvince} color="var(--chart-2)" />
@@ -254,7 +254,7 @@ export default async function IntelUpdatePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Threat Groups</CardTitle>
+            <CardTitle>BY THREAT GROUP</CardTitle>
           </CardHeader>
           <CardContent>
             <LabeledBarChart data={byThreatGroup} color="var(--chart-3)" />
@@ -263,7 +263,7 @@ export default async function IntelUpdatePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Activity by Political Party</CardTitle>
+            <CardTitle>BY POLITICAL PARTY</CardTitle>
           </CardHeader>
           <CardContent>
             <LabeledBarChart data={byPoliticalParty} color="var(--chart-4)" />
