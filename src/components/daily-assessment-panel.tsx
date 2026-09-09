@@ -2,13 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ClipboardList, RefreshCw } from "lucide-react";
@@ -86,11 +80,6 @@ export function DailyAssessmentPanel() {
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-4">
         <div>
           <CardTitle>Daily Analysis &amp; Assessment</CardTitle>
-          <CardDescription>
-            Rule-based readout computed from this dashboard&apos;s current figures, plus
-            each JTF&apos;s own overall assessment quoted verbatim — nothing here is
-            AI-generated or invented.
-          </CardDescription>
         </div>
         <Button onClick={handleGenerate} disabled={loading} variant="outline">
           {loading ? (
