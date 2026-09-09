@@ -163,9 +163,6 @@ export default async function IntelUpdatePage() {
           <h1 className="font-display text-2xl font-bold tracking-wide uppercase">
             Intelligence Update
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Threat activity reports — non-violent and violent, grid-referenced by MGRS.
-          </p>
         </div>
         {canWrite && (
           <div className="flex gap-2">

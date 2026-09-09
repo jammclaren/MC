@@ -95,7 +95,7 @@ export function IntelUpdatesPanel({
         </p>
       )}
 
-      {!listHidden && (
+      {(!listHidden || isSearching) && (
       <Accordion
         multiple
         value={openProvinces}
