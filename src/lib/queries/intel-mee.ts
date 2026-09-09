@@ -1,9 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { assertCanAccessIntelligenceUpdate, type SessionUser } from "@/lib/rbac";
-
-/** jtfId null means "TOW-WESTMIN" — equipment held by WESMINCOM itself,
- * not any subordinate JTF (see schema comment on IntelMeeAsset). */
-export const TOW_WESTMIN_LABEL = "TOW-WESTMIN";
+import { TOW_WESTMIN_LABEL } from "@/lib/intel-suggestions";
 
 export interface IntelMeeAssetRow {
   id: string;

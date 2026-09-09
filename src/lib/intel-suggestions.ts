@@ -9,6 +9,14 @@ export const THREAT_GROUP_SUGGESTIONS = ["DI", "BIFF", "NPA", "ASG", "Unidentifi
 
 export const POLITICAL_PARTY_SUGGESTIONS = ["UBJP", "BFP", "BGC", "MNLF-BAF"] as const;
 
+// jtfId null on an IntelMeeAsset means "TOW-WESTMIN" — equipment held by
+// WESMINCOM itself, not a subordinate JTF (see IntelMeeAsset schema
+// comment). Lives here, not in lib/queries/intel-mee.ts, because that file
+// imports `prisma` — client components (e.g. the MEE cards/form) need this
+// label without pulling the whole server-only Prisma/pg chain into the
+// browser bundle.
+export const TOW_WESTMIN_LABEL = "TOW-WESTMIN";
+
 export const ACTIVITY_TYPES_BY_CATEGORY = {
   VIOLENT: [
     "Encounter",

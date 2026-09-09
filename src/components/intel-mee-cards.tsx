@@ -12,7 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { IntelMeeFormDialog, type JtfOption } from "@/components/intel-mee-form-dialog";
 import { DeleteButton } from "@/components/delete-button";
-import { TOW_WESTMIN_LABEL, type IntelMeeAssetRow } from "@/lib/queries/intel-mee";
+import type { IntelMeeAssetRow } from "@/lib/queries/intel-mee";
+import { TOW_WESTMIN_LABEL } from "@/lib/intel-suggestions";
 
 const TOW_WESTMIN_KEY = "__tow_westmin__";
 

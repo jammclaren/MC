@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TOW_WESTMIN_LABEL } from "@/lib/queries/intel-mee";
+import { TOW_WESTMIN_LABEL } from "@/lib/intel-suggestions";
 
 export interface JtfOption {
   id: string;
