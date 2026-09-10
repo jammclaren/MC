@@ -30,7 +30,7 @@ export function GroupedBarChart({
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 24 }}>
+      <BarChart data={data} margin={{ top: 24, right: 4, left: -20, bottom: 24 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--gridline)" />
         <XAxis
           dataKey="label"
@@ -52,7 +52,7 @@ export function GroupedBarChart({
           }}
           cursor={{ fill: "var(--accent)" }}
         />
-        <Legend wrapperStyle={{ fontSize: 11 }} />
+        <Legend verticalAlign="top" wrapperStyle={{ fontSize: 11 }} />
         <Bar dataKey="selected" name={selectedLabel} fill="var(--chart-1)" radius={[2, 2, 0, 0]} />
         <Bar dataKey="compared" name={comparedLabel} fill="var(--chart-1)" fillOpacity={0.4} radius={[2, 2, 0, 0]} />
       </BarChart>
