@@ -2,17 +2,20 @@ import { redirect, notFound } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import { canAccessSocialMonitor } from "@/lib/rbac";
 import { getSocialMonitorData } from "@/lib/queries/social-monitor";
-import { computeSocialMonitorAssessment, topByFrequency } from "@/lib/social-monitor-assessment";
-import { TOPIC_LABELS } from "@/lib/social-classifier";
-import type { SocialPostTopic } from "@/generated/prisma/client";
+import { getSocialMonitorPeriodComparison } from "@/lib/queries/social-monitor-dashboard";
+import { computeSocialMonitorAssessment } from "@/lib/social-monitor-assessment";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatTile } from "@/components/stat-tile";
 import { SocialPostFormDialog } from "@/components/social-post-form-dialog";
 import { SocialSyncButton } from "@/components/social-sync-button";
 import { SocialMonitorFeed } from "@/components/social-monitor-feed";
-import { LabeledBarChart } from "@/components/charts/labeled-bar-chart";
+import { SocialMonitorPeriodForm } from "@/components/social-monitor-period-form";
+import { GroupedBarChart, type GroupedBarDatum } from "@/components/charts/grouped-bar-chart";
+import { DualLineChart, type DualLineDatum } from "@/components/charts/dual-line-chart";
+import { ComboBarLineChart } from "@/components/charts/combo-bar-line-chart";
+import { SeverityMixChart } from "@/components/charts/severity-mix-chart";
 import { Button } from "@/components/ui/button";
-import { FileText, Flag, ShieldAlert, ShieldCheck, Clock } from "lucide-react";
+import { FileText, Flag, ShieldAlert, ShieldCheck, Clock, MessageSquare } from "lucide-react";
 
 function relativeSyncLabel(date: Date | null): string {
   if (!date) return "Not yet run";
@@ -23,7 +26,36 @@ function relativeSyncLabel(date: Date | null): string {
   return `${hours}h ago`;
 }
 
-export default async function SocialMonitorPage() {
+function isoDate(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+/** Inclusive calendar-date string -> the UTC instant it starts at. */
+function dateStart(dateStr: string): Date {
+  return new Date(`${dateStr}T00:00:00.000Z`);
+}
+
+/** Inclusive calendar-date string -> the exclusive UTC upper bound that
+ * covers the entire day (start of the following day). */
+function dateEndExclusive(dateStr: string): Date {
+  const d = dateStart(dateStr);
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d;
+}
+
+/** "+12%" / "-8%" / "New" (compared period had none on file) / "0%" (both
+ * periods had none) — never divides by zero. */
+function pctChange(selected: number, compared: number): string {
+  if (compared === 0) return selected === 0 ? "0%" : "New";
+  const pct = ((selected - compared) / compared) * 100;
+  return `${pct >= 0 ? "+" : ""}${pct.toFixed(0)}%`;
+}
+
+export default async function SocialMonitorPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ spStart?: string; spEnd?: string; cpStart?: string; cpEnd?: string }>;
+}) {
   const user = await getSessionUser();
   if (!user) {
     redirect("/login");
@@ -32,64 +64,188 @@ export default async function SocialMonitorPage() {
     notFound();
   }
 
-  const data = await getSocialMonitorData();
+  const params = await searchParams;
+
+  // Selected Period defaults to the last 30 days (today inclusive).
+  const today = new Date();
+  const defaultSpEnd = isoDate(today);
+  const defaultSpStart = isoDate(new Date(today.getTime() - 29 * 24 * 60 * 60 * 1000));
+  const spStartStr = params.spStart || defaultSpStart;
+  const spEndStr = params.spEnd || defaultSpEnd;
+  const selectedStart = dateStart(spStartStr);
+  const selectedEnd = dateEndExclusive(spEndStr);
+
+  // Compared Period defaults to the same-length window immediately
+  // preceding the Selected Period, so "vs last period" works out of the
+  // box without the user having to pick a second range themselves.
+  const selectedLengthMs = selectedEnd.getTime() - selectedStart.getTime();
+  const defaultCpEndDate = new Date(selectedStart.getTime() - 24 * 60 * 60 * 1000);
+  const defaultCpStartDate = new Date(selectedStart.getTime() - selectedLengthMs);
+  const cpStartStr = params.cpStart || isoDate(defaultCpStartDate);
+  const cpEndStr = params.cpEnd || isoDate(defaultCpEndDate);
+  const comparedStart = dateStart(cpStartStr);
+  const comparedEnd = dateEndExclusive(cpEndStr);
+
+  const [data, comparison] = await Promise.all([
+    getSocialMonitorData(),
+    getSocialMonitorPeriodComparison(
+      { start: selectedStart, end: selectedEnd },
+      { start: comparedStart, end: comparedEnd }
+    ),
+  ]);
   const assessment = computeSocialMonitorAssessment(data);
-  // Same ranking function the assessment's "Most-cited topic(s)" line uses
-  // — this chart and that line can never disagree with each other.
-  const byTopic = topByFrequency(
-    data.posts.map((p) => (p.topic ? (TOPIC_LABELS[p.topic as SocialPostTopic] ?? p.topic) : "Unspecified")),
-    11
-  );
+  const { selected, compared } = comparison;
+
+  // Same topic set as ranked in the Selected Period — Compared Period's
+  // count for a topic outside that top-10 just doesn't have a bar, same
+  // as it wouldn't for Selected either.
+  const comparedTopicByLabel = new Map(compared.topicCounts.map((t) => [t.label, t.count]));
+  const topicComparison: GroupedBarDatum[] = selected.topicCounts.map((t) => ({
+    label: t.label,
+    selected: t.count,
+    compared: comparedTopicByLabel.get(t.label) ?? 0,
+  }));
+
+  const dayCount = Math.max(selected.postsByDay.length, compared.postsByDay.length);
+  const postsOverTime: DualLineDatum[] = Array.from({ length: dayCount }, (_, i) => ({
+    dayIndex: i + 1,
+    selected: selected.postsByDay[i]?.count ?? 0,
+    compared: compared.postsByDay[i]?.count ?? 0,
+    selectedDate: selected.postsByDay[i]?.date ?? "",
+    comparedDate: compared.postsByDay[i]?.date ?? "",
+  }));
+
+  const CLASSIFICATION_COLORS = {
+    violent: "var(--status-critical)",
+    nonViolent: "var(--status-warning)",
+    unclassified: "var(--muted)",
+  };
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
+        <div className="flex items-center gap-2">
+          <MessageSquare className="size-6 text-primary" />
           <h1 className="font-display text-2xl font-bold tracking-wide uppercase">
-            Social Media Monitor
+            Facebook Dashboard
           </h1>
         </div>
-        <div className="flex gap-2">
-          <SocialSyncButton />
-          <SocialPostFormDialog trigger={<Button>Log Post</Button>} />
+        <div className="flex flex-wrap items-end gap-3">
+          <SocialMonitorPeriodForm spStart={spStartStr} spEnd={spEndStr} cpStart={cpStartStr} cpEnd={cpEndStr} />
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex gap-2">
+              <SocialSyncButton />
+              <SocialPostFormDialog trigger={<Button>Log Post</Button>} />
+            </div>
+            <span className="text-xs text-muted-foreground">
+              Last synced: {relativeSyncLabel(data.lastSyncedAt)}
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        <StatTile label="Total Posts" value={data.totalCount} icon={FileText} />
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         <StatTile
-          label="Highlighted"
-          value={data.highlightedCount}
-          icon={Flag}
-          tone="critical"
+          label="Total Posts"
+          value={selected.totalCount.toLocaleString()}
+          hint={`CP: ${compared.totalCount.toLocaleString()} (${pctChange(selected.totalCount, compared.totalCount)})`}
+          icon={FileText}
         />
         <StatTile
           label="Violent"
-          value={data.violentCount}
+          value={selected.violentCount.toLocaleString()}
+          hint={`CP: ${compared.violentCount.toLocaleString()} (${pctChange(selected.violentCount, compared.violentCount)})`}
           icon={ShieldAlert}
           tone="critical"
         />
         <StatTile
           label="Non-Violent"
-          value={data.nonViolentCount}
+          value={selected.nonViolentCount.toLocaleString()}
+          hint={`CP: ${compared.nonViolentCount.toLocaleString()} (${pctChange(selected.nonViolentCount, compared.nonViolentCount)})`}
           icon={ShieldCheck}
           tone="good"
         />
         <StatTile
-          label="Last Synced"
-          value={relativeSyncLabel(data.lastSyncedAt)}
+          label="Highlighted"
+          value={selected.highlightedCount.toLocaleString()}
+          hint={`CP: ${compared.highlightedCount.toLocaleString()} (${pctChange(selected.highlightedCount, compared.highlightedCount)})`}
+          icon={Flag}
+          tone="critical"
+        />
+        <StatTile
+          label="Auto-Fetched"
+          value={selected.autoCount.toLocaleString()}
+          hint={`CP: ${compared.autoCount.toLocaleString()} (${pctChange(selected.autoCount, compared.autoCount)})`}
           icon={Clock}
+        />
+        <StatTile
+          label="Manually Logged"
+          value={selected.manualCount.toLocaleString()}
+          hint={`CP: ${compared.manualCount.toLocaleString()} (${pctChange(selected.manualCount, compared.manualCount)})`}
+          icon={FileText}
         />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>BY TOPIC</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <LabeledBarChart data={byTopic} color="var(--chart-5)" />
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Posts by Topic — SP vs CP</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <GroupedBarChart data={topicComparison} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Posts Over Time — SP vs CP</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DualLineChart data={postsOverTime} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Posts by Classification</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground uppercase">Selected Period</span>
+                <SeverityMixChart
+                  total={selected.totalCount}
+                  segments={[
+                    { label: "Violent", count: selected.violentCount, color: CLASSIFICATION_COLORS.violent },
+                    { label: "Non-Violent", count: selected.nonViolentCount, color: CLASSIFICATION_COLORS.nonViolent },
+                    { label: "Unclassified", count: selected.unclassifiedCount, color: CLASSIFICATION_COLORS.unclassified },
+                  ]}
+                />
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground uppercase">Compared Period</span>
+                <SeverityMixChart
+                  total={compared.totalCount}
+                  segments={[
+                    { label: "Violent", count: compared.violentCount, color: CLASSIFICATION_COLORS.violent },
+                    { label: "Non-Violent", count: compared.nonViolentCount, color: CLASSIFICATION_COLORS.nonViolent },
+                    { label: "Unclassified", count: compared.unclassifiedCount, color: CLASSIFICATION_COLORS.unclassified },
+                  ]}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Posts &amp; Flagged by Day — Selected Period</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ComboBarLineChart data={selected.postsByDay} />
+          </CardContent>
+        </Card>
+      </div>
 
       <Card>
         <CardHeader>
@@ -100,6 +256,7 @@ export default async function SocialMonitorPage() {
             posts={data.posts.map((p) => ({
               ...p,
               postedAt: p.postedAt.toISOString(),
+              createdAt: p.createdAt.toISOString(),
             }))}
             canWrite
           />

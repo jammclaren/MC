@@ -13,6 +13,7 @@ export interface SocialMonitorData {
     isHighlighted: boolean;
     sourceNote: string | null;
     externalPostId: string | null;
+    createdAt: Date;
   }[];
   totalCount: number;
   violentCount: number;

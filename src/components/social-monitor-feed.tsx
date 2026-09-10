@@ -9,6 +9,7 @@ import { SocialPostFormDialog, toLocalInputValue } from "@/components/social-pos
 import { cn } from "@/lib/utils";
 import { TOPIC_LABELS, TOPIC_OPTIONS } from "@/lib/social-classifier";
 import type { SocialPostTopic } from "@/generated/prisma/client";
+import { currentReportWindow } from "@/lib/reporting-period";
 
 export interface SocialMonitorPost {
   id: string;
@@ -22,6 +23,8 @@ export interface SocialMonitorPost {
   isHighlighted: boolean;
   sourceNote: string | null;
   externalPostId: string | null;
+  createdAt: string; // ISO — when this row was logged, drives the
+  // 2200H-2200H reporting-period cutoff below
 }
 
 type FilterKey = "all" | "unspecified" | SocialPostTopic;
@@ -49,27 +52,57 @@ export function SocialMonitorFeed({
   canWrite: boolean;
 }) {
   const [filter, setFilter] = useState<FilterKey>("all");
+  const [showHistory, setShowHistory] = useState(false);
+
+  const { start: windowStart, end: windowEnd } = useMemo(() => currentReportWindow(), []);
+
+  const historyCount = useMemo(() => {
+    return posts.filter((p) => {
+      const t = new Date(p.createdAt).getTime();
+      return t < windowStart.getTime() || t >= windowEnd.getTime();
+    }).length;
+  }, [posts, windowStart, windowEnd]);
 
   const filtered = useMemo(() => {
-    if (filter === "all") return posts;
-    if (filter === "unspecified") return posts.filter((p) => !p.topic);
-    return posts.filter((p) => p.topic === filter);
-  }, [posts, filter]);
+    const byTopic =
+      filter === "all"
+        ? posts
+        : filter === "unspecified"
+          ? posts.filter((p) => !p.topic)
+          : posts.filter((p) => p.topic === filter);
+    if (showHistory) return byTopic;
+    return byTopic.filter((p) => {
+      const t = new Date(p.createdAt).getTime();
+      return t >= windowStart.getTime() && t < windowEnd.getTime();
+    });
+  }, [posts, filter, showHistory, windowStart, windowEnd]);
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap gap-2">
-        {FILTERS.map((f) => (
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap gap-2">
+          {FILTERS.map((f) => (
+            <Button
+              key={f.key}
+              type="button"
+              variant={filter === f.key ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilter(f.key)}
+            >
+              {f.label}
+            </Button>
+          ))}
+        </div>
+        {historyCount > 0 && (
           <Button
-            key={f.key}
             type="button"
-            variant={filter === f.key ? "default" : "outline"}
+            variant="outline"
             size="sm"
-            onClick={() => setFilter(f.key)}
+            onClick={() => setShowHistory((v) => !v)}
           >
-            {f.label}
+            {showHistory ? "Hide History" : `View History (${historyCount})`}
           </Button>
-        ))}
+        )}
       </div>
 
       {filtered.length === 0 && (
