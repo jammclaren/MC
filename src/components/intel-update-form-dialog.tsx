@@ -9,6 +9,7 @@ import {
   ACTIVITY_TYPES_BY_CATEGORY,
   THREAT_GROUP_SUGGESTIONS,
   POLITICAL_PARTY_SUGGESTIONS,
+  threatGroupPoliticalPartyConflict,
 } from "@/lib/intel-suggestions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,6 +76,11 @@ export function IntelUpdateFormDialog({
     event.preventDefault();
     if ("error" in parsed) {
       toast.error(parsed.error);
+      return;
+    }
+    const conflict = threatGroupPoliticalPartyConflict(threatGroup, politicalParty);
+    if (conflict) {
+      toast.error(conflict);
       return;
     }
     setSubmitting(true);

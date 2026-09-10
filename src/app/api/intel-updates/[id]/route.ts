@@ -6,6 +6,7 @@ import { assertCanWriteIntelligenceUpdate } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import { withAudit } from "@/lib/audit";
 import { parseMgrs } from "@/lib/mgrs";
+import { threatGroupPoliticalPartyConflict } from "@/lib/intel-suggestions";
 
 const updateIntelUpdateSchema = z.object({
   category: z.enum(["NON_VIOLENT", "VIOLENT"]).optional(),
@@ -41,6 +42,16 @@ export async function PATCH(
 
     const body = updateIntelUpdateSchema.parse(await request.json());
     const { mgrs, ...rest } = body;
+
+    // Partial update — a field this PATCH doesn't touch keeps its existing
+    // value, so the conflict check has to run against the row's effective
+    // post-merge state, not just whatever happens to be in this request.
+    const effectiveThreatGroup = "threatGroup" in body ? body.threatGroup : existing.threatGroup;
+    const effectivePoliticalParty = "politicalParty" in body ? body.politicalParty : existing.politicalParty;
+    const conflict = threatGroupPoliticalPartyConflict(effectiveThreatGroup, effectivePoliticalParty);
+    if (conflict) {
+      return NextResponse.json({ error: conflict }, { status: 400 });
+    }
 
     let latLng: { lat: number; lng: number } | undefined;
     if (mgrs) {

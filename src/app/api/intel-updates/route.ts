@@ -5,6 +5,7 @@ import { assertCanWriteIntelligenceUpdate } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import { withAudit } from "@/lib/audit";
 import { parseMgrs } from "@/lib/mgrs";
+import { threatGroupPoliticalPartyConflict } from "@/lib/intel-suggestions";
 
 const createIntelUpdateSchema = z.object({
   category: z.enum(["NON_VIOLENT", "VIOLENT"]),
@@ -23,6 +24,11 @@ export async function POST(request: NextRequest) {
     const user = await requireSessionUser();
     assertCanWriteIntelligenceUpdate(user);
     const body = createIntelUpdateSchema.parse(await request.json());
+
+    const conflict = threatGroupPoliticalPartyConflict(body.threatGroup, body.politicalParty);
+    if (conflict) {
+      return NextResponse.json({ error: conflict }, { status: 400 });
+    }
 
     const parsed = parseMgrs(body.mgrs);
     if ("error" in parsed) {

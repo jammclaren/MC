@@ -122,9 +122,9 @@ export default async function IntelUpdatePage() {
     rows.map((r) => r.province),
     7
   ).map((p) => ({ ...p, label: PROVINCE_CHART_ABBREVIATIONS[p.label] ?? p.label }));
-  // Blank/null entries are excluded here — that gap now lives only in its
-  // own UNSPECIFIED GROUP chart below, not mixed into the named-group
-  // breakdown as an "Unspecified" bar.
+  // Blank/null entries are excluded here — named-group breakdown only,
+  // each activity stays under its own actual threat group/party rather
+  // than mixed together with an "Unspecified" bucket.
   const byThreatGroup = topCounts(
     rows.map((r) => r.threatGroup).filter((v): v is string => !!v?.trim()),
     7
@@ -133,13 +133,6 @@ export default async function IntelUpdatePage() {
     rows.map((r) => r.politicalParty).filter((v): v is string => !!v?.trim()),
     7
   );
-  // Its own standalone breakdown (not folded into BY THREAT GROUP above) —
-  // which provinces are generating reports with no threat group identified
-  // yet, i.e. where the intel gap actually is.
-  const byUnspecifiedThreatGroupProvince = topCounts(
-    rows.filter((r) => !r.threatGroup?.trim()).map((r) => r.province),
-    7
-  ).map((p) => ({ ...p, label: PROVINCE_CHART_ABBREVIATIONS[p.label] ?? p.label }));
   const topNonViolentActivities = topCounts(
     nonViolent.map((r) => r.activityType),
     5
@@ -196,25 +189,6 @@ export default async function IntelUpdatePage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <CardTitle>Intel Mission Essential Equipment (MEE)</CardTitle>
-            </div>
-            {canWrite && (
-              <IntelMeeFormDialog
-                jtfOptions={jtfOptions}
-                trigger={<Button variant="outline">Log Equipment</Button>}
-              />
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <IntelMeeCards rows={meeAssets} jtfOptions={jtfOptions} canWrite={canWrite} />
-        </CardContent>
-      </Card>
-
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
@@ -257,7 +231,7 @@ export default async function IntelUpdatePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle>BY PROVINCE</CardTitle>
@@ -282,15 +256,6 @@ export default async function IntelUpdatePage() {
           </CardHeader>
           <CardContent>
             <LabeledBarChart data={byPoliticalParty} color="var(--chart-4)" />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>UNSPECIFIED GROUP</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <LabeledBarChart data={byUnspecifiedThreatGroupProvince} color="var(--chart-5)" />
           </CardContent>
         </Card>
       </div>
@@ -334,6 +299,25 @@ export default async function IntelUpdatePage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <CardTitle>Intel Mission Essential Equipment (MEE)</CardTitle>
+            </div>
+            {canWrite && (
+              <IntelMeeFormDialog
+                jtfOptions={jtfOptions}
+                trigger={<Button variant="outline">Log Equipment</Button>}
+              />
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <IntelMeeCards rows={meeAssets} jtfOptions={jtfOptions} canWrite={canWrite} />
+        </CardContent>
+      </Card>
 
       <Card className="border-primary/30">
         <CardHeader>
