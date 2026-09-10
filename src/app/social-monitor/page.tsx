@@ -2,12 +2,15 @@ import { redirect, notFound } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import { canAccessSocialMonitor } from "@/lib/rbac";
 import { getSocialMonitorData } from "@/lib/queries/social-monitor";
-import { computeSocialMonitorAssessment } from "@/lib/social-monitor-assessment";
+import { computeSocialMonitorAssessment, topByFrequency } from "@/lib/social-monitor-assessment";
+import { TOPIC_LABELS } from "@/lib/social-classifier";
+import type { SocialPostTopic } from "@/generated/prisma/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatTile } from "@/components/stat-tile";
 import { SocialPostFormDialog } from "@/components/social-post-form-dialog";
 import { SocialSyncButton } from "@/components/social-sync-button";
 import { SocialMonitorFeed } from "@/components/social-monitor-feed";
+import { LabeledBarChart } from "@/components/charts/labeled-bar-chart";
 import { Button } from "@/components/ui/button";
 import { FileText, Flag, ShieldAlert, ShieldCheck, Clock } from "lucide-react";
 
@@ -31,6 +34,12 @@ export default async function SocialMonitorPage() {
 
   const data = await getSocialMonitorData();
   const assessment = computeSocialMonitorAssessment(data);
+  // Same ranking function the assessment's "Most-cited topic(s)" line uses
+  // — this chart and that line can never disagree with each other.
+  const byTopic = topByFrequency(
+    data.posts.map((p) => (p.topic ? (TOPIC_LABELS[p.topic as SocialPostTopic] ?? p.topic) : "Unspecified")),
+    11
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -72,6 +81,15 @@ export default async function SocialMonitorPage() {
           icon={Clock}
         />
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>BY TOPIC</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <LabeledBarChart data={byTopic} color="var(--chart-5)" />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

@@ -29,7 +29,10 @@ function trendFrom(posts: SocialMonitorData["posts"]): "increasing" | "decreasin
   return "stable";
 }
 
-function topByFrequency(values: string[], limit: number): { label: string; count: number }[] {
+/** Exported so the BY TOPIC chart on the page uses the exact same ranking
+ * as this assessment's "Most-cited topic(s)" line — one computation, no
+ * risk of the two drifting apart. */
+export function topByFrequency(values: string[], limit: number): { label: string; count: number }[] {
   const counts = new Map<string, number>();
   for (const v of values) {
     counts.set(v, (counts.get(v) ?? 0) + 1);

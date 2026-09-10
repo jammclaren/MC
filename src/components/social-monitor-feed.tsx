@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { DeleteButton } from "@/components/delete-button";
 import { SocialPostFormDialog, toLocalInputValue } from "@/components/social-post-form-dialog";
 import { cn } from "@/lib/utils";
-import { TOPIC_LABELS } from "@/lib/social-classifier";
+import { TOPIC_LABELS, TOPIC_OPTIONS } from "@/lib/social-classifier";
 import type { SocialPostTopic } from "@/generated/prisma/client";
 
 export interface SocialMonitorPost {
@@ -24,13 +24,12 @@ export interface SocialMonitorPost {
   externalPostId: string | null;
 }
 
-type FilterKey = "all" | "highlighted" | "VIOLENT" | "NON_VIOLENT";
+type FilterKey = "all" | "unspecified" | SocialPostTopic;
 
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: "all", label: "All" },
-  { key: "highlighted", label: "Highlighted" },
-  { key: "VIOLENT", label: "Violent" },
-  { key: "NON_VIOLENT", label: "Non-Violent" },
+  ...TOPIC_OPTIONS.map((o) => ({ key: o.value as FilterKey, label: o.label })),
+  { key: "unspecified", label: "Unspecified" },
 ];
 
 function formatDate(iso: string): string {
@@ -53,8 +52,8 @@ export function SocialMonitorFeed({
 
   const filtered = useMemo(() => {
     if (filter === "all") return posts;
-    if (filter === "highlighted") return posts.filter((p) => p.isHighlighted);
-    return posts.filter((p) => p.classification === filter);
+    if (filter === "unspecified") return posts.filter((p) => !p.topic);
+    return posts.filter((p) => p.topic === filter);
   }, [posts, filter]);
 
   return (
