@@ -113,8 +113,14 @@ export default async function SocialMonitorPage({
   // count for a topic outside that top-10 just doesn't have a bar, same
   // as it wouldn't for Selected either.
   const comparedTopicByLabel = new Map(compared.topicCounts.map((t) => [t.label, t.count]));
+  // Abbreviated for this chart's x-axis only — full names stay everywhere
+  // else (filters, badges, assessment text).
+  const CHART_TOPIC_LABELS: Record<string, string> = {
+    "Election Related": "ERP",
+    "Peace Inclined Armed Groups": "PIAGs",
+  };
   const topicComparison: GroupedBarDatum[] = selected.topicCounts.map((t) => ({
-    label: t.label,
+    label: CHART_TOPIC_LABELS[t.label] ?? t.label,
     selected: t.count,
     compared: comparedTopicByLabel.get(t.label) ?? 0,
   }));
