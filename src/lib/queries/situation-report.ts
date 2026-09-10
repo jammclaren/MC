@@ -43,6 +43,15 @@ function manilaTimeLabel(d: Date): string {
   });
 }
 
+function manilaDateLabel(date: string): string {
+  return new Date(`${date}T00:00:00.000Z`).toLocaleDateString("en-PH", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 /** Plain-text draft assembled from on-file stats — a starting point the
  * viewer (ADMIN or WFC Intelligence/M2) always edits by hand before it
  * means anything as an actual report; never presented as a finished
@@ -65,21 +74,17 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
   const scopeJtfId = scopeJtfFilter(user, undefined, { allowRollup: true });
 
   const [
-    windowIncidentCount,
-    mostRecentWindowIncident,
+    windowIncidents,
     windowSocialPosts,
     windowIntelRows,
     jtfAssessments,
     allIntelRows,
     socialMonitorData,
   ] = await Promise.all([
-    prisma.incident.count({
-      where: { jtfId: scopeJtfId, date: { gte: start, lt: end } },
-    }),
-    prisma.incident.findFirst({
+    prisma.incident.findMany({
       where: { jtfId: scopeJtfId, date: { gte: start, lt: end } },
       orderBy: { date: "desc" },
-      include: { jtf: { select: { name: true } } },
+      include: { jtf: { select: { id: true, name: true } } },
     }),
     // Social Media Monitor and Intelligence Update are both command-wide
     // (no jtfId of their own) — every ADMIN session (the only role that
@@ -116,6 +121,17 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
     3
   );
 
+  // windowIncidents is already sorted desc by date, so the first hit per
+  // JTF encountered while walking it is that JTF's most recent — one pass,
+  // covering every JTF on the roster (not just ones with an incident this
+  // period, so a quiet JTF still shows up as "none logged").
+  const mostRecentIncidentByJtf = new Map<string, (typeof windowIncidents)[number]>();
+  for (const incident of windowIncidents) {
+    if (!mostRecentIncidentByJtf.has(incident.jtf.id)) {
+      mostRecentIncidentByJtf.set(incident.jtf.id, incident);
+    }
+  }
+
   const intelViolent = windowIntelRows.filter((r) => r.category === "VIOLENT").length;
   const intelNonViolent = windowIntelRows.filter((r) => r.category === "NON_VIOLENT").length;
   const topThreatGroups = topByFrequency(
@@ -131,20 +147,19 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
 
   lines.push(`DAILY SUMMARY OF REPORTS — ${date}`);
   lines.push(`Reporting Period: ${manilaTimeLabel(start)} to ${manilaTimeLabel(end)} (2200H to 2200H)`);
-  lines.push(
-    `BPE 2026 Window: ${new Date(data.bpe.startDate).toLocaleDateString()} to ${new Date(data.bpe.endDate).toLocaleDateString()}`
-  );
+  lines.push(`Date of Reporting: ${manilaDateLabel(date)}`);
   lines.push("");
   lines.push("1. INCIDENTS (this reporting period)");
-  lines.push(`Logged: ${windowIncidentCount}`);
+  lines.push(`Logged: ${windowIncidents.length}`);
   lines.push(`Priority/flagged areas (overall): ${data.priorityAreaCount}`);
-  if (mostRecentWindowIncident) {
-    const r = mostRecentWindowIncident;
+  lines.push("Most Recent Incident by JTF:");
+  for (const j of data.jtfDeployments) {
+    const r = mostRecentIncidentByJtf.get(j.jtfId);
     lines.push(
-      `Most recent: ${r.type} — ${r.jtf.name}${r.locationLabel ? `, ${r.locationLabel}` : ""} (${manilaTimeLabel(r.date)})`
+      r
+        ? `  - ${j.jtfName}: ${r.type}${r.locationLabel ? `, ${r.locationLabel}` : ""} (${manilaTimeLabel(r.date)})`
+        : `  - ${j.jtfName}: none logged this reporting period.`
     );
-  } else {
-    lines.push("Most recent: none logged this reporting period.");
   }
   lines.push("");
   lines.push("2. SOCIAL MEDIA MONITOR (this reporting period)");
@@ -185,9 +200,9 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
   }
   lines.push("");
   lines.push("6. OVERALL ASSESSMENT");
-  const totalReports = windowIncidentCount + windowSocialPosts.length + windowIntelRows.length;
+  const totalReports = windowIncidents.length + windowSocialPosts.length + windowIntelRows.length;
   lines.push(
-    `${totalReports.toLocaleString()} total report(s) this reporting period — ${windowIncidentCount.toLocaleString()} incident(s), ${windowSocialPosts.length.toLocaleString()} social media post(s), ${windowIntelRows.length.toLocaleString()} intelligence report(s).`
+    `${totalReports.toLocaleString()} total report(s) this reporting period — ${windowIncidents.length.toLocaleString()} incident(s), ${windowSocialPosts.length.toLocaleString()} social media post(s), ${windowIntelRows.length.toLocaleString()} intelligence report(s).`
   );
   lines.push(`Command-wide severity call (Overview/Daily Analysis): ${dailyAssessment.severityLevel}`);
   lines.push("");

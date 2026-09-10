@@ -127,6 +127,16 @@ export function SituationReportEditor({ initial }: { initial: SituationReport })
       {/* Print-only rendering — a <textarea>'s value doesn't reliably print
           across browsers, so the same content is mirrored into a plain
           block that's the only thing visible under @media print. */}
+      <div className="print-header hidden items-center gap-3 border-b border-black pb-3 mb-3">
+        {/* eslint-disable-next-line @next/next/no-img-element -- print-only
+            header mark; not worth next/image's optimization pipeline for a
+            one-time print render. */}
+        <img src="/wesmincom-seal.png" alt="WESMINCOM seal" className="size-14" />
+        <div>
+          <div className="text-base font-bold uppercase">Western Mindanao Command</div>
+          <div className="text-sm">Daily Summary of Reports</div>
+        </div>
+      </div>
       <pre className="print-only hidden font-mono text-sm whitespace-pre-wrap">{content}</pre>
     </div>
   );
