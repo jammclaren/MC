@@ -38,20 +38,29 @@ export function DualLineChart({
     return <p className="text-sm text-muted-foreground">No data for either period yet.</p>;
   }
 
+  // The x-axis plots by day-index (so two periods with different real
+  // dates line up point-for-point), but ticks are labeled with the
+  // Current Week's actual calendar date for that index.
+  const dateByDayIndex = new Map(data.map((d) => [d.dayIndex, d.selectedDate]));
+  const tickDateLabel = (dayIndex: number): string => {
+    const date = dateByDayIndex.get(dayIndex);
+    return date ? formatDate(date) : `Day ${dayIndex}`;
+  };
+
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--gridline)" />
         <XAxis
           dataKey="dayIndex"
-          tickFormatter={(v) => `Day ${v}`}
+          tickFormatter={tickDateLabel}
           tick={TICK_STYLE}
           stroke="var(--axis-baseline)"
           interval={Math.ceil(data.length / 8)}
         />
         <YAxis tick={TICK_STYLE} stroke="var(--axis-baseline)" allowDecimals={false} width={28} />
         <Tooltip
-          labelFormatter={(v) => `Day ${v}`}
+          labelFormatter={(v) => tickDateLabel(v as number)}
           formatter={(value, name, item) => {
             const point = item?.payload as DualLineDatum | undefined;
             const dateLabel = point
