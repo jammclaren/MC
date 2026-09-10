@@ -542,6 +542,24 @@ export function PriorityMap({
     return map;
   }, [markers]);
 
+  // One sub-layer per distinct activity type (e.g. "Campaign Rally",
+  // "Ambush") within Enemy Activity, same "group into its own toggleable
+  // overlay" pattern as the per-JTF Logged Incidents layers above —
+  // checking only "Rally" shows only rally markers, per the user's
+  // request. Sorted so the layer list has a stable order across renders
+  // rather than shuffling with whatever order the query happened to
+  // return rows in.
+  const intelMarkersByActivityType = useMemo(() => {
+    const map = new Map<string, IntelMarker[]>();
+    for (const marker of intelMarkers) {
+      const key = marker.activityType?.trim() || "Unspecified";
+      const list = map.get(key) ?? [];
+      list.push(marker);
+      map.set(key, list);
+    }
+    return new Map([...map.entries()].sort((a, b) => a[0].localeCompare(b[0])));
+  }, [intelMarkers]);
+
   const areaByKey = useMemo(() => {
     const map = new Map<string, ScoredArea>();
     for (const area of areas) {
@@ -805,13 +823,13 @@ export function PriorityMap({
               </LayersControl.Overlay>
             );
           })}
-          {intelMarkers.length > 0 && (
-            <LayersControl.Overlay checked name="Enemy Activity">
+          {[...intelMarkersByActivityType.entries()].map(([activityType, typeMarkers]) => (
+            <LayersControl.Overlay checked key={activityType} name={`Enemy Activity — ${activityType}`}>
               <LayerGroup>
-                <IntelMarkerItems markers={intelMarkers} />
+                <IntelMarkerItems markers={typeMarkers} />
               </LayerGroup>
             </LayersControl.Overlay>
-          )}
+          ))}
         </LayersControl>
         {provinces && <FitToBounds data={provinces} />}
       </MapContainer>
