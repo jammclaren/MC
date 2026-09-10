@@ -5,7 +5,10 @@ import { requireSessionUser } from "@/lib/session";
 import { assertCanAccessSocialMonitor } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import { withAudit } from "@/lib/audit";
-import { classifyPostContent } from "@/lib/social-classifier";
+import { classifyPostContent, classifyPostTopic, TOPIC_OPTIONS } from "@/lib/social-classifier";
+import type { SocialPostTopic } from "@/generated/prisma/client";
+
+const TOPIC_VALUES = TOPIC_OPTIONS.map((o) => o.value) as [SocialPostTopic, ...SocialPostTopic[]];
 
 const createPostSchema = z.object({
   pageName: z.string().trim().min(1).max(200),
@@ -14,6 +17,7 @@ const createPostSchema = z.object({
   postUrl: z.string().trim().url().max(500).nullable().optional(),
   postedAt: z.coerce.date(),
   classification: z.enum(["VIOLENT", "NON_VIOLENT"]).nullable().optional(),
+  topic: z.enum(TOPIC_VALUES).nullable().optional(),
   isHighlighted: z.boolean().optional(),
   sourceNote: z.string().trim().max(300).nullable().optional(),
 });
@@ -49,6 +53,7 @@ export async function POST(request: NextRequest) {
             postUrl: body.postUrl ?? null,
             postedAt: body.postedAt,
             classification: body.classification ?? classifyPostContent(body.content),
+            topic: body.topic ?? classifyPostTopic(body.content),
             isHighlighted: body.isHighlighted ?? false,
             sourceNote: body.sourceNote ?? null,
             createdById: user.id,

@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import { canAccessSocialMonitor } from "@/lib/rbac";
 import { getSocialMonitorData } from "@/lib/queries/social-monitor";
+import { computeSocialMonitorAssessment } from "@/lib/social-monitor-assessment";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatTile } from "@/components/stat-tile";
 import { SocialPostFormDialog } from "@/components/social-post-form-dialog";
@@ -29,6 +30,7 @@ export default async function SocialMonitorPage() {
   }
 
   const data = await getSocialMonitorData();
+  const assessment = computeSocialMonitorAssessment(data);
 
   return (
     <div className="flex flex-col gap-6">
@@ -83,6 +85,22 @@ export default async function SocialMonitorPage() {
             }))}
             canWrite
           />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Data Interpretation &amp; Assessment</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="flex flex-col gap-2 text-sm">
+            {assessment.analysis.map((line, i) => (
+              <li key={i} className="flex gap-2">
+                <span className="text-muted-foreground">•</span>
+                <span>{line}</span>
+              </li>
+            ))}
+          </ul>
         </CardContent>
       </Card>
     </div>

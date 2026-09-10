@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { DeleteButton } from "@/components/delete-button";
 import { SocialPostFormDialog, toLocalInputValue } from "@/components/social-post-form-dialog";
 import { cn } from "@/lib/utils";
+import { TOPIC_LABELS } from "@/lib/social-classifier";
+import type { SocialPostTopic } from "@/generated/prisma/client";
 
 export interface SocialMonitorPost {
   id: string;
@@ -16,6 +18,7 @@ export interface SocialMonitorPost {
   postUrl: string | null;
   postedAt: string; // ISO
   classification: string | null;
+  topic: string | null;
   isHighlighted: boolean;
   sourceNote: string | null;
   externalPostId: string | null;
@@ -106,6 +109,11 @@ export function SocialMonitorFeed({
                   <Badge variant="good">Non-Violent</Badge>
                 )}
                 {!post.classification && <Badge variant="outline">Unclassified</Badge>}
+                {post.topic && (
+                  <Badge variant="secondary">
+                    {TOPIC_LABELS[post.topic as SocialPostTopic] ?? post.topic}
+                  </Badge>
+                )}
                 {!post.externalPostId && <Badge variant="outline">Manual Entry</Badge>}
               </div>
             </div>
@@ -140,6 +148,7 @@ export function SocialMonitorFeed({
                       postUrl: post.postUrl ?? "",
                       postedAt: toLocalInputValue(new Date(post.postedAt)),
                       classification: post.classification ?? "",
+                      topic: post.topic ?? "",
                       isHighlighted: post.isHighlighted,
                       sourceNote: post.sourceNote ?? "",
                     }}

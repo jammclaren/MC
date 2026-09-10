@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { canAccessSocialMonitor } from "@/lib/rbac";
-import { classifyPostContent } from "@/lib/social-classifier";
+import { classifyPostContent, classifyPostTopic } from "@/lib/social-classifier";
 
 // How far back to look on every run — generous overlap with the hourly
 // cadence so a slow run or a missed tick doesn't drop posts; upserts on
@@ -103,6 +103,7 @@ export async function POST(request: NextRequest) {
         if (existing) continue;
 
         const classification = classifyPostContent(post.message);
+        const topic = classifyPostTopic(post.message);
         await prisma.socialMediaPost.create({
           data: {
             platform: "FACEBOOK",
@@ -113,6 +114,7 @@ export async function POST(request: NextRequest) {
             postUrl: post.permalink_url ?? null,
             postedAt: new Date(post.created_time),
             classification,
+            topic,
             isHighlighted: classification === "VIOLENT",
           },
         });

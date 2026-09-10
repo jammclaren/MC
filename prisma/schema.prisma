@@ -539,11 +539,29 @@ enum SocialIncidentClass {
   NON_VIOLENT
 }
 
+// Subject-matter tag, separate from (and orthogonal to) classification
+// above — a post can be VIOLENT and about ELECTION_VIOLENCE, or
+// NON_VIOLENT and about VOTER_EDUCATION. Curated list confirmed with the
+// user; keyword-classified the same way as classification (see
+// lib/social-classifier.ts), always staff-correctable.
+enum SocialPostTopic {
+  VOTE_BUYING
+  ELECTION_FRAUD
+  CANDIDATE_PARTY_ATTACK
+  VOTER_EDUCATION
+  ELECTION_VIOLENCE
+  TERRORISM
+  RIDO_CLAN_CONFLICT
+  CRIMINALITY
+  PEACE_AND_ORDER
+  MISINFORMATION
+}
+
 // A monitored post — either pulled in automatically by the hourly Facebook
 // sync (externalPostId set, sourceNote null) or logged by staff who spotted
 // something the sync missed (externalPostId null, sourceNote describes how
-// it was found). classification defaults to a keyword-based best guess
-// (see lib/social-classifier.ts) and is always staff-correctable.
+// it was found). classification and topic each default to a keyword-based
+// best guess (see lib/social-classifier.ts) and are always staff-correctable.
 model SocialMediaPost {
   id             String               @id @default(cuid())
   platform       SocialPlatform       @default(FACEBOOK)
@@ -554,6 +572,7 @@ model SocialMediaPost {
   postUrl        String?
   postedAt       DateTime
   classification SocialIncidentClass?
+  topic          SocialPostTopic?
   isHighlighted  Boolean              @default(false)
   sourceNote     String?
   createdById    String?
@@ -564,6 +583,7 @@ model SocialMediaPost {
   @@unique([platform, externalPostId])
   @@index([postedAt])
   @@index([classification])
+  @@index([topic])
   @@index([isHighlighted])
 }
 

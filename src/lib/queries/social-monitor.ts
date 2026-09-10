@@ -9,6 +9,7 @@ export interface SocialMonitorData {
     postUrl: string | null;
     postedAt: Date;
     classification: string | null;
+    topic: string | null;
     isHighlighted: boolean;
     sourceNote: string | null;
     externalPostId: string | null;

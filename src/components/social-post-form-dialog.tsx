@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { classifyPostContent } from "@/lib/social-classifier";
+import { classifyPostContent, classifyPostTopic, TOPIC_OPTIONS } from "@/lib/social-classifier";
 
 export interface SocialPostFormInitial {
   id: string;
@@ -32,6 +32,7 @@ export interface SocialPostFormInitial {
   postUrl: string;
   postedAt: string; // yyyy-MM-ddThh:mm, for <input type="datetime-local">
   classification: string; // "VIOLENT" | "NON_VIOLENT" | ""
+  topic: string; // one of TOPIC_OPTIONS' values, or ""
   isHighlighted: boolean;
   sourceNote: string;
 }
@@ -45,6 +46,11 @@ const CLASSIFICATION_OPTIONS = [
   { value: "__unset__", label: "Unclassified" },
   { value: "VIOLENT", label: "Violent" },
   { value: "NON_VIOLENT", label: "Non-Violent" },
+];
+
+const TOPIC_SELECT_OPTIONS = [
+  { value: "__unset__", label: "Unspecified" },
+  ...TOPIC_OPTIONS,
 ];
 
 export function SocialPostFormDialog({
@@ -64,18 +70,24 @@ export function SocialPostFormDialog({
   const [postUrl, setPostUrl] = useState(initial?.postUrl ?? "");
   const [postedAt, setPostedAt] = useState(initial?.postedAt ?? toLocalInputValue(new Date()));
   const [classification, setClassification] = useState(initial?.classification || "__unset__");
+  const [topic, setTopic] = useState(initial?.topic || "__unset__");
   const [isHighlighted, setIsHighlighted] = useState(initial?.isHighlighted ?? false);
   const [sourceNote, setSourceNote] = useState(initial?.sourceNote ?? "");
   const [classificationTouched, setClassificationTouched] = useState(isEdit);
+  const [topicTouched, setTopicTouched] = useState(isEdit);
 
   const classificationItems = useMemo(() => CLASSIFICATION_OPTIONS, []);
+  const topicItems = useMemo(() => TOPIC_SELECT_OPTIONS, []);
 
   function handleContentChange(value: string) {
     setContent(value);
-    // Suggest a classification as staff type, same keyword pass the hourly
-    // Facebook sync uses — never overrides a choice staff already made.
+    // Suggest a classification/topic as staff type, same keyword passes the
+    // hourly Facebook sync uses — never overrides a choice staff already made.
     if (!classificationTouched && value.trim().length > 0) {
       setClassification(classifyPostContent(value));
+    }
+    if (!topicTouched && value.trim().length > 0) {
+      setTopic(classifyPostTopic(value) ?? "__unset__");
     }
   }
 
@@ -95,6 +107,7 @@ export function SocialPostFormDialog({
           postUrl: postUrl.trim() || null,
           postedAt: new Date(postedAt).toISOString(),
           classification: classification === "__unset__" ? null : classification,
+          topic: topic === "__unset__" ? null : topic,
           isHighlighted,
           sourceNote: sourceNote.trim() || null,
         }),
@@ -187,6 +200,28 @@ export function SocialPostFormDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {CLASSIFICATION_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label>Topic</Label>
+              <Select
+                items={topicItems}
+                value={topic}
+                onValueChange={(v: string | null) => {
+                  setTopicTouched(true);
+                  setTopic(v ?? "__unset__");
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TOPIC_SELECT_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
                     </SelectItem>
