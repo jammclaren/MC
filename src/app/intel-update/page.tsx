@@ -120,12 +120,15 @@ export default async function IntelUpdatePage() {
     rows.map((r) => r.province),
     7
   ).map((p) => ({ ...p, label: PROVINCE_CHART_ABBREVIATIONS[p.label] ?? p.label }));
+  // Blank/null entries are excluded here — that gap now lives only in its
+  // own UNSPECIFIED GROUP chart below, not mixed into the named-group
+  // breakdown as an "Unspecified" bar.
   const byThreatGroup = topCounts(
-    rows.map((r) => r.threatGroup),
+    rows.map((r) => r.threatGroup).filter((v): v is string => !!v?.trim()),
     7
   );
   const byPoliticalParty = topCounts(
-    rows.map((r) => r.politicalParty),
+    rows.map((r) => r.politicalParty).filter((v): v is string => !!v?.trim()),
     7
   );
   // Its own standalone breakdown (not folded into BY THREAT GROUP above) —
