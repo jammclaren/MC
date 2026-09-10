@@ -160,40 +160,40 @@ export default async function SocialMonitorPage({
         <StatTile
           label="Total Posts"
           value={selected.totalCount.toLocaleString()}
-          hint={`CP: ${compared.totalCount.toLocaleString()} (${pctChange(selected.totalCount, compared.totalCount)})`}
+          hint={`Previous Week: ${compared.totalCount.toLocaleString()} (${pctChange(selected.totalCount, compared.totalCount)})`}
           icon={FileText}
         />
         <StatTile
           label="Violent"
           value={selected.violentCount.toLocaleString()}
-          hint={`CP: ${compared.violentCount.toLocaleString()} (${pctChange(selected.violentCount, compared.violentCount)})`}
+          hint={`Previous Week: ${compared.violentCount.toLocaleString()} (${pctChange(selected.violentCount, compared.violentCount)})`}
           icon={ShieldAlert}
           tone="critical"
         />
         <StatTile
           label="Non-Violent"
           value={selected.nonViolentCount.toLocaleString()}
-          hint={`CP: ${compared.nonViolentCount.toLocaleString()} (${pctChange(selected.nonViolentCount, compared.nonViolentCount)})`}
+          hint={`Previous Week: ${compared.nonViolentCount.toLocaleString()} (${pctChange(selected.nonViolentCount, compared.nonViolentCount)})`}
           icon={ShieldCheck}
           tone="good"
         />
         <StatTile
           label="Highlighted"
           value={selected.highlightedCount.toLocaleString()}
-          hint={`CP: ${compared.highlightedCount.toLocaleString()} (${pctChange(selected.highlightedCount, compared.highlightedCount)})`}
+          hint={`Previous Week: ${compared.highlightedCount.toLocaleString()} (${pctChange(selected.highlightedCount, compared.highlightedCount)})`}
           icon={Flag}
           tone="critical"
         />
         <StatTile
           label="Auto-Fetched"
           value={selected.autoCount.toLocaleString()}
-          hint={`CP: ${compared.autoCount.toLocaleString()} (${pctChange(selected.autoCount, compared.autoCount)})`}
+          hint={`Previous Week: ${compared.autoCount.toLocaleString()} (${pctChange(selected.autoCount, compared.autoCount)})`}
           icon={Clock}
         />
         <StatTile
           label="Manually Logged"
           value={selected.manualCount.toLocaleString()}
-          hint={`CP: ${compared.manualCount.toLocaleString()} (${pctChange(selected.manualCount, compared.manualCount)})`}
+          hint={`Previous Week: ${compared.manualCount.toLocaleString()} (${pctChange(selected.manualCount, compared.manualCount)})`}
           icon={FileText}
         />
       </div>
@@ -201,19 +201,19 @@ export default async function SocialMonitorPage({
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Posts by Topic — SP vs CP</CardTitle>
+            <CardTitle>Posts by Topic — Current Week vs Previous Week</CardTitle>
           </CardHeader>
           <CardContent>
-            <GroupedBarChart data={topicComparison} />
+            <GroupedBarChart data={topicComparison} selectedLabel="Current Week" comparedLabel="Previous Week" />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Posts Over Time — SP vs CP</CardTitle>
+            <CardTitle>Posts Over Time — Current Week vs Previous Week</CardTitle>
           </CardHeader>
           <CardContent>
-            <DualLineChart data={postsOverTime} />
+            <DualLineChart data={postsOverTime} selectedLabel="Current Week" comparedLabel="Previous Week" />
           </CardContent>
         </Card>
 
@@ -224,7 +224,7 @@ export default async function SocialMonitorPage({
           <CardContent>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex flex-col items-center gap-2">
-                <span className="text-xs font-medium text-muted-foreground uppercase">Selected Period</span>
+                <span className="text-xs font-medium text-muted-foreground uppercase">Current Week</span>
                 <SeverityMixChart
                   total={selected.totalCount}
                   segments={[
@@ -235,7 +235,7 @@ export default async function SocialMonitorPage({
                 />
               </div>
               <div className="flex flex-col items-center gap-2">
-                <span className="text-xs font-medium text-muted-foreground uppercase">Compared Period</span>
+                <span className="text-xs font-medium text-muted-foreground uppercase">Previous Week</span>
                 <SeverityMixChart
                   total={compared.totalCount}
                   segments={[
@@ -251,7 +251,7 @@ export default async function SocialMonitorPage({
 
         <Card>
           <CardHeader>
-            <CardTitle>Posts &amp; Flagged by Day — Selected Period</CardTitle>
+            <CardTitle>Posts &amp; Flagged by Day — Current Week</CardTitle>
           </CardHeader>
           <CardContent>
             <ComboBarLineChart data={selected.postsByDay} />

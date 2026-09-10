@@ -10,14 +10,14 @@ export interface GroupedBarDatum {
 
 const TICK_STYLE = { fill: "var(--muted-foreground)", fontSize: 11 };
 
-/** Two bars per category — Selected Period vs Compared Period — same
+/** Two bars per category — Current Week vs Previous Week — same
  * category set on both, so a topic/group present in only one period
  * still shows up at zero for the other rather than shifting the axis. */
 export function GroupedBarChart({
   data,
   height = 220,
-  selectedLabel = "Selected Period",
-  comparedLabel = "Compared Period",
+  selectedLabel = "Current Week",
+  comparedLabel = "Previous Week",
 }: {
   data: GroupedBarDatum[];
   height?: number | `${number}%`;

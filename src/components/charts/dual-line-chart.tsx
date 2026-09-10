@@ -26,8 +26,8 @@ function formatDate(dateStr: string): string {
 export function DualLineChart({
   data,
   height = 220,
-  selectedLabel = "Selected Period",
-  comparedLabel = "Compared Period",
+  selectedLabel = "Current Week",
+  comparedLabel = "Previous Week",
 }: {
   data: DualLineDatum[];
   height?: number | `${number}%`;

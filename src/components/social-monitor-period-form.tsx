@@ -17,7 +17,7 @@ export function SocialMonitorPeriodForm({
   return (
     <form className="flex flex-wrap items-end gap-3 text-sm" method="get">
       <div className="flex flex-col gap-1">
-        <span className="text-xs font-medium text-muted-foreground uppercase">Period</span>
+        <span className="text-xs font-medium text-muted-foreground uppercase">Current Week</span>
         <div className="flex items-center gap-1">
           <input
             type="date"
@@ -35,7 +35,7 @@ export function SocialMonitorPeriodForm({
         </div>
       </div>
       <div className="flex flex-col gap-1">
-        <span className="text-xs font-medium text-muted-foreground uppercase">Compared Period</span>
+        <span className="text-xs font-medium text-muted-foreground uppercase">Previous Week</span>
         <div className="flex items-center gap-1">
           <input
             type="date"
