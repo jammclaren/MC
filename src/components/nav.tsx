@@ -46,11 +46,11 @@ export async function Nav() {
     ...(canAccessSocialMonitor(user)
       ? [{ href: "/social-monitor", label: "SOCMED" }]
       : []),
+    ...(canAccessIntelligenceUpdate(user)
+      ? [{ href: "/intel-update", label: "INTELLIGENCE" }]
+      : []),
     ...(canAccessSituationReport(user)
       ? [{ href: "/situation-report", label: "Daily Summary of Reports" }]
-      : []),
-    ...(canAccessIntelligenceUpdate(user)
-      ? [{ href: "/intel-update", label: "Intelligence Update" }]
       : []),
     ...visibleAdminLinks.map((l) => ({
       href: l.href,
