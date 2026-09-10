@@ -295,6 +295,55 @@ function CategoryEditPanel({
   );
 }
 
+/** Collapsed-by-default sub-panel nested under the Enemy Activity layer —
+ * a per-type entry in the main layer list got cluttered fast once there
+ * were more than a couple of activity types, so this keeps the main
+ * LayersControl to one "Enemy Activity" toggle and moves the fine-grained
+ * per-type checklist into its own small popover instead. */
+function EnemyActivityTypeFilter({
+  types,
+  enabled,
+  onToggleType,
+}: {
+  types: Map<string, IntelMarker[]>;
+  enabled: Set<string> | null;
+  onToggleType: (type: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  if (types.size === 0) return null;
+
+  return (
+    <div className="pointer-events-auto absolute top-2 left-14 z-[1000]">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="rounded-md border border-primary/30 bg-card/95 px-2.5 py-1.5 text-xs font-medium shadow-[0_0_12px_-4px_var(--primary)] backdrop-blur-sm"
+      >
+        Enemy Activity Types {open ? "▲" : "▼"}
+      </button>
+      {open && (
+        <div className="mt-1 flex w-56 flex-col gap-1.5 rounded-md border border-primary/30 bg-card/95 p-3 shadow-[0_0_16px_-4px_var(--primary)] backdrop-blur-sm">
+          {[...types.entries()].map(([type, markers]) => {
+            const checked = enabled === null || enabled.has(type);
+            return (
+              <label key={type} className="flex items-center gap-2 text-xs">
+                <input
+                  type="checkbox"
+                  className="size-3.5 rounded border-border accent-primary"
+                  checked={checked}
+                  onChange={() => onToggleType(type)}
+                />
+                <span className="flex-1">{type}</span>
+                <span className="font-mono text-muted-foreground">{markers.length}</span>
+              </label>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Tracks the map's current zoom so marker icons can shrink as it zooms
  * out — must be rendered as a MapContainer descendant to reach useMap(). */
 function useCurrentZoom(): number {
@@ -542,13 +591,12 @@ export function PriorityMap({
     return map;
   }, [markers]);
 
-  // One sub-layer per distinct activity type (e.g. "Campaign Rally",
-  // "Ambush") within Enemy Activity, same "group into its own toggleable
-  // overlay" pattern as the per-JTF Logged Incidents layers above —
-  // checking only "Rally" shows only rally markers, per the user's
-  // request. Sorted so the layer list has a stable order across renders
-  // rather than shuffling with whatever order the query happened to
-  // return rows in.
+  // Grouped by distinct activity type (e.g. "Campaign Rally", "Ambush") —
+  // feeds the Enemy Activity Types sub-panel's checklist below, rather
+  // than each type getting its own entry in the main layer list (that
+  // read as cluttered once there were more than a couple of types).
+  // Sorted so the checklist has a stable order across renders rather than
+  // shuffling with whatever order the query happened to return rows in.
   const intelMarkersByActivityType = useMemo(() => {
     const map = new Map<string, IntelMarker[]>();
     for (const marker of intelMarkers) {
@@ -559,6 +607,28 @@ export function PriorityMap({
     }
     return new Map([...map.entries()].sort((a, b) => a[0].localeCompare(b[0])));
   }, [intelMarkers]);
+
+  // null = every type visible (the default, before anyone touches the
+  // sub-panel). Once touched it becomes an explicit allow-list, so a type
+  // that shows up later (a new activity type someone logs) doesn't
+  // silently disappear just because it wasn't in the set yet — only
+  // reconsidered against `null` at the top of the filter below.
+  const [enabledActivityTypes, setEnabledActivityTypes] = useState<Set<string> | null>(null);
+
+  const visibleIntelMarkers = useMemo(() => {
+    if (enabledActivityTypes === null) return intelMarkers;
+    return intelMarkers.filter((m) => enabledActivityTypes.has(m.activityType?.trim() || "Unspecified"));
+  }, [intelMarkers, enabledActivityTypes]);
+
+  function toggleActivityType(type: string) {
+    setEnabledActivityTypes((prev) => {
+      const current = prev ?? new Set(intelMarkersByActivityType.keys());
+      const next = new Set(current);
+      if (next.has(type)) next.delete(type);
+      else next.add(type);
+      return next;
+    });
+  }
 
   const areaByKey = useMemo(() => {
     const map = new Map<string, ScoredArea>();
@@ -823,18 +893,23 @@ export function PriorityMap({
               </LayersControl.Overlay>
             );
           })}
-          {[...intelMarkersByActivityType.entries()].map(([activityType, typeMarkers]) => (
-            <LayersControl.Overlay checked key={activityType} name={`Enemy Activity — ${activityType}`}>
+          {intelMarkers.length > 0 && (
+            <LayersControl.Overlay checked name="Enemy Activity">
               <LayerGroup>
-                <IntelMarkerItems markers={typeMarkers} />
+                <IntelMarkerItems markers={visibleIntelMarkers} />
               </LayerGroup>
             </LayersControl.Overlay>
-          ))}
+          )}
         </LayersControl>
         {provinces && <FitToBounds data={provinces} />}
       </MapContainer>
       <HudFrame />
       <Legend counts={categoryCounts} total={areas.length} />
+      <EnemyActivityTypeFilter
+        types={intelMarkersByActivityType}
+        enabled={enabledActivityTypes}
+        onToggleType={toggleActivityType}
+      />
       {editingArea && (
         <CategoryEditPanel
           area={editingArea}
