@@ -8,6 +8,7 @@ import { listIntelMeeAssets } from "@/lib/queries/intel-mee";
 import { computeIntelAssessment } from "@/lib/intel-assessment";
 import { PROVINCE_TO_JTF } from "@/lib/queries/election-board";
 import { nowMs } from "@/lib/time";
+import { currentReportWindow } from "@/lib/reporting-period";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatTile } from "@/components/stat-tile";
@@ -106,8 +107,16 @@ export default async function IntelUpdatePage() {
   const nowIso = new Date(nowMs()).toISOString();
   const since30d = nowMs() - 30 * 24 * 60 * 60 * 1000;
   const recent30d = rows.filter((r) => new Date(r.date).getTime() >= since30d);
-  const since24h = nowMs() - 24 * 60 * 60 * 1000;
-  const recent24h = rows.filter((r) => new Date(r.createdAt).getTime() >= since24h);
+  // Reports "for the day" are counted by the command's 2200H-to-2200H
+  // reporting cycle (Asia/Manila), not a rolling last-24h window or
+  // calendar midnight — a report logged at 11pm counts toward tomorrow's
+  // reporting day, not today's, same convention as the Daily Summary of
+  // Reports.
+  const reportingDay = currentReportWindow();
+  const recent24h = rows.filter((r) => {
+    const createdAt = new Date(r.createdAt).getTime();
+    return createdAt >= reportingDay.start.getTime() && createdAt < reportingDay.end.getTime();
+  });
 
   // Only these two get shortened — the rest of the tracked provinces
   // (Basilan, Tawi-Tawi, SGA-BARMM) are already short enough for the
@@ -207,7 +216,7 @@ export default async function IntelUpdatePage() {
 
         <div className="grid grid-cols-2 gap-4">
           <StatTile
-            label="Total Reports for the Day (past 24 hrs)"
+            label="Total Reports for the Day (2200H-2200H)"
             value={recent24h.length.toLocaleString()}
             icon={Radar}
           />
