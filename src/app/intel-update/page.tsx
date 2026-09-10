@@ -213,32 +213,7 @@ export default async function IntelUpdatePage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatTile
-          label="Total Reports for the Day (past 24 hrs)"
-          value={recent24h.length.toLocaleString()}
-          icon={Radar}
-        />
-        <StatTile
-          label="Violent"
-          value={violent.length.toLocaleString()}
-          icon={ShieldAlert}
-          tone={violent.length > 0 ? "critical" : "good"}
-        />
-        <StatTile
-          label="Non-Violent"
-          value={nonViolent.length.toLocaleString()}
-          icon={FileWarning}
-          tone={nonViolent.length > 0 ? "warning" : "default"}
-        />
-        <StatTile
-          label="Reports (30d)"
-          value={recent30d.length.toLocaleString()}
-          icon={CalendarClock}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Violent vs Non-Violent</CardTitle>
@@ -253,6 +228,31 @@ export default async function IntelUpdatePage() {
             />
           </CardContent>
         </Card>
+
+        <div className="grid grid-cols-2 gap-4">
+          <StatTile
+            label="Total Reports for the Day (past 24 hrs)"
+            value={recent24h.length.toLocaleString()}
+            icon={Radar}
+          />
+          <StatTile
+            label="Reports (30d)"
+            value={recent30d.length.toLocaleString()}
+            icon={CalendarClock}
+          />
+          <StatTile
+            label="Violent"
+            value={violent.length.toLocaleString()}
+            icon={ShieldAlert}
+            tone={violent.length > 0 ? "critical" : "good"}
+          />
+          <StatTile
+            label="Non-Violent"
+            value={nonViolent.length.toLocaleString()}
+            icon={FileWarning}
+            tone={nonViolent.length > 0 ? "warning" : "default"}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
