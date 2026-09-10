@@ -1,6 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { scopeJtfFilter, type SessionUser } from "@/lib/rbac";
 import { getOverviewData } from "@/lib/queries/overview";
+import { computeDailyAssessment } from "@/lib/queries/daily-assessment";
+import { listRecentJtfAssessmentsForDailyAnalysis } from "@/lib/queries/jtf-assessments";
+import { listIntelUpdates } from "@/lib/queries/intel-updates";
+import { computeIntelAssessment } from "@/lib/intel-assessment";
+import { getSocialMonitorData } from "@/lib/queries/social-monitor";
+import { computeSocialMonitorAssessment } from "@/lib/social-monitor-assessment";
 import { TOPIC_LABELS } from "@/lib/social-classifier";
 import type { SocialPostTopic } from "@/generated/prisma/client";
 
@@ -63,6 +69,9 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
     mostRecentWindowIncident,
     windowSocialPosts,
     windowIntelRows,
+    jtfAssessments,
+    allIntelRows,
+    socialMonitorData,
   ] = await Promise.all([
     prisma.incident.count({
       where: { jtfId: scopeJtfId, date: { gte: start, lt: end } },
@@ -83,7 +92,20 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
     prisma.intelUpdate.findMany({
       where: { date: { gte: start, lt: end } },
     }),
+    // The Overall Assessment section below reuses each dashboard page's own
+    // assessment engine rather than re-deriving similar analysis inline —
+    // one source of truth per topic, same wording a reader would see on
+    // that page itself. These three read all on-file data (not just this
+    // reporting window), which is intentional: trend lines and severity
+    // calls need more history than one 24h window to mean anything.
+    listRecentJtfAssessmentsForDailyAnalysis(),
+    listIntelUpdates(user),
+    getSocialMonitorData(),
   ]);
+
+  const dailyAssessment = computeDailyAssessment(data, jtfAssessments);
+  const intelAssessment = computeIntelAssessment(allIntelRows);
+  const socialAssessment = computeSocialMonitorAssessment(socialMonitorData);
 
   const socialViolent = windowSocialPosts.filter((p) => p.classification === "VIOLENT").length;
   const socialNonViolent = windowSocialPosts.filter((p) => p.classification === "NON_VIOLENT").length;
@@ -164,17 +186,23 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
   lines.push("");
   lines.push("6. OVERALL ASSESSMENT");
   const totalReports = windowIncidentCount + windowSocialPosts.length + windowIntelRows.length;
-  const totalViolent = socialViolent + intelViolent;
-  const totalNonViolent = socialNonViolent + intelNonViolent;
   lines.push(
     `${totalReports.toLocaleString()} total report(s) this reporting period — ${windowIncidentCount.toLocaleString()} incident(s), ${windowSocialPosts.length.toLocaleString()} social media post(s), ${windowIntelRows.length.toLocaleString()} intelligence report(s).`
   );
-  lines.push(
-    `Across Social Media Monitor and Intelligence Update: ${totalViolent.toLocaleString()} violent, ${totalNonViolent.toLocaleString()} non-violent.`
-  );
-  if (topThreatGroups.length > 0) {
-    lines.push(`Threat picture led by: ${topThreatGroups.map((g) => `${g.label} (${g.count})`).join(", ")}.`);
+  lines.push(`Command-wide severity call (Overview/Daily Analysis): ${dailyAssessment.severityLevel}`);
+  lines.push("");
+  lines.push("From Overview / Daily Analysis:");
+  for (const line of dailyAssessment.analysis) lines.push(`  - ${line}`);
+  if (dailyAssessment.recommendations.strategic[0]) {
+    lines.push(`  - Top strategic recommendation: ${dailyAssessment.recommendations.strategic[0]}`);
   }
+  lines.push("");
+  lines.push("From Intelligence Update:");
+  for (const line of intelAssessment.analysis) lines.push(`  - ${line}`);
+  lines.push("");
+  lines.push("From Social Media Monitor:");
+  for (const line of socialAssessment.analysis) lines.push(`  - ${line}`);
+  lines.push("");
   lines.push("[Add narrative assessment here]");
 
   return lines.join("\n");
