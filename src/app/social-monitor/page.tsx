@@ -5,19 +5,40 @@ import { getSocialMonitorData } from "@/lib/queries/social-monitor";
 import { getSocialMonitorPeriodComparison } from "@/lib/queries/social-monitor-dashboard";
 import { computeSocialMonitorAssessment } from "@/lib/social-monitor-assessment";
 import { computeRecommendedActions } from "@/lib/social-monitor-recommendations";
+import {
+  getSocialListeningReport,
+  listSocialListeningReportOptions,
+} from "@/lib/queries/social-listening";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatTile } from "@/components/stat-tile";
 import { SocialPostFormDialog } from "@/components/social-post-form-dialog";
 import { SocialSyncButton } from "@/components/social-sync-button";
 import { SocialMonitorFeed } from "@/components/social-monitor-feed";
 import { SocialMonitorPeriodForm } from "@/components/social-monitor-period-form";
+import { SocialListeningReportFormDialog } from "@/components/social-listening-report-form-dialog";
+import { DeleteButton } from "@/components/delete-button";
 import { GroupedBarChart, type GroupedBarDatum } from "@/components/charts/grouped-bar-chart";
 import { DualLineChart, type DualLineDatum } from "@/components/charts/dual-line-chart";
 import { ComboBarLineChart } from "@/components/charts/combo-bar-line-chart";
 import { SeverityMixChart } from "@/components/charts/severity-mix-chart";
+import { HorizontalBarList } from "@/components/charts/horizontal-bar-list";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FacebookLogo } from "@/components/icons/facebook-logo";
-import { FileText, Flag, ShieldAlert, ShieldCheck, Clock } from "lucide-react";
+import { ExternalLink, FileText, Flag, ShieldAlert, ShieldCheck, Clock } from "lucide-react";
+
+/** Best-effort tone from a free-text risk/status label — display only,
+ * never fed back into logic, since these values are staff-transcribed
+ * free text rather than a fixed enum. */
+function riskTone(label: string): "critical" | "warning" | "good" | "outline" {
+  const upper = label.toUpperCase();
+  if (upper.includes("HIGH") || upper.includes("SENSITIVE")) return "critical";
+  if (upper.includes("MODERATE")) return "warning";
+  if (upper.includes("LOW")) return "good";
+  return "outline";
+}
 
 function relativeSyncLabel(date: Date | null): string {
   if (!date) return "Not yet run";
@@ -69,7 +90,13 @@ function pctChange(selected: number, compared: number): string {
 export default async function SocialMonitorPage({
   searchParams,
 }: {
-  searchParams: Promise<{ spStart?: string; spEnd?: string; cpStart?: string; cpEnd?: string }>;
+  searchParams: Promise<{
+    spStart?: string;
+    spEnd?: string;
+    cpStart?: string;
+    cpEnd?: string;
+    reportId?: string;
+  }>;
 }) {
   const user = await getSessionUser();
   if (!user) {
@@ -100,12 +127,14 @@ export default async function SocialMonitorPage({
   const comparedStart = dateStart(cpStartStr);
   const comparedEnd = dateEndExclusive(cpEndStr);
 
-  const [data, comparison] = await Promise.all([
+  const [data, comparison, socialListeningReport, socialListeningReportOptions] = await Promise.all([
     getSocialMonitorData(),
     getSocialMonitorPeriodComparison(
       { start: selectedStart, end: selectedEnd },
       { start: comparedStart, end: comparedEnd }
     ),
+    getSocialListeningReport(params.reportId),
+    listSocialListeningReportOptions(),
   ]);
   const assessment = computeSocialMonitorAssessment(data);
   const { selected, compared } = comparison;
@@ -142,8 +171,29 @@ export default async function SocialMonitorPage({
     unclassified: "var(--muted)",
   };
 
+  const coreMentions = socialListeningReport
+    ? socialListeningReport.issues.reduce((sum, i) => sum + i.mentions, 0)
+    : 0;
+  const issuesByVolume = socialListeningReport
+    ? [...socialListeningReport.issues]
+        .sort((a, b) => b.mentions - a.mentions)
+        .map((i) => ({ label: i.label, value: i.mentions }))
+    : [];
+  const platformDistribution = socialListeningReport
+    ? [...socialListeningReport.platformMentions]
+        .sort((a, b) => b.mentions - a.mentions)
+        .map((p) => ({ label: p.platform, value: p.mentions }))
+    : [];
+
   return (
     <div className="flex flex-col gap-6">
+      <Tabs defaultValue="facebook">
+        <TabsList variant="line">
+          <TabsTrigger value="facebook">Facebook</TabsTrigger>
+          <TabsTrigger value="social-listening">Social Listening Report</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="facebook" className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <FacebookLogo className="size-6" />
@@ -315,6 +365,287 @@ export default async function SocialMonitorPage({
           </ul>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="social-listening" className="flex flex-col gap-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <h2 className="font-display text-xl font-bold tracking-wide uppercase">
+                Social Listening Report
+              </h2>
+              {socialListeningReport && (
+                <span className="text-sm text-muted-foreground">
+                  {socialListeningReport.periodLabel}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap items-end gap-2">
+              {socialListeningReportOptions.length > 1 && (
+                <form method="get" className="flex items-end gap-2">
+                  <select
+                    name="reportId"
+                    defaultValue={socialListeningReport?.id}
+                    className="h-9 rounded-md border bg-background px-2 text-sm"
+                  >
+                    {socialListeningReportOptions.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.periodLabel}
+                      </option>
+                    ))}
+                  </select>
+                  <Button type="submit" variant="outline" size="sm">
+                    View
+                  </Button>
+                </form>
+              )}
+              <SocialListeningReportFormDialog
+                trigger={<Button>Log New Report</Button>}
+              />
+              {socialListeningReport && (
+                <>
+                  <SocialListeningReportFormDialog
+                    initial={{
+                      id: socialListeningReport.id,
+                      periodLabel: socialListeningReport.periodLabel,
+                      uniqueSources: String(socialListeningReport.uniqueSources),
+                      engagementLabel: socialListeningReport.engagementLabel,
+                      overallRiskLevel: socialListeningReport.overallRiskLevel,
+                      riskRationale: socialListeningReport.riskRationale,
+                      dominantNarratives: socialListeningReport.dominantNarratives,
+                      emergingNarratives: socialListeningReport.emergingNarratives,
+                      indicatorsToWatch: socialListeningReport.indicatorsToWatch,
+                      issues: socialListeningReport.issues.map((i) => ({
+                        label: i.label,
+                        mentions: String(i.mentions),
+                        engagementLabel: i.engagementLabel,
+                        reachLabel: i.reachLabel,
+                        authors: String(i.authors),
+                        status: i.status,
+                        riskLevel: i.riskLevel,
+                      })),
+                      platformMentions: socialListeningReport.platformMentions.map((p) => ({
+                        platform: p.platform,
+                        mentions: String(p.mentions),
+                      })),
+                      significantActivities: socialListeningReport.significantActivities.map(
+                        (a) => ({
+                          title: a.title,
+                          subtitle: a.subtitle,
+                          sourceUrl: a.sourceUrl ?? "",
+                          analysis: a.analysis,
+                          assessment: a.assessment,
+                        })
+                      ),
+                    }}
+                    trigger={<Button variant="outline">Edit Report</Button>}
+                  />
+                  <DeleteButton
+                    url={`/api/social-listening-reports/${socialListeningReport.id}`}
+                    confirmMessage="Delete this Social Listening report? This cannot be undone."
+                  />
+                </>
+              )}
+            </div>
+          </div>
+
+          {!socialListeningReport && (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              No Social Listening report logged yet — click &quot;Log New Report&quot; to add the
+              first one.
+            </p>
+          )}
+
+          {socialListeningReport && (
+            <>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <StatTile label="Core Mentions" value={coreMentions.toLocaleString()} icon={FileText} />
+                <StatTile
+                  label="Unique Sources"
+                  value={socialListeningReport.uniqueSources.toLocaleString()}
+                  icon={FileText}
+                />
+                <StatTile label="Engagement" value={socialListeningReport.engagementLabel} icon={Flag} />
+                <StatTile
+                  label="Significant Activities"
+                  value={socialListeningReport.significantActivities.length.toLocaleString()}
+                  icon={ShieldAlert}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Issues by Volume</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <HorizontalBarList data={issuesByVolume} />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Platform Distribution</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <HorizontalBarList data={platformDistribution} />
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Issue Map</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Issue</TableHead>
+                        <TableHead className="text-right">Mentions</TableHead>
+                        <TableHead className="text-right">Engagement</TableHead>
+                        <TableHead className="text-right">Reach</TableHead>
+                        <TableHead className="text-right">Authors</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Risk</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {socialListeningReport.issues.map((issue) => (
+                        <TableRow key={issue.id}>
+                          <TableCell className="font-medium">{issue.label}</TableCell>
+                          <TableCell className="text-right font-mono tabular-nums">
+                            {issue.mentions.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right font-mono tabular-nums">
+                            {issue.engagementLabel}
+                          </TableCell>
+                          <TableCell className="text-right font-mono tabular-nums">
+                            {issue.reachLabel}
+                          </TableCell>
+                          <TableCell className="text-right font-mono tabular-nums">
+                            {issue.authors.toLocaleString()}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={riskTone(issue.status)}>{issue.status}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={riskTone(issue.riskLevel)}>{issue.riskLevel}</Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {socialListeningReport.issues.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center text-muted-foreground">
+                            No issues logged for this report.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Narratives &amp; Risk Indicators</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div className="flex flex-col gap-2">
+                      <span className="text-xs font-medium text-muted-foreground uppercase">
+                        Dominant Narratives
+                      </span>
+                      <ul className="flex flex-col gap-1.5 text-sm">
+                        {socialListeningReport.dominantNarratives.map((n, i) => (
+                          <li key={i} className="flex gap-2">
+                            <span className="text-muted-foreground">•</span>
+                            <span>{n}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <span className="text-xs font-medium text-muted-foreground uppercase">
+                        Emerging / Sensitive Narratives
+                      </span>
+                      <ul className="flex flex-col gap-1.5 text-sm">
+                        {socialListeningReport.emergingNarratives.map((n, i) => (
+                          <li key={i} className="flex gap-2">
+                            <span className="text-muted-foreground">•</span>
+                            <span>{n}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <span className="text-xs font-medium text-muted-foreground uppercase">
+                        Indicators to Watch
+                      </span>
+                      <ul className="flex flex-col gap-1.5 text-sm">
+                        {socialListeningReport.indicatorsToWatch.map((n, i) => (
+                          <li key={i} className="flex gap-2">
+                            <span className="text-muted-foreground">•</span>
+                            <span>{n}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 rounded-lg border p-3">
+                    <Badge variant={riskTone(socialListeningReport.overallRiskLevel)}>
+                      {socialListeningReport.overallRiskLevel}
+                    </Badge>
+                    <span className="text-sm text-muted-foreground">
+                      {socialListeningReport.riskRationale}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Significant Activities</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col gap-3">
+                    {socialListeningReport.significantActivities.map((activity) => (
+                      <div key={activity.id} className="rounded-lg border p-4">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div className="font-medium">{activity.title}</div>
+                          {activity.sourceUrl && (
+                            <a
+                              href={activity.sourceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-xs text-primary hover:underline"
+                            >
+                              Source <ExternalLink className="size-3" />
+                            </a>
+                          )}
+                        </div>
+                        <p className="mt-1 text-sm text-muted-foreground">{activity.subtitle}</p>
+                        <p className="mt-2 text-sm">
+                          <span className="font-medium">Analysis: </span>
+                          {activity.analysis}
+                        </p>
+                        <p className="mt-1 text-sm">
+                          <span className="font-medium">Assessment: </span>
+                          {activity.assessment}
+                        </p>
+                      </div>
+                    ))}
+                    {socialListeningReport.significantActivities.length === 0 && (
+                      <p className="py-4 text-center text-sm text-muted-foreground">
+                        No significant activities logged for this report.
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

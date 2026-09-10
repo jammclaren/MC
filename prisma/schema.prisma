@@ -128,6 +128,7 @@ model User {
   intelOverallAssessments IntelOverallAssessment[]
   intelMeeAssets      IntelMeeAsset[]
   devices             UserDevice[]
+  socialListeningReports SocialListeningReport[]
 
   @@index([jtfId])
 }
@@ -580,6 +581,74 @@ model SocialMediaPost {
   @@index([classification])
   @@index([topic])
   @@index([isHighlighted])
+}
+
+// Multi-platform social-listening report — staff transcribe a periodic
+// external listening report (mentions/reach/narratives across platforms
+// beyond just the Facebook feed above) as one atomic unit. No live API
+// integration; every field here is a real reported figure entered by
+// staff, never computed/estimated by the app.
+model SocialListeningReport {
+  id                 String   @id @default(cuid())
+  periodLabel        String
+  uniqueSources      Int
+  engagementLabel    String
+  overallRiskLevel   String
+  riskRationale      String
+  dominantNarratives String[]
+  emergingNarratives String[]
+  indicatorsToWatch  String[]
+  createdById        String
+  createdBy          User     @relation(fields: [createdById], references: [id])
+  createdAt          DateTime @default(now())
+
+  issues                SocialListeningIssue[]
+  platformMentions      SocialListeningPlatformMention[]
+  significantActivities SocialListeningActivity[]
+
+  @@index([createdAt])
+}
+
+model SocialListeningIssue {
+  id              String                @id @default(cuid())
+  reportId        String
+  report          SocialListeningReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  label           String
+  mentions        Int
+  engagementLabel String
+  reachLabel      String
+  authors         Int
+  status          String
+  riskLevel       String
+  sortOrder       Int                   @default(0)
+
+  @@index([reportId])
+}
+
+model SocialListeningPlatformMention {
+  id        String                @id @default(cuid())
+  reportId  String
+  report    SocialListeningReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  platform  String
+  mentions  Int
+  sortOrder Int                   @default(0)
+
+  @@index([reportId])
+}
+
+model SocialListeningActivity {
+  id         String                @id @default(cuid())
+  reportId   String
+  report     SocialListeningReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  rank       Int                   @default(0)
+  title      String
+  subtitle   String
+  sourceUrl  String?
+  analysis   String
+  assessment String
+  createdAt  DateTime              @default(now())
+
+  @@index([reportId])
 }
 
 // --- Situation Report (SITREP) — WFC Intelligence (M2) and ADMIN only, see
