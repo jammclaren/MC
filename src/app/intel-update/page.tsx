@@ -42,19 +42,6 @@ function topCounts(values: (string | null)[], limit: number): { label: string; c
     .map(([label, count]) => ({ label, count }));
 }
 
-/** Same ranking as topCounts, but "Unspecified" never competes for one of
- * the top-N slots and always gets its own bar appended after them — a
- * report with no threat group/political party on file stays visible as
- * its own category instead of only showing up incidentally (or getting
- * bumped off entirely once enough distinct named values pile up). */
-function topCountsWithUnspecified(
-  values: (string | null)[],
-  limit: number
-): { label: string; count: number }[] {
-  const specified = values.filter((v) => !!v?.trim());
-  const unspecifiedCount = values.length - specified.length;
-  return [...topCounts(specified, limit), { label: "Unspecified", count: unspecifiedCount }];
-}
 
 /** Shortens each label for the Top Activities charts specifically — a
  * manually-typed Type of Activity isn't guaranteed to stay short, and a
@@ -129,18 +116,25 @@ export default async function IntelUpdatePage() {
     "Maguindanao del Sur": "MDS",
     "Maguindanao del Norte": "MDN",
   };
-  const byProvince = topCountsWithUnspecified(
+  const byProvince = topCounts(
     rows.map((r) => r.province),
     7
   ).map((p) => ({ ...p, label: PROVINCE_CHART_ABBREVIATIONS[p.label] ?? p.label }));
-  const byThreatGroup = topCountsWithUnspecified(
+  const byThreatGroup = topCounts(
     rows.map((r) => r.threatGroup),
     7
   );
-  const byPoliticalParty = topCountsWithUnspecified(
+  const byPoliticalParty = topCounts(
     rows.map((r) => r.politicalParty),
     7
   );
+  // Its own standalone breakdown (not folded into BY THREAT GROUP above) —
+  // which provinces are generating reports with no threat group identified
+  // yet, i.e. where the intel gap actually is.
+  const byUnspecifiedThreatGroupProvince = topCounts(
+    rows.filter((r) => !r.threatGroup?.trim()).map((r) => r.province),
+    7
+  ).map((p) => ({ ...p, label: PROVINCE_CHART_ABBREVIATIONS[p.label] ?? p.label }));
   const topNonViolentActivities = topCounts(
     nonViolent.map((r) => r.activityType),
     5
@@ -256,7 +250,9 @@ export default async function IntelUpdatePage() {
             />
           </CardContent>
         </Card>
+      </div>
 
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader>
             <CardTitle>BY PROVINCE</CardTitle>
@@ -281,6 +277,15 @@ export default async function IntelUpdatePage() {
           </CardHeader>
           <CardContent>
             <LabeledBarChart data={byPoliticalParty} color="var(--chart-4)" />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>UNSPECIFIED GROUP</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <LabeledBarChart data={byUnspecifiedThreatGroupProvince} color="var(--chart-5)" />
           </CardContent>
         </Card>
       </div>
