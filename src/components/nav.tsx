@@ -44,7 +44,7 @@ export async function Nav() {
   const allLinks = [
     ...visibleNavLinks.map((l) => ({ href: l.href, label: l.label })),
     ...(canAccessSocialMonitor(user)
-      ? [{ href: "/social-monitor", label: "Social Media Monitor" }]
+      ? [{ href: "/social-monitor", label: "SOCMED" }]
       : []),
     ...(canAccessSituationReport(user)
       ? [{ href: "/situation-report", label: "Daily Summary of Reports" }]

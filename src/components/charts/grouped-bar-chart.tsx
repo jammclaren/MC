@@ -54,7 +54,7 @@ export function GroupedBarChart({
         />
         <Legend verticalAlign="top" wrapperStyle={{ fontSize: 11 }} />
         <Bar dataKey="selected" name={selectedLabel} fill="var(--chart-1)" radius={[2, 2, 0, 0]} />
-        <Bar dataKey="compared" name={comparedLabel} fill="var(--chart-1)" fillOpacity={0.4} radius={[2, 2, 0, 0]} />
+        <Bar dataKey="compared" name={comparedLabel} fill="var(--chart-4)" radius={[2, 2, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

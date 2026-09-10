@@ -15,7 +15,8 @@ import { DualLineChart, type DualLineDatum } from "@/components/charts/dual-line
 import { ComboBarLineChart } from "@/components/charts/combo-bar-line-chart";
 import { SeverityMixChart } from "@/components/charts/severity-mix-chart";
 import { Button } from "@/components/ui/button";
-import { FileText, Flag, ShieldAlert, ShieldCheck, Clock, MessageSquare } from "lucide-react";
+import { FacebookLogo } from "@/components/icons/facebook-logo";
+import { FileText, Flag, ShieldAlert, ShieldCheck, Clock } from "lucide-react";
 
 function relativeSyncLabel(date: Date | null): string {
   if (!date) return "Not yet run";
@@ -137,7 +138,7 @@ export default async function SocialMonitorPage({
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <MessageSquare className="size-6 text-primary" />
+          <FacebookLogo className="size-6" />
           <h1 className="font-display text-2xl font-bold tracking-wide uppercase">
             Facebook Dashboard
           </h1>
