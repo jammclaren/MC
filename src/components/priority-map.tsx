@@ -2,6 +2,7 @@
 
 import "leaflet/dist/leaflet.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import L from "leaflet";
@@ -353,11 +354,18 @@ function CategoryEditPanel({
   );
 }
 
-/** Collapsed-by-default sub-panel nested under the Enemy Activity layer —
- * a per-type entry in the main layer list got cluttered fast once there
- * were more than a couple of activity types, so this keeps the main
- * LayersControl to one "Enemy Activity" toggle and moves the fine-grained
- * per-type checklist into its own small popover instead. */
+/** Renders the per-activity-type checklist as genuinely indented children
+ * directly inside Leaflet's own layers control, immediately under the
+ * "Enemy Activity" row — react-leaflet's LayersControl has no API for
+ * nested/grouped overlays (Leaflet's native control is one flat list), so
+ * this finds "Enemy Activity"'s own rendered <label> once the control has
+ * painted and portals a real checkbox list into a container inserted
+ * right after it. Each checkbox here drives React state (enabledActivityTypes)
+ * rather than its own separate Leaflet layer — only one real layer
+ * ("Enemy Activity" itself) is ever added to the map, so a type being
+ * checked both here and as part of the whole group can never double-render
+ * the same marker. Must be rendered as a MapContainer descendant (needs
+ * useMap()). */
 function EnemyActivityTypeFilter({
   types,
   enabled,
@@ -367,38 +375,59 @@ function EnemyActivityTypeFilter({
   enabled: Set<string> | null;
   onToggleType: (type: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
-  if (types.size === 0) return null;
+  const map = useMap();
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
 
-  return (
-    <div className="pointer-events-auto absolute top-2 left-14 z-[1000]">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="rounded-md border border-primary/30 bg-card/95 px-2.5 py-1.5 text-xs font-medium shadow-[0_0_12px_-4px_var(--primary)] backdrop-blur-sm"
-      >
-        Enemy Activity Types {open ? "▲" : "▼"}
-      </button>
-      {open && (
-        <div className="mt-1 flex w-56 flex-col gap-1.5 rounded-md border border-primary/30 bg-card/95 p-3 shadow-[0_0_16px_-4px_var(--primary)] backdrop-blur-sm">
-          {[...types.entries()].map(([type, markers]) => {
-            const checked = enabled === null || enabled.has(type);
-            return (
-              <label key={type} className="flex items-center gap-2 text-xs">
-                <input
-                  type="checkbox"
-                  className="size-3.5 rounded border-border accent-primary"
-                  checked={checked}
-                  onChange={() => onToggleType(type)}
-                />
-                <span className="flex-1">{type}</span>
-                <span className="font-mono text-muted-foreground">{markers.length}</span>
-              </label>
-            );
-          })}
-        </div>
-      )}
-    </div>
+  const hasTypes = types.size > 0;
+
+  useEffect(() => {
+    if (!hasTypes) return;
+    let container: HTMLDivElement | null = null;
+    let attempts = 0;
+    const tryAttach = () => {
+      attempts += 1;
+      const labels = map
+        .getContainer()
+        .querySelectorAll<HTMLLabelElement>(".leaflet-control-layers-overlays label");
+      for (const label of labels) {
+        if (label.textContent?.trim() === "Enemy Activity") {
+          container = document.createElement("div");
+          label.insertAdjacentElement("afterend", container);
+          setPortalTarget(container);
+          return;
+        }
+      }
+      if (attempts < 10) setTimeout(tryAttach, 100);
+    };
+    const timeout = setTimeout(tryAttach, 0);
+    return () => {
+      clearTimeout(timeout);
+      container?.remove();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasTypes]);
+
+  if (!portalTarget || !hasTypes) return null;
+
+  return createPortal(
+    <div className="flex flex-col gap-1 py-1 pl-6">
+      {[...types.entries()].map(([type, markers]) => {
+        const checked = enabled === null || enabled.has(type);
+        return (
+          <label key={type} className="flex items-center gap-2 text-xs">
+            <input
+              type="checkbox"
+              className="size-3.5 rounded border-border accent-primary"
+              checked={checked}
+              onChange={() => onToggleType(type)}
+            />
+            <span className="flex-1">{type}</span>
+            <span className="font-mono text-muted-foreground">{markers.length}</span>
+          </label>
+        );
+      })}
+    </div>,
+    portalTarget
   );
 }
 
@@ -961,14 +990,14 @@ export function PriorityMap({
         </LayersControl>
         {provinces && <FitToBounds data={provinces} />}
         <RestoreBaseLayer />
+        <EnemyActivityTypeFilter
+          types={intelMarkersByActivityType}
+          enabled={enabledActivityTypes}
+          onToggleType={toggleActivityType}
+        />
       </MapContainer>
       <HudFrame />
       <Legend counts={categoryCounts} total={areas.length} />
-      <EnemyActivityTypeFilter
-        types={intelMarkersByActivityType}
-        enabled={enabledActivityTypes}
-        onToggleType={toggleActivityType}
-      />
       {editingArea && (
         <CategoryEditPanel
           area={editingArea}
