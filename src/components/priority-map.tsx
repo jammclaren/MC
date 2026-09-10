@@ -671,11 +671,11 @@ export function PriorityMap({
     label: string;
     hotspotCategory: string | null;
   } | null>(null);
-  // Matches the "Threat Categorization" overlay's own `checked` default
-  // below — the Legend should only ever be out of sync with the actual
-  // layer state for the instant before ThreatCategorizationVisibilityTracker's
-  // first event fires.
-  const [threatLayerVisible, setThreatLayerVisible] = useState(true);
+  // Threat Categorization starts unchecked (see the Overlay below) — both
+  // the barangay boundary layer and this legend stay hidden until someone
+  // actively turns that layer on themselves, rather than showing by
+  // default on every page load.
+  const [threatLayerVisible, setThreatLayerVisible] = useState(false);
 
   // Another JTF's hotspot-category edit on the Election Status page (or
   // this one's own, from a different tab) doesn't push to this page —
@@ -985,7 +985,7 @@ export function PriorityMap({
             </LayersControl.Overlay>
           )}
           {barangays && (
-            <LayersControl.Overlay checked name="Threat Categorization">
+            <LayersControl.Overlay name="Threat Categorization">
               <LayerGroup>
                 <GeoJSON
                   key={categorizationSignature}
