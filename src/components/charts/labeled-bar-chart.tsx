@@ -20,9 +20,17 @@ export function LabeledBarChart({
 }) {
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+      <BarChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 16 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--gridline)" />
-        <XAxis dataKey="label" tick={TICK_STYLE} stroke="var(--axis-baseline)" />
+        <XAxis
+          dataKey="label"
+          tick={TICK_STYLE}
+          stroke="var(--axis-baseline)"
+          interval={0}
+          angle={-25}
+          textAnchor="end"
+          height={40}
+        />
         <YAxis tick={TICK_STYLE} stroke="var(--axis-baseline)" allowDecimals={false} width={28} />
         <Tooltip
           contentStyle={{

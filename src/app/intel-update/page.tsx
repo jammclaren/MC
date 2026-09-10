@@ -110,11 +110,13 @@ export default async function IntelUpdatePage() {
   const recent24h = rows.filter((r) => new Date(r.createdAt).getTime() >= since24h);
 
   // Only these two get shortened — the rest of the tracked provinces
-  // (Basilan, Tawi-Tawi, Lanao del Sur, Cotabato City, SGA-BARMM) are
-  // already short enough for the chart's axis labels.
+  // (Basilan, Tawi-Tawi, SGA-BARMM) are already short enough for the
+  // chart's axis labels.
   const PROVINCE_CHART_ABBREVIATIONS: Record<string, string> = {
     "Maguindanao del Sur": "MDS",
     "Maguindanao del Norte": "MDN",
+    "Cotabato City": "Cot City",
+    "Lanao del Sur": "LDS",
   };
   const byProvince = topCounts(
     rows.map((r) => r.province),
