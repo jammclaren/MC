@@ -435,7 +435,9 @@ function EnemyActivityTypeFilter({
               onChange={() => onToggleType(type)}
             />
             <span className="flex-1">{type}</span>
-            <span className="font-mono text-muted-foreground">{markers.length}</span>
+            <span className="font-mono font-semibold text-muted-foreground">
+              — <span className="text-status-critical">{markers.length}</span>
+            </span>
           </label>
         );
       })}
