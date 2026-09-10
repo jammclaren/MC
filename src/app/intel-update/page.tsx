@@ -42,6 +42,20 @@ function topCounts(values: (string | null)[], limit: number): { label: string; c
     .map(([label, count]) => ({ label, count }));
 }
 
+/** Same ranking as topCounts, but "Unspecified" never competes for one of
+ * the top-N slots and always gets its own bar appended after them — a
+ * report with no threat group/political party on file stays visible as
+ * its own category instead of only showing up incidentally (or getting
+ * bumped off entirely once enough distinct named values pile up). */
+function topCountsWithUnspecified(
+  values: (string | null)[],
+  limit: number
+): { label: string; count: number }[] {
+  const specified = values.filter((v) => !!v?.trim());
+  const unspecifiedCount = values.length - specified.length;
+  return [...topCounts(specified, limit), { label: "Unspecified", count: unspecifiedCount }];
+}
+
 /** Shortens each label for the Top Activities charts specifically — a
  * manually-typed Type of Activity isn't guaranteed to stay short, and a
  * long one makes the ranked list look cluttered. Full text stays on hover
@@ -115,15 +129,15 @@ export default async function IntelUpdatePage() {
     "Maguindanao del Sur": "MDS",
     "Maguindanao del Norte": "MDN",
   };
-  const byProvince = topCounts(
+  const byProvince = topCountsWithUnspecified(
     rows.map((r) => r.province),
     7
   ).map((p) => ({ ...p, label: PROVINCE_CHART_ABBREVIATIONS[p.label] ?? p.label }));
-  const byThreatGroup = topCounts(
+  const byThreatGroup = topCountsWithUnspecified(
     rows.map((r) => r.threatGroup),
     7
   );
-  const byPoliticalParty = topCounts(
+  const byPoliticalParty = topCountsWithUnspecified(
     rows.map((r) => r.politicalParty),
     7
   );
