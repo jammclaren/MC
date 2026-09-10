@@ -44,67 +44,105 @@ export function classifyPostContent(content: string): "VIOLENT" | "NON_VIOLENT" 
 
 /** Human-readable label per topic — shared by the form dialog's Select,
  * the feed's badge, and the assessment card's "most-cited topics" line,
- * so all three always agree on wording. */
+ * so all three always agree on wording. Confirmed with the user
+ * 2026-09-10, replacing an earlier 10-value taxonomy that never had any
+ * real data tagged under it. */
 export const TOPIC_LABELS: Record<SocialPostTopic, string> = {
-  VOTE_BUYING: "Vote Buying",
-  ELECTION_FRAUD: "Election Fraud",
-  CANDIDATE_PARTY_ATTACK: "Candidate/Party Attack",
-  VOTER_EDUCATION: "Voter Education",
-  ELECTION_VIOLENCE: "Election Violence",
-  TERRORISM: "Terrorism",
-  RIDO_CLAN_CONFLICT: "Rido/Clan Conflict",
-  CRIMINALITY: "Criminality",
-  PEACE_AND_ORDER: "Peace & Order",
-  MISINFORMATION: "Misinformation",
+  ELECTION_RELATED: "Election Related",
+  PEACE_INCLINED_ARMED_GROUPS: "Peace Inclined Armed Groups",
+  ISO_RELATED: "ISO Related",
+  ESO_RELATED: "ESO Related",
 };
 
 export const TOPIC_OPTIONS: { value: SocialPostTopic; label: string }[] = (
   Object.keys(TOPIC_LABELS) as SocialPostTopic[]
 ).map((value) => ({ value, label: TOPIC_LABELS[value] }));
 
-// Checked in this order — first keyword match wins, so a post naming both
-// a general theme and a more specific one (e.g. "election violence" also
-// containing "attack") lands in the more specific/first-listed bucket.
+// Checked in this order — first keyword match wins.
 const TOPIC_KEYWORDS: { topic: SocialPostTopic; keywords: string[] }[] = [
   {
-    topic: "VOTE_BUYING",
-    keywords: ["vote buying", "vote-buying", "vote selling", "pera para sa boto", "binili ang boto"],
+    // All about election topics: voting, candidates, campaign, election
+    // fraud/vote buying, etc.
+    topic: "ELECTION_RELATED",
+    keywords: [
+      "election",
+      "halalan",
+      "comelec",
+      "candidate",
+      "kandidato",
+      "campaign",
+      "ballot",
+      "boto",
+      "vote buying",
+      "vote-buying",
+      "vote selling",
+      "election fraud",
+      "poll fraud",
+      "dagdag-bawas",
+      "dagdag bawas",
+      "ballot tampering",
+      "rigged election",
+      "voter education",
+      "voter registration",
+      "polling place",
+      "precinct",
+      "canvassing",
+    ],
   },
   {
-    topic: "ELECTION_FRAUD",
-    keywords: ["election fraud", "poll fraud", "dagdag-bawas", "dagdag bawas", "ballot tampering", "rigged election", "rigging"],
+    // Groups engaged in the peace process — MILF/MNLF, decommissioning,
+    // normalization — as opposed to hostile/unaligned armed groups.
+    topic: "PEACE_INCLINED_ARMED_GROUPS",
+    keywords: [
+      "milf",
+      "mnlf",
+      "peace process",
+      "peace agreement",
+      "peace panel",
+      "decommissioning",
+      "decommissioned combatant",
+      "bangsamoro islamic armed forces",
+      "biaf",
+      "normalization process",
+      "camp transformation",
+    ],
   },
   {
-    topic: "ELECTION_VIOLENCE",
-    keywords: ["election violence", "poll violence", "election-related shooting", "election-related killing"],
+    // Internal Security Operations: terrorism, communism/NPA, insurgency.
+    topic: "ISO_RELATED",
+    keywords: [
+      "terrorism",
+      "terrorist",
+      "extremist",
+      "extremism",
+      "communist",
+      "communism",
+      "new people's army",
+      "npa",
+      "cpp-npa",
+      "insurgency",
+      "insurgent",
+      "ied",
+      "bombing",
+    ],
   },
   {
-    topic: "CANDIDATE_PARTY_ATTACK",
-    keywords: ["black propaganda", "smear campaign", "candidate attack", "party attack", "maling akusasyon"],
-  },
-  {
-    topic: "VOTER_EDUCATION",
-    keywords: ["voter education", "paano bumoto", "how to vote", "voter registration", "comelec advisory"],
-  },
-  {
-    topic: "TERRORISM",
-    keywords: ["terrorism", "terrorist", "ied", "extremist", "extremism"],
-  },
-  {
-    topic: "RIDO_CLAN_CONFLICT",
-    keywords: ["rido", "clan war", "clan feud", "family feud"],
-  },
-  {
-    topic: "CRIMINALITY",
-    keywords: ["robbery", "theft", "carnapping", "carjacking", "drug trafficking", "criminality", "extortion"],
-  },
-  {
-    topic: "PEACE_AND_ORDER",
-    keywords: ["peace and order", "checkpoint", "curfew", "security operation", "law enforcement operation"],
-  },
-  {
-    topic: "MISINFORMATION",
-    keywords: ["fake news", "misinformation", "disinformation", "fact check", "false claim", "hoax"],
+    // External Security Operations: West Philippine Sea, Sabah/Malaysia
+    // conflict.
+    topic: "ESO_RELATED",
+    keywords: [
+      "west philippine sea",
+      "wps",
+      "south china sea",
+      "china coast guard",
+      "chinese militia",
+      "spratly",
+      "scarborough",
+      "ayungin",
+      "sabah",
+      "sabah claim",
+      "malaysia territorial",
+    ],
   },
 ];
 

@@ -540,21 +540,16 @@ enum SocialIncidentClass {
 }
 
 // Subject-matter tag, separate from (and orthogonal to) classification
-// above — a post can be VIOLENT and about ELECTION_VIOLENCE, or
-// NON_VIOLENT and about VOTER_EDUCATION. Curated list confirmed with the
-// user; keyword-classified the same way as classification (see
-// lib/social-classifier.ts), always staff-correctable.
+// above — a post can be VIOLENT and ISO_RELATED, or NON_VIOLENT and
+// ELECTION_RELATED. Curated list confirmed with the user (2026-09-10,
+// replacing an earlier 10-value taxonomy that never had any real data
+// tagged under it); keyword-classified the same way as classification
+// (see lib/social-classifier.ts), always staff-correctable.
 enum SocialPostTopic {
-  VOTE_BUYING
-  ELECTION_FRAUD
-  CANDIDATE_PARTY_ATTACK
-  VOTER_EDUCATION
-  ELECTION_VIOLENCE
-  TERRORISM
-  RIDO_CLAN_CONFLICT
-  CRIMINALITY
-  PEACE_AND_ORDER
-  MISINFORMATION
+  ELECTION_RELATED // election topics generally: voting, candidates, campaign, election fraud/vote buying, etc.
+  PEACE_INCLINED_ARMED_GROUPS // groups engaged in the peace process (e.g. MILF/MNLF, decommissioning, normalization)
+  ISO_RELATED // Internal Security Operations: terrorism, communism/NPA, insurgency
+  ESO_RELATED // External Security Operations: West Philippine Sea, Sabah/Malaysia conflict
 }
 
 // A monitored post — either pulled in automatically by the hourly Facebook
