@@ -27,10 +27,16 @@ function trendFrom(rows: IntelUpdateRow[]): "increasing" | "decreasing" | "stabl
   return "stable";
 }
 
+// Blank/null values are excluded rather than bucketed into an
+// "Unspecified" entry — a report with no threat group on file shouldn't
+// be able to win the #1 "most-cited threat group" slot just because
+// "blank" happens to be the single most common value. Same rule the BY
+// THREAT GROUP / BY POLITICAL PARTY charts already follow.
 function topByFrequency(values: (string | null)[], limit: number): { label: string; count: number }[] {
   const counts = new Map<string, number>();
   for (const v of values) {
-    const label = v?.trim() || "Unspecified";
+    const label = v?.trim();
+    if (!label) continue;
     counts.set(label, (counts.get(label) ?? 0) + 1);
   }
   return Array.from(counts.entries())
