@@ -250,6 +250,21 @@ function RestoreBaseLayer() {
   return null;
 }
 
+/** Reports whether the "Threat Categorization" overlay is currently
+ * checked — Leaflet fires overlayadd/overlayremove on the map whenever any
+ * overlay's checkbox is toggled via the control, so this just filters
+ * those events down to the one layer the Legend cares about. Must be
+ * rendered as a MapContainer descendant (needs useMapEvent). */
+function ThreatCategorizationVisibilityTracker({ onChange }: { onChange: (visible: boolean) => void }) {
+  useMapEvent("overlayadd", (e) => {
+    if (e.name === "Threat Categorization") onChange(true);
+  });
+  useMapEvent("overlayremove", (e) => {
+    if (e.name === "Threat Categorization") onChange(false);
+  });
+  return null;
+}
+
 const CATEGORY_ORDER = ["Red", "Orange", "Yellow", "Green"] as const;
 
 /** BFT-style HUD legend: category swatches with live counts, overlaid on the
@@ -656,6 +671,11 @@ export function PriorityMap({
     label: string;
     hotspotCategory: string | null;
   } | null>(null);
+  // Matches the "Threat Categorization" overlay's own `checked` default
+  // below — the Legend should only ever be out of sync with the actual
+  // layer state for the instant before ThreatCategorizationVisibilityTracker's
+  // first event fires.
+  const [threatLayerVisible, setThreatLayerVisible] = useState(true);
 
   // Another JTF's hotspot-category edit on the Election Status page (or
   // this one's own, from a different tab) doesn't push to this page —
@@ -1005,6 +1025,7 @@ export function PriorityMap({
         </LayersControl>
         {provinces && <FitToBounds data={provinces} />}
         <RestoreBaseLayer />
+        <ThreatCategorizationVisibilityTracker onChange={setThreatLayerVisible} />
         <EnemyActivityTypeFilter
           types={intelMarkersByActivityType}
           enabled={enabledActivityTypes}
@@ -1012,7 +1033,7 @@ export function PriorityMap({
         />
       </MapContainer>
       <HudFrame />
-      <Legend counts={categoryCounts} total={areas.length} />
+      {threatLayerVisible && <Legend counts={categoryCounts} total={areas.length} />}
       {editingArea && (
         <CategoryEditPanel
           area={editingArea}
