@@ -358,13 +358,23 @@ function CategoryEditPanel({
  * directly inside Leaflet's own layers control, immediately under the
  * "Enemy Activity" row — react-leaflet's LayersControl has no API for
  * nested/grouped overlays (Leaflet's native control is one flat list), so
- * this finds "Enemy Activity"'s own rendered <label> once the control has
- * painted and portals a real checkbox list into a container inserted
- * right after it. Each checkbox here drives React state (enabledActivityTypes)
- * rather than its own separate Leaflet layer — only one real layer
- * ("Enemy Activity" itself) is ever added to the map, so a type being
- * checked both here and as part of the whole group can never double-render
- * the same marker. Must be rendered as a MapContainer descendant (needs
+ * this finds "Enemy Activity"'s own rendered <label> and portals a real
+ * checkbox list into a container inserted right after it.
+ *
+ * Leaflet's control doesn't just append new rows — on certain redraws
+ * (adding/removing an overlay, which the per-JTF layers and the 20s
+ * router.refresh() poll both do) it calls `empty()` on the whole overlays
+ * list and rebuilds every row from scratch, which silently deletes any
+ * DOM Leaflet doesn't own itself, including a container inserted this
+ * way. A MutationObserver on that list re-inserts it every time that
+ * happens, instead of a one-shot attach that only ever survives until
+ * the next redraw.
+ *
+ * Each checkbox here drives React state (enabledActivityTypes) rather
+ * than its own separate Leaflet layer — only one real layer ("Enemy
+ * Activity" itself) is ever added to the map, so a type being checked
+ * both here and as part of the whole group can never double-render the
+ * same marker. Must be rendered as a MapContainer descendant (needs
  * useMap()). */
 function EnemyActivityTypeFilter({
   types,
@@ -382,30 +392,33 @@ function EnemyActivityTypeFilter({
 
   useEffect(() => {
     if (!hasTypes) return;
-    let container: HTMLDivElement | null = null;
-    let attempts = 0;
-    const tryAttach = () => {
-      attempts += 1;
-      const labels = map
-        .getContainer()
-        .querySelectorAll<HTMLLabelElement>(".leaflet-control-layers-overlays label");
+
+    const overlaysList = map.getContainer().querySelector<HTMLElement>(".leaflet-control-layers-overlays");
+    if (!overlaysList) return;
+
+    let current: HTMLDivElement | null = null;
+
+    function attach() {
+      if (current && overlaysList!.contains(current)) return;
+      const labels = overlaysList!.querySelectorAll<HTMLLabelElement>("label");
       for (const label of labels) {
         if (label.textContent?.trim() === "Enemy Activity") {
-          container = document.createElement("div");
-          label.insertAdjacentElement("afterend", container);
-          setPortalTarget(container);
+          current = document.createElement("div");
+          label.insertAdjacentElement("afterend", current);
+          setPortalTarget(current);
           return;
         }
       }
-      if (attempts < 10) setTimeout(tryAttach, 100);
-    };
-    const timeout = setTimeout(tryAttach, 0);
+    }
+
+    attach();
+    const observer = new MutationObserver(attach);
+    observer.observe(overlaysList, { childList: true });
     return () => {
-      clearTimeout(timeout);
-      container?.remove();
+      observer.disconnect();
+      current?.remove();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasTypes]);
+  }, [hasTypes, map]);
 
   if (!portalTarget || !hasTypes) return null;
 
