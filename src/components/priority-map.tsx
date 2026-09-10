@@ -191,6 +191,64 @@ function FitToBounds({ data }: { data: GeoJSON.FeatureCollection }) {
   return null;
 }
 
+const BASE_LAYER_STORAGE_KEY = "wesmincom-map-base-layer";
+
+/** Remembers the last-selected base layer (OpenStreetMap/Satellite/Light
+ * Canvas/Tactical Blueprint/Tactical Grid) across page reloads — a
+ * per-browser display preference, not operational data, so localStorage
+ * is the right store (same convention as the nav bar's collapsed state).
+ * Leaflet's L.Control.Layers has no public API to activate a named base
+ * layer from outside itself, so restoring the saved choice drives its
+ * radio input directly in the rendered control DOM — the same kind of
+ * direct-DOM escape hatch this file already uses elsewhere (see
+ * TacticalBlueprintPane's pane z-index writes). */
+function RestoreBaseLayer() {
+  const map = useMap();
+
+  useEffect(() => {
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem(BASE_LAYER_STORAGE_KEY);
+    } catch {
+      // Private browsing / blocked site data — fall back to whichever
+      // base layer is already showing (the JSX-declared default).
+    }
+    if (!saved) return;
+
+    // The control's DOM renders on mount but this effect can still win
+    // the race on a slow first paint — retry a couple of times.
+    let attempts = 0;
+    const tryRestore = () => {
+      attempts += 1;
+      const labels = map
+        .getContainer()
+        .querySelectorAll<HTMLLabelElement>(".leaflet-control-layers-base label");
+      for (const label of labels) {
+        if (label.textContent?.trim() === saved) {
+          const input = label.querySelector<HTMLInputElement>("input[type=radio]");
+          if (input && !input.checked) input.click();
+          return;
+        }
+      }
+      if (attempts < 5) setTimeout(tryRestore, 100);
+    };
+    const timeout = setTimeout(tryRestore, 0);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useMapEvent("baselayerchange", (e) => {
+    try {
+      localStorage.setItem(BASE_LAYER_STORAGE_KEY, e.name);
+    } catch {
+      // Same private-browsing/blocked-storage fallback as above — the
+      // layer switch itself still works, it just won't be remembered.
+    }
+  });
+
+  return null;
+}
+
 const CATEGORY_ORDER = ["Red", "Orange", "Yellow", "Green"] as const;
 
 /** BFT-style HUD legend: category swatches with live counts, overlaid on the
@@ -902,6 +960,7 @@ export function PriorityMap({
           )}
         </LayersControl>
         {provinces && <FitToBounds data={provinces} />}
+        <RestoreBaseLayer />
       </MapContainer>
       <HudFrame />
       <Legend counts={categoryCounts} total={areas.length} />
