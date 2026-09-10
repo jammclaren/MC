@@ -4,6 +4,7 @@ import { canAccessSocialMonitor } from "@/lib/rbac";
 import { getSocialMonitorData } from "@/lib/queries/social-monitor";
 import { getSocialMonitorPeriodComparison } from "@/lib/queries/social-monitor-dashboard";
 import { computeSocialMonitorAssessment } from "@/lib/social-monitor-assessment";
+import { computeRecommendedActions } from "@/lib/social-monitor-recommendations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatTile } from "@/components/stat-tile";
 import { SocialPostFormDialog } from "@/components/social-post-form-dialog";
@@ -108,6 +109,7 @@ export default async function SocialMonitorPage({
   ]);
   const assessment = computeSocialMonitorAssessment(data);
   const { selected, compared } = comparison;
+  const recommendedActions = computeRecommendedActions(selected, compared);
 
   // Same topic set as ranked in the Selected Period — Compared Period's
   // count for a topic outside that top-10 just doesn't have a bar, same
@@ -289,6 +291,22 @@ export default async function SocialMonitorPage({
         <CardContent>
           <ul className="flex flex-col gap-2 text-sm">
             {assessment.analysis.map((line, i) => (
+              <li key={i} className="flex gap-2">
+                <span className="text-muted-foreground">•</span>
+                <span>{line}</span>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Auto Generate Recommended Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="flex flex-col gap-2 text-sm">
+            {recommendedActions.map((line, i) => (
               <li key={i} className="flex gap-2">
                 <span className="text-muted-foreground">•</span>
                 <span>{line}</span>
