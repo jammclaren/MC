@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { scopeJtfFilter, type SessionUser } from "@/lib/rbac";
 import { getOverviewData } from "@/lib/queries/overview";
+import { TOPIC_LABELS } from "@/lib/social-classifier";
+import type { SocialPostTopic } from "@/generated/prisma/client";
 
 export interface SituationReport {
   date: string;
@@ -39,12 +41,29 @@ function manilaTimeLabel(d: Date): string {
  * viewer (ADMIN or WFC Intelligence/M2) always edits by hand before it
  * means anything as an actual report; never presented as a finished
  * report on its own. */
+function topByFrequency(values: (string | null)[], limit: number): { label: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const v of values) {
+    const label = v?.trim() || "Unspecified";
+    counts.set(label, (counts.get(label) ?? 0) + 1);
+  }
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([label, count]) => ({ label, count }));
+}
+
 export async function generateSitrepDraft(user: SessionUser, date: string): Promise<string> {
   const data = await getOverviewData(user);
   const { start, end } = reportWindow(date);
   const scopeJtfId = scopeJtfFilter(user, undefined, { allowRollup: true });
 
-  const [windowIncidentCount, mostRecentWindowIncident] = await Promise.all([
+  const [
+    windowIncidentCount,
+    mostRecentWindowIncident,
+    windowSocialPosts,
+    windowIntelRows,
+  ] = await Promise.all([
     prisma.incident.count({
       where: { jtfId: scopeJtfId, date: { gte: start, lt: end } },
     }),
@@ -53,7 +72,38 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
       orderBy: { date: "desc" },
       include: { jtf: { select: { name: true } } },
     }),
+    // Social Media Monitor and Intelligence Update are both command-wide
+    // (no jtfId of their own) — every ADMIN session (the only role that
+    // reaches this generator, see canAccessSituationReport) sees the full
+    // picture here regardless of scopeJtfId above.
+    prisma.socialMediaPost.findMany({
+      where: { postedAt: { gte: start, lt: end } },
+      orderBy: { postedAt: "desc" },
+    }),
+    prisma.intelUpdate.findMany({
+      where: { date: { gte: start, lt: end } },
+    }),
   ]);
+
+  const socialViolent = windowSocialPosts.filter((p) => p.classification === "VIOLENT").length;
+  const socialNonViolent = windowSocialPosts.filter((p) => p.classification === "NON_VIOLENT").length;
+  const socialUnclassified = windowSocialPosts.length - socialViolent - socialNonViolent;
+  const socialHighlighted = windowSocialPosts.filter((p) => p.isHighlighted).length;
+  const topSocialTopics = topByFrequency(
+    windowSocialPosts.map((p) => (p.topic ? (TOPIC_LABELS[p.topic as SocialPostTopic] ?? p.topic) : null)),
+    3
+  );
+
+  const intelViolent = windowIntelRows.filter((r) => r.category === "VIOLENT").length;
+  const intelNonViolent = windowIntelRows.filter((r) => r.category === "NON_VIOLENT").length;
+  const topThreatGroups = topByFrequency(
+    windowIntelRows.map((r) => r.threatGroup),
+    3
+  );
+  const topIntelProvinces = topByFrequency(
+    windowIntelRows.map((r) => r.province),
+    3
+  );
 
   const lines: string[] = [];
 
@@ -75,21 +125,57 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
     lines.push("Most recent: none logged this reporting period.");
   }
   lines.push("");
-  lines.push("2. DEPLOYMENT");
+  lines.push("2. SOCIAL MEDIA MONITOR (this reporting period)");
+  lines.push(
+    `Posts logged: ${windowSocialPosts.length} (${socialViolent} violent, ${socialNonViolent} non-violent, ${socialUnclassified} unclassified)`
+  );
+  lines.push(`Flagged for review: ${socialHighlighted}`);
+  lines.push(
+    topSocialTopics.length > 0
+      ? `Most-cited topic(s): ${topSocialTopics.map((t) => `${t.label} (${t.count})`).join(", ")}`
+      : "Most-cited topic(s): none logged this reporting period."
+  );
+  lines.push("");
+  lines.push("3. INTELLIGENCE UPDATE (this reporting period)");
+  lines.push(`Reports logged: ${windowIntelRows.length} (${intelViolent} violent, ${intelNonViolent} non-violent)`);
+  lines.push(
+    topThreatGroups.length > 0
+      ? `Most-cited threat group(s): ${topThreatGroups.map((g) => `${g.label} (${g.count})`).join(", ")}`
+      : "Most-cited threat group(s): none logged this reporting period."
+  );
+  lines.push(
+    topIntelProvinces.length > 0
+      ? `Most-reported province(s): ${topIntelProvinces.map((p) => `${p.label} (${p.count})`).join(", ")}`
+      : "Most-reported province(s): none logged this reporting period."
+  );
+  lines.push("");
+  lines.push("4. DEPLOYMENT");
   lines.push(`Total deployed to polling: ${data.totalDeployed.toLocaleString()}`);
   lines.push(`Total QRF: ${data.totalQrf.toLocaleString()}`);
   for (const j of data.jtfDeployments) {
     lines.push(`  - ${j.jtfName}: ${j.deployedToPolling.toLocaleString()} deployed, ${j.qrf.toLocaleString()} QRF`);
   }
   lines.push("");
-  lines.push("3. ELECTION OPERATIONS STATUS");
+  lines.push("5. ELECTION OPERATIONS STATUS");
   lines.push(`Registered voters (BARMM): ${data.totalRegisteredVoters.toLocaleString()}`);
   for (const stage of data.electionOpsFunnel) {
     lines.push(`  - ${stage.label}: ${stage.count.toLocaleString()}`);
   }
   lines.push("");
-  lines.push("4. ASSESSMENT");
-  lines.push("[Add assessment here]");
+  lines.push("6. OVERALL ASSESSMENT");
+  const totalReports = windowIncidentCount + windowSocialPosts.length + windowIntelRows.length;
+  const totalViolent = socialViolent + intelViolent;
+  const totalNonViolent = socialNonViolent + intelNonViolent;
+  lines.push(
+    `${totalReports.toLocaleString()} total report(s) this reporting period — ${windowIncidentCount.toLocaleString()} incident(s), ${windowSocialPosts.length.toLocaleString()} social media post(s), ${windowIntelRows.length.toLocaleString()} intelligence report(s).`
+  );
+  lines.push(
+    `Across Social Media Monitor and Intelligence Update: ${totalViolent.toLocaleString()} violent, ${totalNonViolent.toLocaleString()} non-violent.`
+  );
+  if (topThreatGroups.length > 0) {
+    lines.push(`Threat picture led by: ${topThreatGroups.map((g) => `${g.label} (${g.count})`).join(", ")}.`);
+  }
+  lines.push("[Add narrative assessment here]");
 
   return lines.join("\n");
 }
