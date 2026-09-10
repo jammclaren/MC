@@ -43,6 +43,19 @@ function dateEndExclusive(dateStr: string): Date {
   return d;
 }
 
+function addCalendarDays(dateStr: string, days: number): string {
+  const d = dateStart(dateStr);
+  d.setUTCDate(d.getUTCDate() + days);
+  return isoDate(d);
+}
+
+/** Monday of the calendar week containing dateStr (weeks run Mon-Sun). */
+function mondayOfWeek(dateStr: string): string {
+  const d = dateStart(dateStr);
+  const daysSinceMonday = (d.getUTCDay() + 6) % 7; // Sun=0 -> 6, Mon=1 -> 0, ...
+  return addCalendarDays(dateStr, -daysSinceMonday);
+}
+
 /** "+12%" / "-8%" / "New" (compared period had none on file) / "0%" (both
  * periods had none) — never divides by zero. */
 function pctChange(selected: number, compared: number): string {
@@ -66,23 +79,22 @@ export default async function SocialMonitorPage({
 
   const params = await searchParams;
 
-  // Selected Period defaults to the last 30 days (today inclusive).
+  // Selected Period defaults to the current calendar week (Monday-Sunday);
+  // Compared Period defaults to the calendar week immediately before it —
+  // a fixed weekly cadence rather than a rolling N-day window.
   const today = new Date();
-  const defaultSpEnd = isoDate(today);
-  const defaultSpStart = isoDate(new Date(today.getTime() - 29 * 24 * 60 * 60 * 1000));
-  const spStartStr = params.spStart || defaultSpStart;
-  const spEndStr = params.spEnd || defaultSpEnd;
+  const currentWeekMonday = mondayOfWeek(isoDate(today));
+  const currentWeekSunday = addCalendarDays(currentWeekMonday, 6);
+  const previousWeekMonday = addCalendarDays(currentWeekMonday, -7);
+  const previousWeekSunday = addCalendarDays(currentWeekMonday, -1);
+
+  const spStartStr = params.spStart || currentWeekMonday;
+  const spEndStr = params.spEnd || currentWeekSunday;
   const selectedStart = dateStart(spStartStr);
   const selectedEnd = dateEndExclusive(spEndStr);
 
-  // Compared Period defaults to the same-length window immediately
-  // preceding the Selected Period, so "vs last period" works out of the
-  // box without the user having to pick a second range themselves.
-  const selectedLengthMs = selectedEnd.getTime() - selectedStart.getTime();
-  const defaultCpEndDate = new Date(selectedStart.getTime() - 24 * 60 * 60 * 1000);
-  const defaultCpStartDate = new Date(selectedStart.getTime() - selectedLengthMs);
-  const cpStartStr = params.cpStart || isoDate(defaultCpStartDate);
-  const cpEndStr = params.cpEnd || isoDate(defaultCpEndDate);
+  const cpStartStr = params.cpStart || previousWeekMonday;
+  const cpEndStr = params.cpEnd || previousWeekSunday;
   const comparedStart = dateStart(cpStartStr);
   const comparedEnd = dateEndExclusive(cpEndStr);
 
