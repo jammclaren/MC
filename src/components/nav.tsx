@@ -47,7 +47,7 @@ export async function Nav() {
       ? [{ href: "/social-monitor", label: "Social Media Monitor" }]
       : []),
     ...(canAccessSituationReport(user)
-      ? [{ href: "/situation-report", label: "Situation Report" }]
+      ? [{ href: "/situation-report", label: "Daily Summary of Reports" }]
       : []),
     ...(canAccessIntelligenceUpdate(user)
       ? [{ href: "/intel-update", label: "Intelligence Update" }]

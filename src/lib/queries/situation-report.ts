@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { SessionUser } from "@/lib/rbac";
+import { scopeJtfFilter, type SessionUser } from "@/lib/rbac";
 import { getOverviewData } from "@/lib/queries/overview";
 
 export interface SituationReport {
@@ -14,29 +14,65 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+const REPORT_WINDOW_START_HOUR_UTC = 14; // 2200H Asia/Manila (UTC+8) == 1400 UTC
+
+/** The report dated `date` covers the command's standard daily reporting
+ * cycle — 2200H the day before through 2200H on `date` itself (Asia/
+ * Manila) — not calendar midnight-to-midnight. */
+function reportWindow(date: string): { start: Date; end: Date } {
+  const end = new Date(`${date}T${String(REPORT_WINDOW_START_HOUR_UTC).padStart(2, "0")}:00:00.000Z`);
+  const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
+  return { start, end };
+}
+
+function manilaTimeLabel(d: Date): string {
+  return d.toLocaleString("en-PH", {
+    timeZone: "Asia/Manila",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 /** Plain-text draft assembled from on-file stats — a starting point the
  * viewer (ADMIN or WFC Intelligence/M2) always edits by hand before it
- * means anything as an actual SITREP; never presented as a finished
+ * means anything as an actual report; never presented as a finished
  * report on its own. */
 export async function generateSitrepDraft(user: SessionUser, date: string): Promise<string> {
   const data = await getOverviewData(user);
+  const { start, end } = reportWindow(date);
+  const scopeJtfId = scopeJtfFilter(user, undefined, { allowRollup: true });
+
+  const [windowIncidentCount, mostRecentWindowIncident] = await Promise.all([
+    prisma.incident.count({
+      where: { jtfId: scopeJtfId, date: { gte: start, lt: end } },
+    }),
+    prisma.incident.findFirst({
+      where: { jtfId: scopeJtfId, date: { gte: start, lt: end } },
+      orderBy: { date: "desc" },
+      include: { jtf: { select: { name: true } } },
+    }),
+  ]);
+
   const lines: string[] = [];
 
-  lines.push(`SITUATION REPORT — ${date}`);
+  lines.push(`DAILY SUMMARY OF REPORTS — ${date}`);
+  lines.push(`Reporting Period: ${manilaTimeLabel(start)} to ${manilaTimeLabel(end)} (2200H to 2200H)`);
   lines.push(
     `BPE 2026 Window: ${new Date(data.bpe.startDate).toLocaleDateString()} to ${new Date(data.bpe.endDate).toLocaleDateString()}`
   );
   lines.push("");
-  lines.push("1. INCIDENTS");
-  lines.push(`Logged (last 30 days): ${data.recentIncidentCount30d}`);
-  lines.push(`Priority/flagged areas: ${data.priorityAreaCount}`);
-  if (data.recentIncidents[0]) {
-    const r = data.recentIncidents[0];
+  lines.push("1. INCIDENTS (this reporting period)");
+  lines.push(`Logged: ${windowIncidentCount}`);
+  lines.push(`Priority/flagged areas (overall): ${data.priorityAreaCount}`);
+  if (mostRecentWindowIncident) {
+    const r = mostRecentWindowIncident;
     lines.push(
-      `Most recent: ${r.type} — ${r.jtfName}${r.areaLabel ? `, ${r.areaLabel}` : ""} (${new Date(r.date).toLocaleDateString()})`
+      `Most recent: ${r.type} — ${r.jtf.name}${r.locationLabel ? `, ${r.locationLabel}` : ""} (${manilaTimeLabel(r.date)})`
     );
   } else {
-    lines.push("Most recent: none on file.");
+    lines.push("Most recent: none logged this reporting period.");
   }
   lines.push("");
   lines.push("2. DEPLOYMENT");

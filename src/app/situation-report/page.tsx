@@ -20,13 +20,13 @@ export default async function SituationReportPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="font-display text-2xl font-bold tracking-wide uppercase">
-          Situation Report
+          Daily Summary of Reports
         </h1>
       </div>
 
       <Card className="border-primary/30">
         <CardHeader>
-          <CardTitle className="text-xl">SITREP — {report.date}</CardTitle>
+          <CardTitle className="text-xl">Daily Summary of Reports — {report.date}</CardTitle>
         </CardHeader>
         <CardContent>
           <SituationReportEditor initial={report} />
