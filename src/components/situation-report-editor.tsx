@@ -9,6 +9,13 @@ import { Printer, RefreshCw, Save } from "lucide-react";
 import type { SituationReport } from "@/lib/queries/situation-report";
 import { SituationReportPrintView } from "@/components/situation-report-print-view";
 
+/** "2026-09-11" -> "11 September 2026". */
+function formatTitleDate(iso: string): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  const month = d.toLocaleDateString("en-US", { month: "long", timeZone: "UTC" });
+  return `${d.getUTCDate()} ${month} ${d.getUTCFullYear()}`;
+}
+
 export function SituationReportEditor({
   initial,
   canWrite,
@@ -141,25 +148,20 @@ export function SituationReportEditor({
       {/* Print-only rendering — a <textarea>'s value doesn't reliably print
           across browsers, so the same content is mirrored into a plain
           block that's the only thing visible under @media print. The
-          title/Reporting Period/Date of Reporting lines are always the
-          first three lines generateSitrepDraft produces (before the blank
-          line ahead of "1. EXECUTIVE SUMMARY") — pulled out here to sit
-          beside the seal instead of repeating inside the report body,
-          which SituationReportPrintView skips for exactly that reason. */}
+          title here is a fixed "DAILY SUMMARY OF REPORTS as of <date>"
+          format (not generateSitrepDraft's own title line, which
+          SituationReportPrintView drops from the body); Reporting Period
+          is always the second line generateSitrepDraft produces. */}
       <div className="print-header hidden items-center gap-3 border-b border-black pb-3 mb-3">
         {/* eslint-disable-next-line @next/next/no-img-element -- print-only
             header mark; not worth next/image's optimization pipeline for a
             one-time print render. */}
         <img src="/wesmincom-seal.png" alt="WESMINCOM seal" className="size-14" />
         <div className="text-sm">
-          {content
-            .split("\n")
-            .slice(0, 2)
-            .map((line, i) => (
-              <div key={i} className={i === 0 ? "text-base font-bold uppercase" : ""}>
-                {line}
-              </div>
-            ))}
+          <div className="text-base font-bold uppercase">
+            Daily Summary of Reports as of {formatTitleDate(date)}
+          </div>
+          <div>{content.split("\n")[1]}</div>
         </div>
       </div>
       <div className="print-only hidden">

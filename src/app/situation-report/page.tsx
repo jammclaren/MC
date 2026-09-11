@@ -19,14 +19,14 @@ export default async function SituationReportPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
+      <div className="no-print">
         <h1 className="font-display text-2xl font-bold tracking-wide uppercase">
           Daily Summary of Reports
         </h1>
       </div>
 
       <Card className="border-primary/30">
-        <CardHeader>
+        <CardHeader className="no-print">
           <CardTitle className="text-xl">Daily Summary of Reports — {report.date}</CardTitle>
         </CardHeader>
         <CardContent>

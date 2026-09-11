@@ -21,15 +21,6 @@ export interface SituationReport {
   updatedByName: string | null;
 }
 
-function manilaDateLabel(date: string): string {
-  return new Date(`${date}T00:00:00.000Z`).toLocaleDateString("en-PH", {
-    timeZone: "Asia/Manila",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
 /** Plain-text draft assembled from on-file stats — a starting point the
  * viewer (ADMIN or WFC Intelligence/M2) always edits by hand before it
  * means anything as an actual report; never presented as a finished
@@ -156,7 +147,6 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
 
   lines.push(`DAILY SUMMARY OF REPORTS — ${date}`);
   lines.push(`Reporting Period: ${manilaTimeLabel(start)} to ${manilaTimeLabel(end)} (2200H to 2200H)`);
-  lines.push(`Date of Reporting: ${manilaDateLabel(date)}`);
   lines.push("");
 
   lines.push("1. EXECUTIVE SUMMARY");
