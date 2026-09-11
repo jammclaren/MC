@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Printer, RefreshCw, Save } from "lucide-react";
 import type { SituationReport } from "@/lib/queries/situation-report";
+import { SituationReportPrintView } from "@/components/situation-report-print-view";
 
 export function SituationReportEditor({ initial }: { initial: SituationReport }) {
   const [date, setDate] = useState(initial.date);
@@ -137,7 +138,9 @@ export function SituationReportEditor({ initial }: { initial: SituationReport })
           <div className="text-sm">Daily Summary of Reports</div>
         </div>
       </div>
-      <pre className="print-only hidden font-mono text-sm whitespace-pre-wrap">{content}</pre>
+      <div className="print-only hidden">
+        <SituationReportPrintView content={content} />
+      </div>
     </div>
   );
 }

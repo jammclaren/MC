@@ -10,6 +10,8 @@ import { computeSocialMonitorAssessment } from "@/lib/social-monitor-assessment"
 import { TOPIC_LABELS } from "@/lib/social-classifier";
 import type { SocialPostTopic } from "@/generated/prisma/client";
 import { reportWindow, manilaTimeLabel, todayManilaIso } from "@/lib/reporting-period";
+import { getSocialListeningReport } from "@/lib/queries/social-listening";
+import { listElectionProvinces, getElectionBoardData } from "@/lib/queries/election-board";
 
 export interface SituationReport {
   date: string;
@@ -56,6 +58,8 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
     jtfAssessments,
     allIntelRows,
     socialMonitorData,
+    socialListeningReport,
+    electionProvinces,
   ] = await Promise.all([
     prisma.incident.findMany({
       where: { jtfId: scopeJtfId, date: { gte: start, lt: end } },
@@ -82,11 +86,25 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
     listRecentJtfAssessmentsForDailyAnalysis(),
     listIntelUpdates(user),
     getSocialMonitorData(),
+    // Most recent Social Listening report on file — not scoped to this
+    // reporting window, since these are logged periodically rather than
+    // once per 2200H-2200H cycle (same "latest on file" default the
+    // Social Media Monitor page itself uses).
+    getSocialListeningReport(),
+    listElectionProvinces(user),
   ]);
 
   const dailyAssessment = computeDailyAssessment(data, jtfAssessments);
   const intelAssessment = computeIntelAssessment(allIntelRows);
   const socialAssessment = computeSocialMonitorAssessment(socialMonitorData);
+
+  // Election Board (COMELEC vote-count) data is real but almost always
+  // all-zero before polls close on 14 September — a per-province note is
+  // only worth printing once actual encoding has started somewhere.
+  const electionBoards = await Promise.all(
+    electionProvinces.map((province) => getElectionBoardData(user, province))
+  );
+  const reportingProvinces = electionBoards.filter((b) => b.reportingPct > 0);
 
   const socialViolent = windowSocialPosts.filter((p) => p.classification === "VIOLENT").length;
   const socialNonViolent = windowSocialPosts.filter((p) => p.classification === "NON_VIOLENT").length;
@@ -119,13 +137,65 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
     3
   );
 
+  const sortedIssues = socialListeningReport
+    ? [...socialListeningReport.issues].sort((a, b) => b.mentions - a.mentions)
+    : [];
+  const sortedActivities = socialListeningReport
+    ? [...socialListeningReport.significantActivities].sort((a, b) => a.rank - b.rank)
+    : [];
+  const topPlatform = socialListeningReport
+    ? [...socialListeningReport.platformMentions].sort((a, b) => b.mentions - a.mentions)[0]
+    : undefined;
+
+  const totalAreas = data.electionOpsFunnel.find((s) => s.label === "Total Areas")?.count ?? 0;
+  const paraphDelivered =
+    data.electionOpsFunnel.find((s) => s.label === "Paraphernalia Delivered")?.count ?? 0;
+  const acmSealed = data.electionOpsFunnel.find((s) => s.label === "ACM Tested & Sealed")?.count ?? 0;
+
   const lines: string[] = [];
 
   lines.push(`DAILY SUMMARY OF REPORTS — ${date}`);
   lines.push(`Reporting Period: ${manilaTimeLabel(start)} to ${manilaTimeLabel(end)} (2200H to 2200H)`);
   lines.push(`Date of Reporting: ${manilaDateLabel(date)}`);
   lines.push("");
-  lines.push("1. INCIDENTS (this reporting period)");
+
+  lines.push("1. EXECUTIVE SUMMARY");
+  lines.push(`Command-wide severity call: ${dailyAssessment.severityLevel}. 14-day incident trend: ${dailyAssessment.incidentTrend}.`);
+  lines.push(
+    windowIncidents.length > 0
+      ? `${windowIncidents.length} incident(s) logged this cycle across ${mostRecentIncidentByJtf.size} JTF(s).`
+      : "No incidents logged this cycle."
+  );
+  if (socialListeningReport) {
+    lines.push(
+      `Social listening rates the information environment ${socialListeningReport.overallRiskLevel} risk` +
+        (sortedActivities.length > 0
+          ? `, with ${sortedActivities.length} significant activit${sortedActivities.length === 1 ? "y" : "ies"} under review this cycle.`
+          : " for this cycle.")
+    );
+  } else if (windowSocialPosts.length > 0) {
+    lines.push(
+      `${socialViolent} of ${windowSocialPosts.length} social media post(s) this cycle carry a violent classification; ${socialHighlighted} flagged for review.`
+    );
+  } else {
+    lines.push("No social media activity logged this cycle.");
+  }
+  lines.push(
+    topThreatGroups.length > 0
+      ? `${topThreatGroups[0].label} remains the most-cited threat picture this cycle (${topThreatGroups[0].count} report(s))${topIntelProvinces.length > 0 ? `, concentrated in ${topIntelProvinces[0].label}` : ""}.`
+      : "No intelligence reports logged this cycle."
+  );
+  lines.push(
+    `${data.totalDeployed.toLocaleString()} personnel remain deployed to polling (${data.totalQrf.toLocaleString()} QRF) BARMM-wide.`
+  );
+  if (totalAreas > 0) {
+    lines.push(
+      `Of ${totalAreas.toLocaleString()} BPE-tracked polling area(s) on file, ${paraphDelivered.toLocaleString()} have paraphernalia delivered and ${acmSealed.toLocaleString()} have ACM tested and sealed.`
+    );
+  }
+  lines.push("");
+
+  lines.push("2. INCIDENTS (this reporting period)");
   lines.push(`Logged: ${windowIncidents.length}`);
   lines.push(`Priority/flagged areas (overall): ${data.priorityAreaCount}`);
   lines.push("Most Recent Incident by JTF:");
@@ -138,7 +208,8 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
     );
   }
   lines.push("");
-  lines.push("2. SOCIAL MEDIA MONITOR (this reporting period)");
+
+  lines.push("3. SOCIAL MEDIA MONITOR (this reporting period)");
   lines.push(
     `Posts logged: ${windowSocialPosts.length} (${socialViolent} violent, ${socialNonViolent} non-violent, ${socialUnclassified} unclassified)`
   );
@@ -149,7 +220,47 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
       : "Most-cited topic(s): none logged this reporting period."
   );
   lines.push("");
-  lines.push("3. INTELLIGENCE UPDATE (this reporting period)");
+
+  lines.push("4. SOCIAL LISTENING REPORT");
+  if (socialListeningReport) {
+    const coreMentions = socialListeningReport.issues.reduce((sum, i) => sum + i.mentions, 0);
+    lines.push(`Period: ${socialListeningReport.periodLabel}`);
+    lines.push(
+      `Core mentions: ${coreMentions.toLocaleString()} | Unique sources: ${socialListeningReport.uniqueSources.toLocaleString()} | Engagement: ${socialListeningReport.engagementLabel}`
+    );
+    lines.push(`Overall risk level: ${socialListeningReport.overallRiskLevel} — ${socialListeningReport.riskRationale}`);
+    if (sortedIssues.length > 0) {
+      lines.push("Top issues by volume:");
+      for (const issue of sortedIssues.slice(0, 3)) {
+        lines.push(
+          `  - ${issue.label}: ${issue.mentions.toLocaleString()} mentions, risk ${issue.riskLevel} (${issue.status}).`
+        );
+      }
+    }
+    if (topPlatform) {
+      lines.push(`Leading platform: ${topPlatform.platform} (${topPlatform.mentions.toLocaleString()} mentions).`);
+    }
+    if (socialListeningReport.dominantNarratives[0]) {
+      lines.push(`Dominant narrative: ${socialListeningReport.dominantNarratives[0]}`);
+    }
+    if (socialListeningReport.emergingNarratives[0]) {
+      lines.push(`Emerging/sensitive narrative to watch: ${socialListeningReport.emergingNarratives[0]}`);
+    }
+    if (sortedActivities.length > 0) {
+      lines.push("Significant activities (case file):");
+      sortedActivities.forEach((activity, i) => {
+        lines.push(`  ${i + 1}. ${activity.title}${activity.sourceUrl ? ` — Source: ${activity.sourceUrl}` : ""}`);
+        lines.push(`     Assessment: ${activity.assessment}`);
+      });
+    } else {
+      lines.push("No significant activities logged for this report.");
+    }
+  } else {
+    lines.push("No Social Listening report logged for this cycle.");
+  }
+  lines.push("");
+
+  lines.push("5. INTELLIGENCE UPDATE (this reporting period)");
   lines.push(`Reports logged: ${windowIntelRows.length} (${intelViolent} violent, ${intelNonViolent} non-violent)`);
   lines.push(
     topThreatGroups.length > 0
@@ -162,31 +273,44 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
       : "Most-reported province(s): none logged this reporting period."
   );
   lines.push("");
-  lines.push("4. DEPLOYMENT");
+
+  lines.push("6. DEPLOYMENT");
   lines.push(`Total deployed to polling: ${data.totalDeployed.toLocaleString()}`);
   lines.push(`Total QRF: ${data.totalQrf.toLocaleString()}`);
   for (const j of data.jtfDeployments) {
     lines.push(`  - ${j.jtfName}: ${j.deployedToPolling.toLocaleString()} deployed, ${j.qrf.toLocaleString()} QRF`);
   }
   lines.push("");
-  lines.push("5. ELECTION OPERATIONS STATUS");
+
+  lines.push("7. ELECTION OPERATIONS STATUS");
   lines.push(`Registered voters (BARMM): ${data.totalRegisteredVoters.toLocaleString()}`);
   for (const stage of data.electionOpsFunnel) {
     lines.push(`  - ${stage.label}: ${stage.count.toLocaleString()}`);
   }
+  if (reportingProvinces.length > 0) {
+    lines.push("Election Board (encoding underway):");
+    for (const board of reportingProvinces) {
+      const leader = board.leaderboard[0];
+      lines.push(
+        `  - ${board.province}: ${board.reportingPct.toFixed(1)}% reporting` +
+          (leader ? `; ${leader.nameOnBallot} leads with ${leader.votesEncoded.toLocaleString()} vote(s).` : ".")
+      );
+    }
+  }
   lines.push("");
-  lines.push("6. OVERALL ASSESSMENT");
+
+  lines.push("8. OVERALL ASSESSMENT & TREND");
   const totalReports = windowIncidents.length + windowSocialPosts.length + windowIntelRows.length;
   lines.push(
     `${totalReports.toLocaleString()} total report(s) this reporting period — ${windowIncidents.length.toLocaleString()} incident(s), ${windowSocialPosts.length.toLocaleString()} social media post(s), ${windowIntelRows.length.toLocaleString()} intelligence report(s).`
   );
   lines.push(`Command-wide severity call (Overview/Daily Analysis): ${dailyAssessment.severityLevel}`);
+  if (socialListeningReport) {
+    lines.push(`Social listening risk level: ${socialListeningReport.overallRiskLevel} — ${socialListeningReport.riskRationale}`);
+  }
   lines.push("");
   lines.push("From Overview / Daily Analysis:");
   for (const line of dailyAssessment.analysis) lines.push(`  - ${line}`);
-  if (dailyAssessment.recommendations.strategic[0]) {
-    lines.push(`  - Top strategic recommendation: ${dailyAssessment.recommendations.strategic[0]}`);
-  }
   lines.push("");
   lines.push("From Intelligence Update:");
   for (const line of intelAssessment.analysis) lines.push(`  - ${line}`);
@@ -194,6 +318,27 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
   lines.push("From Social Media Monitor:");
   for (const line of socialAssessment.analysis) lines.push(`  - ${line}`);
   lines.push("");
+
+  lines.push("9. RECOMMENDATIONS");
+  lines.push("Strategic:");
+  for (const r of dailyAssessment.recommendations.strategic) lines.push(`  - ${r}`);
+  lines.push("Operational:");
+  for (const r of dailyAssessment.recommendations.operational) lines.push(`  - ${r}`);
+  lines.push("Tactical:");
+  for (const r of dailyAssessment.recommendations.tactical) lines.push(`  - ${r}`);
+  if (sortedActivities[0]) {
+    lines.push(
+      `  - Verify and issue an attributable correction, where warranted, for the top-ranked Social Listening activity ("${sortedActivities[0].title}") before it gathers further reach.`
+    );
+  }
+  if (topThreatGroups.length > 0) {
+    lines.push(
+      `  - Continue coordinated monitoring of ${topThreatGroups[0].label} activity${topIntelProvinces.length > 0 ? ` in ${topIntelProvinces[0].label}` : ""}, the most-cited threat picture this reporting cycle.`
+    );
+  }
+  lines.push("");
+
+  lines.push("10. COMMANDER'S ADDENDUM");
   lines.push("[Add narrative assessment here]");
 
   return lines.join("\n");

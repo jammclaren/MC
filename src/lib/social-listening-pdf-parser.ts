@@ -74,9 +74,16 @@ function findSectionBullets(lines: string[], header: RegExp, stopHeaders: RegExp
   for (let i = idx + 1; i < lines.length; i++) {
     const line = lines[i];
     if (stopHeaders.some((h) => h.test(line))) break;
-    // Strip a leading bullet glyph or dash if present, keep the rest.
-    const cleaned = line.replace(/^[•\-*]\s*/, "").trim();
-    if (cleaned) bullets.push(cleaned);
+    // A PDF's text layer breaks a bullet's sentence across several lines
+    // wherever the page itself wraps it — only a line starting with an
+    // actual glyph is a new bullet; anything else is that wrapped bullet
+    // continuing, and gets appended rather than treated as its own entry.
+    const glyphMatch = line.match(/^[•\-*]\s*(.+)$/);
+    if (glyphMatch) {
+      bullets.push(glyphMatch[1].trim());
+    } else if (bullets.length > 0 && line.trim()) {
+      bullets[bullets.length - 1] += ` ${line.trim()}`;
+    }
   }
   return bullets;
 }
