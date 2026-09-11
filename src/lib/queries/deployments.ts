@@ -8,6 +8,7 @@ export interface JtfDeploymentCard {
   deployedToPollingCenters: number;
   qrf: number;
   pnpDeployed: number;
+  pcgCount: number;
   wavsTav: number;
   airAssetCount: number;
   navalAssetCount: number;
@@ -21,7 +22,8 @@ export interface DeploymentRow {
   jtfId: string;
   jtfName: string;
   electionAreaId: string | null;
-  unitLabel: string | null;
+  battalion: string | null;
+  brigade: string | null;
   areaLabel: string | null;
   deployedToPolling: number;
   deployedToPollingCenters: number;
@@ -32,6 +34,7 @@ export interface DeploymentRow {
   wavsTav: number;
   pnpOfficers: number;
   pnpEnlisted: number;
+  pcg: number;
   checkpointOps: number;
   airAssetType: string | null;
   airAssetCount: number;
@@ -76,6 +79,7 @@ export async function getDeploymentData(
         qrf: true,
         pnpOfficers: true,
         pnpEnlisted: true,
+        pcg: true,
         wavsTav: true,
         airAssetCount: true,
         navalAssetCount: true,
@@ -104,6 +108,7 @@ export async function getDeploymentData(
       deployedToPollingCenters: deployRows.reduce((sum, r) => sum + r.deployedToPollingCenters, 0),
       qrf: deployRows.reduce((sum, r) => sum + r.qrf, 0),
       pnpDeployed: deployRows.reduce((sum, r) => sum + r.pnpOfficers + r.pnpEnlisted, 0),
+      pcgCount: deployRows.reduce((sum, r) => sum + r.pcg, 0),
       wavsTav: deployRows.reduce((sum, r) => sum + r.wavsTav, 0),
       airAssetCount: deployRows.reduce((sum, r) => sum + r.airAssetCount, 0),
       navalAssetCount: deployRows.reduce((sum, r) => sum + r.navalAssetCount, 0),
@@ -118,7 +123,8 @@ export async function getDeploymentData(
     jtfId: d.jtfId,
     jtfName: d.jtf.name,
     electionAreaId: d.electionAreaId,
-    unitLabel: d.unitLabel,
+    battalion: d.battalion,
+    brigade: d.brigade,
     areaLabel: d.electionArea
       ? [d.electionArea.barangay, d.electionArea.municipality]
           .filter(Boolean)
@@ -133,6 +139,7 @@ export async function getDeploymentData(
     wavsTav: d.wavsTav,
     pnpOfficers: d.pnpOfficers,
     pnpEnlisted: d.pnpEnlisted,
+    pcg: d.pcg,
     checkpointOps: d.checkpointOps,
     airAssetType: d.airAssetType,
     airAssetCount: d.airAssetCount,

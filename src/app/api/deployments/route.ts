@@ -9,7 +9,8 @@ import { withAudit } from "@/lib/audit";
 const createDeploymentSchema = z.object({
   jtfId: z.string().min(1),
   electionAreaId: z.string().optional(),
-  unitLabel: z.string().optional(),
+  battalion: z.string().trim().max(120).optional(),
+  brigade: z.string().trim().max(120).optional(),
   deployedToPolling: z.number().int().nonnegative().default(0),
   deployedToPollingCenters: z.number().int().nonnegative().default(0),
   qrf: z.number().int().nonnegative().default(0),
@@ -19,6 +20,7 @@ const createDeploymentSchema = z.object({
   wavsTav: z.number().int().nonnegative().default(0),
   pnpOfficers: z.number().int().nonnegative().default(0),
   pnpEnlisted: z.number().int().nonnegative().default(0),
+  pcg: z.number().int().nonnegative().default(0),
   checkpointOps: z.number().int().nonnegative().default(0),
   airAssetType: z.string().trim().max(120).optional(),
   airAssetCount: z.number().int().nonnegative().default(0),

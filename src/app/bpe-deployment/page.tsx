@@ -131,6 +131,10 @@ export default async function BpeDeploymentPage({
                   <span className="font-medium">{card.pnpDeployed.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
+                  <span className="text-muted-foreground">PCG Deployed</span>
+                  <span className="font-medium">{card.pcgCount.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-muted-foreground">WAVs/TAV</span>
                   <span className="font-medium">{card.wavsTav.toLocaleString()}</span>
                 </div>
@@ -192,6 +196,7 @@ export default async function BpeDeploymentPage({
             rows={data.rows.map((row) => ({ ...row, canEdit: canWriteDeployment(user, row.jtfId) }))}
             jtfOptions={jtfOptions}
             areaOptions={areaOptions}
+            lockJtfId={writableJtfId}
           />
         </CardContent>
       </Card>

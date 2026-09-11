@@ -249,7 +249,11 @@ model TroopDeployment {
   jtf                      JTF           @relation(fields: [jtfId], references: [id])
   electionAreaId           String?
   electionArea             ElectionArea? @relation(fields: [electionAreaId], references: [id])
-  unitLabel                String?
+  // The battalion actually deployed, and the brigade it's OPCON to or
+  // attached to — was a single free-text "unitLabel" field; split so the
+  // unit-level breakdown can group battalions under their brigade.
+  battalion                String?
+  brigade                  String?
   // "Deployed to Polling Precincts" in the UI — the original field, kept
   // as-is at the DB level (existing reports already mean this) alongside
   // the newer, distinct polling-center count below.
@@ -262,6 +266,7 @@ model TroopDeployment {
   wavsTav                  Int           @default(0)
   pnpOfficers              Int           @default(0)
   pnpEnlisted              Int           @default(0)
+  pcg                      Int           @default(0)
   checkpointOps            Int           @default(0)
   // Free-text type (e.g. "UH-1H Huey", "Rigid Hull Inflatable Boat") since
   // units report whatever asset they actually have, not a fixed catalog.

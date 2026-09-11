@@ -37,7 +37,8 @@ export interface DeploymentFormValues {
   id?: string;
   jtfId: string;
   electionAreaId?: string;
-  unitLabel: string;
+  battalion: string;
+  brigade: string;
   deployedToPolling: number;
   deployedToPollingCenters: number;
   qrf: number;
@@ -47,6 +48,7 @@ export interface DeploymentFormValues {
   wavsTav: number;
   pnpOfficers: number;
   pnpEnlisted: number;
+  pcg: number;
   checkpointOps: number;
   airAssetType: string;
   airAssetCount: number;
@@ -57,7 +59,8 @@ export interface DeploymentFormValues {
 }
 
 const EMPTY: Omit<DeploymentFormValues, "jtfId"> = {
-  unitLabel: "",
+  battalion: "",
+  brigade: "",
   deployedToPolling: 0,
   deployedToPollingCenters: 0,
   qrf: 0,
@@ -67,6 +70,7 @@ const EMPTY: Omit<DeploymentFormValues, "jtfId"> = {
   wavsTav: 0,
   pnpOfficers: 0,
   pnpEnlisted: 0,
+  pcg: 0,
   checkpointOps: 0,
   airAssetType: "",
   airAssetCount: 0,
@@ -128,17 +132,32 @@ export function DeploymentFormDialog({
     try {
       const url = isEdit ? `/api/deployments/${initial!.id}` : "/api/deployments";
       const method = isEdit ? "PATCH" : "POST";
-      const { id: _id, jtfId, airAssetType, navalAssetType, isrAssetType, ...rest } = values;
+      const {
+        id: _id,
+        jtfId,
+        electionAreaId,
+        battalion,
+        brigade,
+        airAssetType,
+        navalAssetType,
+        isrAssetType,
+        ...rest
+      } = values;
       void _id;
       // Create's schema wants the key omitted (not null) when blank; update's
-      // schema is nullable, so an explicit null there clears a prior value.
-      const normalized = {
+      // schema is nullable, so an explicit null there clears a prior value —
+      // otherwise picking "No specific area" (or blanking Battalion/Brigade/
+      // an asset type) while editing would silently have no effect.
+      const body = {
         ...rest,
+        jtfId,
+        electionAreaId: electionAreaId || (isEdit ? null : undefined),
+        battalion: battalion.trim() || (isEdit ? null : undefined),
+        brigade: brigade.trim() || (isEdit ? null : undefined),
         airAssetType: airAssetType.trim() || (isEdit ? null : undefined),
         navalAssetType: navalAssetType.trim() || (isEdit ? null : undefined),
         isrAssetType: isrAssetType.trim() || (isEdit ? null : undefined),
       };
-      const body = isEdit ? normalized : { jtfId, ...normalized };
 
       const res = await fetch(url, {
         method,
@@ -169,6 +188,7 @@ export function DeploymentFormDialog({
     { key: "wavsTav", label: "WAVs/TAV" },
     { key: "pnpOfficers", label: "PNP Officers" },
     { key: "pnpEnlisted", label: "PNP Enlisted" },
+    { key: "pcg", label: "PCG" },
     { key: "checkpointOps", label: "Checkpoint Ops" },
   ];
 
@@ -181,7 +201,7 @@ export function DeploymentFormDialog({
             <DialogTitle>{isEdit ? "Edit Deployment" : "Log Deployment"}</DialogTitle>
           </DialogHeader>
           <div className="grid max-h-[65vh] grid-cols-2 gap-4 overflow-y-auto py-4">
-            {!isEdit && !lockJtfId && (
+            {!lockJtfId && (
               <div className="col-span-2 flex flex-col gap-2">
                 <Label>JTF</Label>
                 <Select
@@ -204,13 +224,22 @@ export function DeploymentFormDialog({
                 </Select>
               </div>
             )}
-            <div className="col-span-2 flex flex-col gap-2">
-              <Label htmlFor="unitLabel">Unit</Label>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="battalion">Battalion (leave blank for a Brigade-level entry)</Label>
               <Input
-                id="unitLabel"
-                placeholder="e.g. 101BDE"
-                value={values.unitLabel}
-                onChange={(e) => setField("unitLabel", e.target.value)}
+                id="battalion"
+                placeholder="e.g. 40th IB"
+                value={values.battalion}
+                onChange={(e) => setField("battalion", e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="brigade">Brigade (OPCON/Attached)</Label>
+              <Input
+                id="brigade"
+                placeholder="e.g. 601st Brigade"
+                value={values.brigade}
+                onChange={(e) => setField("brigade", e.target.value)}
               />
             </div>
             <div className="col-span-2 flex flex-col gap-2">

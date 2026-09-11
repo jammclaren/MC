@@ -7,7 +7,10 @@ import { handleApiError } from "@/lib/api-error";
 import { withAudit } from "@/lib/audit";
 
 const updateDeploymentSchema = z.object({
-  unitLabel: z.string().optional(),
+  jtfId: z.string().min(1).optional(),
+  electionAreaId: z.string().nullable().optional(),
+  battalion: z.string().trim().max(120).nullable().optional(),
+  brigade: z.string().trim().max(120).nullable().optional(),
   deployedToPolling: z.number().int().nonnegative().optional(),
   deployedToPollingCenters: z.number().int().nonnegative().optional(),
   qrf: z.number().int().nonnegative().optional(),
@@ -17,6 +20,7 @@ const updateDeploymentSchema = z.object({
   wavsTav: z.number().int().nonnegative().optional(),
   pnpOfficers: z.number().int().nonnegative().optional(),
   pnpEnlisted: z.number().int().nonnegative().optional(),
+  pcg: z.number().int().nonnegative().optional(),
   checkpointOps: z.number().int().nonnegative().optional(),
   airAssetType: z.string().trim().max(120).nullable().optional(),
   airAssetCount: z.number().int().nonnegative().optional(),
@@ -50,6 +54,11 @@ export async function PATCH(
     assertCanWriteDeployment(user, existing.jtfId);
 
     const body = updateDeploymentSchema.parse(await request.json());
+    // Reassigning a battalion to a different JTF requires write access to
+    // that JTF too, not just the one it's currently under.
+    if (body.jtfId && body.jtfId !== existing.jtfId) {
+      assertCanWriteDeployment(user, body.jtfId);
+    }
 
     const updated = await withAudit(
       (tx) => tx.troopDeployment.update({ where: { id }, data: body }),
