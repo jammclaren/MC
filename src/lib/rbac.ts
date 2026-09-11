@@ -38,6 +38,27 @@ export function canWriteJtf(user: SessionUser, targetJtfId: string): boolean {
   return false;
 }
 
+/**
+ * Deployment is also owned by WFC Maneuver ("M2") command-wide — unlike
+ * JTF_COMMANDER/JTF_STAFF, a WFC_STAFF account isn't tied to one JTF, so
+ * ownership here means the same "any JTF" write access ADMIN already has
+ * on this one page. CMO and Intelligence get read-only cross-visibility
+ * (see canAccessPage's WFC_INTELLIGENCE_BLOCKED_PAGES and the bpe-deployment
+ * page itself) but not this. Kept separate from canWriteJtf/assertCanWriteJtf
+ * so this grant never leaks into RIDO/HVI Log/Incidents/Election Areas etc.,
+ * which stay JTF-scoped-roles-only.
+ */
+export function canWriteDeployment(user: SessionUser, targetJtfId: string): boolean {
+  if (user.role === "WFC_STAFF" && user.warfightingFunction === "MANEUVER") return true;
+  return canWriteJtf(user, targetJtfId);
+}
+
+export function assertCanWriteDeployment(user: SessionUser, targetJtfId: string): void {
+  if (!canWriteDeployment(user, targetJtfId)) {
+    throw new ForbiddenError("Not authorized to write deployment data for this JTF");
+  }
+}
+
 /** JTF_STAFF/BRIGADE_STAFF may only edit/delete entries they created
  * themselves. */
 export function canModifyEntry(
@@ -63,12 +84,13 @@ export function canModifyEntry(
 const BRIGADE_STAFF_BLOCKED_PAGES = ["situation-map", "deployment"] as const;
 
 /**
- * WFC Intelligence (M2) is scoped down to Overview, Monitored Incidents,
- * Situation Map, and its own Intelligence Update page — no Deployment,
- * Election Status, or Election Profile (those belong to logistics/election
- * ops, not intelligence).
+ * WFC Intelligence is scoped down to Overview, Monitored Incidents,
+ * Situation Map, its own Intelligence Update page, and (view-only, see
+ * canAccessSocialMonitor/canWriteSocialMonitor) Social Media Monitor and
+ * Deployment — no Election Status or Election Profile (those belong to
+ * election ops, not intelligence).
  */
-const WFC_INTELLIGENCE_BLOCKED_PAGES = ["deployment", "election-status", "election-profile"] as const;
+const WFC_INTELLIGENCE_BLOCKED_PAGES = ["election-status", "election-profile"] as const;
 
 type RestrictablePage =
   | (typeof BRIGADE_STAFF_BLOCKED_PAGES)[number]
@@ -97,16 +119,23 @@ const SOCIAL_MONITOR_LAUNCHED = true;
 
 /**
  * Social Media Monitor is restricted beyond the usual JTF/command scoping:
- * COMMAND and ADMIN command-wide, plus WFC_STAFF in CMO (civil-military/
- * public-sentiment) specifically — explicitly NOT Intelligence (M2), or any
- * other warfighting function. Every other role, including JTF_COMMANDER/
- * JTF_STAFF, has no access at all — this isn't a JTF-scoped feature.
+ * COMMAND and ADMIN command-wide, plus every WFC_STAFF function (CMO, which
+ * owns and can write it; INTELLIGENCE and MANEUVER get read-only visibility
+ * into it, see canWriteSocialMonitor below). Every other role, including
+ * JTF_COMMANDER/JTF_STAFF, has no access at all — this isn't a JTF-scoped
+ * feature. COMMAND is a pure viewer command-wide (see canWriteSocialMonitor,
+ * canWriteIntelligenceUpdate, canWriteDeployment, canWriteSituationReport) —
+ * it never gets write access to anything.
  */
 export function canAccessSocialMonitor(user: SessionUser): boolean {
   if (!SOCIAL_MONITOR_LAUNCHED) return false;
   if (user.role === "ADMIN" || user.role === "COMMAND") return true;
   if (user.role === "WFC_STAFF") {
-    return user.warfightingFunction === "CMO";
+    return (
+      user.warfightingFunction === "CMO" ||
+      user.warfightingFunction === "INTELLIGENCE" ||
+      user.warfightingFunction === "MANEUVER"
+    );
   }
   return false;
 }
@@ -117,14 +146,29 @@ export function assertCanAccessSocialMonitor(user: SessionUser): void {
   }
 }
 
+/** Only CMO actually owns Social Media Monitor — Intelligence/Maneuver can
+ * view it (see canAccessSocialMonitor) but not log/edit/delete posts or
+ * Social Listening reports there, and neither can COMMAND. */
+export function canWriteSocialMonitor(user: SessionUser): boolean {
+  if (!SOCIAL_MONITOR_LAUNCHED) return false;
+  if (user.role === "ADMIN") return true;
+  return user.role === "WFC_STAFF" && user.warfightingFunction === "CMO";
+}
+
+export function assertCanWriteSocialMonitor(user: SessionUser): void {
+  if (!canWriteSocialMonitor(user)) {
+    throw new ForbiddenError("Not authorized to modify the Social Media Monitor");
+  }
+}
+
 /**
- * Situation Report is ADMIN-only — WFC Intelligence (M2) previously had
- * access too, but per the WFC-Intelligence account scope-down (see
- * canAccessIntelligenceUpdate, which replaces this for that account), it no
- * longer does. Explicitly not COMMAND, not CMO, and not any JTF-scoped role.
+ * Situation Report (Daily Summary of Reports) is written by ADMIN only, but
+ * per the command-viewer rule COMMAND can now see it too, read-only — a
+ * command-wide document is exactly what a pure viewer should be able to
+ * open. Not visible to CMO/Intelligence/Maneuver or any JTF-scoped role.
  */
 export function canAccessSituationReport(user: SessionUser): boolean {
-  return user.role === "ADMIN";
+  return user.role === "ADMIN" || user.role === "COMMAND";
 }
 
 export function assertCanAccessSituationReport(user: SessionUser): void {
@@ -133,17 +177,30 @@ export function assertCanAccessSituationReport(user: SessionUser): void {
   }
 }
 
+export function canWriteSituationReport(user: SessionUser): boolean {
+  return user.role === "ADMIN";
+}
+
+export function assertCanWriteSituationReport(user: SessionUser): void {
+  if (!canWriteSituationReport(user)) {
+    throw new ForbiddenError("Not authorized to modify the Situation Report");
+  }
+}
+
 /**
  * Intelligence Update is viewable by ADMIN, COMMAND (read-only rollup —
- * same posture COMMAND already has on other aggregate views), and WFC
- * Intelligence (M2). Writing (create/edit/delete reports) is narrower:
- * ADMIN and WFC Intelligence only — COMMAND can see the picture but not
- * change it.
+ * same posture COMMAND already has on other aggregate views), and every
+ * WFC_STAFF function: INTELLIGENCE owns and writes it, while CMO and
+ * MANEUVER get read-only cross-visibility (see canWriteIntelligenceUpdate).
  */
 export function canAccessIntelligenceUpdate(user: SessionUser): boolean {
   if (user.role === "ADMIN" || user.role === "COMMAND") return true;
   if (user.role === "WFC_STAFF") {
-    return user.warfightingFunction === "INTELLIGENCE";
+    return (
+      user.warfightingFunction === "INTELLIGENCE" ||
+      user.warfightingFunction === "CMO" ||
+      user.warfightingFunction === "MANEUVER"
+    );
   }
   return false;
 }

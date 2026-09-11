@@ -23,7 +23,7 @@ const NAV_LINKS = [
 
 const ADMIN_LINKS = [
   { href: "/admin/users", label: "Users", roles: ["ADMIN"] },
-  { href: "/admin/audit-log", label: "Audit Log", roles: ["ADMIN", "COMMAND"] },
+  { href: "/admin/audit-log", label: "Audit Log", roles: ["ADMIN"] },
 ] as const;
 
 export async function Nav() {

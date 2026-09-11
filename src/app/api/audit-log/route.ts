@@ -7,7 +7,7 @@ import { handleApiError } from "@/lib/api-error";
 export async function GET(request: NextRequest) {
   try {
     const user = await requireSessionUser();
-    requireRole(user, ["ADMIN", "COMMAND"]);
+    requireRole(user, ["ADMIN"]);
 
     const { searchParams } = request.nextUrl;
     const entity = searchParams.get("entity");

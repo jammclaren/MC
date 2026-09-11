@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUser } from "@/lib/session";
-import { assertCanWriteJtf, ForbiddenError } from "@/lib/rbac";
+import { assertCanWriteDeployment, ForbiddenError } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import { withAudit } from "@/lib/audit";
 
@@ -47,7 +47,7 @@ export async function PATCH(
       throw new ForbiddenError("Not authorized to write deployment data");
     }
     const existing = await loadDeploymentOrThrow(id);
-    assertCanWriteJtf(user, existing.jtfId);
+    assertCanWriteDeployment(user, existing.jtfId);
 
     const body = updateDeploymentSchema.parse(await request.json());
 
@@ -79,7 +79,7 @@ export async function DELETE(
       throw new ForbiddenError("Not authorized to write deployment data");
     }
     const existing = await loadDeploymentOrThrow(id);
-    assertCanWriteJtf(user, existing.jtfId);
+    assertCanWriteDeployment(user, existing.jtfId);
 
     await withAudit(
       (tx) => tx.troopDeployment.delete({ where: { id } }),

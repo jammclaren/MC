@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUser } from "@/lib/session";
-import { assertCanAccessSocialMonitor } from "@/lib/rbac";
+import { assertCanAccessSocialMonitor, assertCanWriteSocialMonitor } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import { withAudit } from "@/lib/audit";
 import { classifyPostContent, classifyPostTopic, TOPIC_OPTIONS } from "@/lib/social-classifier";
@@ -40,7 +40,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const user = await requireSessionUser();
-    assertCanAccessSocialMonitor(user);
+    assertCanWriteSocialMonitor(user);
     const body = createPostSchema.parse(await request.json());
 
     const post = await withAudit(

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUser } from "@/lib/session";
-import { assertCanAccessSocialMonitor } from "@/lib/rbac";
+import { assertCanWriteSocialMonitor } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import { withAudit } from "@/lib/audit";
 import { TOPIC_OPTIONS } from "@/lib/social-classifier";
@@ -39,7 +39,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const user = await requireSessionUser();
-    assertCanAccessSocialMonitor(user);
+    assertCanWriteSocialMonitor(user);
     const existing = await loadPostOrThrow(id);
 
     const body = updatePostSchema.parse(await request.json());
@@ -68,7 +68,7 @@ export async function DELETE(
   try {
     const { id } = await params;
     const user = await requireSessionUser();
-    assertCanAccessSocialMonitor(user);
+    assertCanWriteSocialMonitor(user);
     const existing = await loadPostOrThrow(id);
 
     await withAudit(

@@ -3,7 +3,7 @@ import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { getDeploymentData } from "@/lib/queries/deployments";
 import { safePercent } from "@/lib/percentages";
-import { canAccessPage, canWriteJtf } from "@/lib/rbac";
+import { canAccessPage, canWriteDeployment } from "@/lib/rbac";
 import {
   Card,
   CardContent,
@@ -44,13 +44,18 @@ export default async function BpeDeploymentPage({
     jtfId: area.jtfId,
     label: [area.barangay, area.municipality, area.province].filter(Boolean).join(", "),
   }));
+  // A WFC_STAFF/MANEUVER ("M2") account isn't tied to one JTF but owns this
+  // page command-wide, the same "any JTF" write posture ADMIN already has
+  // here (see canWriteDeployment).
+  const isDeploymentOwner =
+    user.role === "ADMIN" || (user.role === "WFC_STAFF" && user.warfightingFunction === "MANEUVER");
   const writableJtfId =
-    user.role === "ADMIN"
+    isDeploymentOwner
       ? undefined
-      : user.jtfId && canWriteJtf(user, user.jtfId)
+      : user.jtfId && canWriteDeployment(user, user.jtfId)
         ? user.jtfId
         : undefined;
-  const canCreate = user.role === "ADMIN" || (!!user.jtfId && canWriteJtf(user, user.jtfId));
+  const canCreate = isDeploymentOwner || (!!user.jtfId && canWriteDeployment(user, user.jtfId));
 
   return (
     <div className="flex flex-col gap-6">
@@ -184,7 +189,7 @@ export default async function BpeDeploymentPage({
         </CardHeader>
         <CardContent>
           <DeploymentRowsAccordion
-            rows={data.rows.map((row) => ({ ...row, canEdit: canWriteJtf(user, row.jtfId) }))}
+            rows={data.rows.map((row) => ({ ...row, canEdit: canWriteDeployment(user, row.jtfId) }))}
             jtfOptions={jtfOptions}
             areaOptions={areaOptions}
           />

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireSessionUser } from "@/lib/session";
-import { assertCanAccessSituationReport } from "@/lib/rbac";
+import { assertCanWriteSituationReport } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import { generateSitrepDraft } from "@/lib/queries/situation-report";
 
@@ -14,7 +14,7 @@ const bodySchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const user = await requireSessionUser();
-    assertCanAccessSituationReport(user);
+    assertCanWriteSituationReport(user);
     const { date } = bodySchema.parse(await request.json());
     const content = await generateSitrepDraft(user, date);
     return NextResponse.json({ content });

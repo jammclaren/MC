@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
-import { canAccessSocialMonitor } from "@/lib/rbac";
+import { canAccessSocialMonitor, canWriteSocialMonitor } from "@/lib/rbac";
 import { getSocialMonitorData } from "@/lib/queries/social-monitor";
 import { getSocialMonitorPeriodComparison } from "@/lib/queries/social-monitor-dashboard";
 import { computeSocialMonitorAssessment } from "@/lib/social-monitor-assessment";
@@ -105,6 +105,7 @@ export default async function SocialMonitorPage({
   if (!canAccessSocialMonitor(user)) {
     notFound();
   }
+  const canWrite = canWriteSocialMonitor(user);
 
   const params = await searchParams;
 
@@ -204,10 +205,12 @@ export default async function SocialMonitorPage({
         <div className="flex flex-wrap items-end gap-3">
           <SocialMonitorPeriodForm spStart={spStartStr} spEnd={spEndStr} cpStart={cpStartStr} cpEnd={cpEndStr} />
           <div className="flex flex-col items-end gap-1">
-            <div className="flex gap-2">
-              <SocialSyncButton />
-              <SocialPostFormDialog trigger={<Button>Log Post</Button>} />
-            </div>
+            {canWrite && (
+              <div className="flex gap-2">
+                <SocialSyncButton />
+                <SocialPostFormDialog trigger={<Button>Log Post</Button>} />
+              </div>
+            )}
             <span className="text-xs text-muted-foreground">
               Last synced: {relativeSyncLabel(data.lastSyncedAt)}
             </span>
@@ -329,7 +332,7 @@ export default async function SocialMonitorPage({
               postedAt: p.postedAt.toISOString(),
               createdAt: p.createdAt.toISOString(),
             }))}
-            canWrite
+            canWrite={canWrite}
           />
         </CardContent>
       </Card>
@@ -398,10 +401,12 @@ export default async function SocialMonitorPage({
                   </Button>
                 </form>
               )}
-              <SocialListeningReportFormDialog
-                trigger={<Button>Log New Report</Button>}
-              />
-              {socialListeningReport && (
+              {canWrite && (
+                <SocialListeningReportFormDialog
+                  trigger={<Button>Log New Report</Button>}
+                />
+              )}
+              {socialListeningReport && canWrite && (
                 <>
                   <SocialListeningReportFormDialog
                     initial={{
@@ -450,8 +455,9 @@ export default async function SocialMonitorPage({
 
           {!socialListeningReport && (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              No Social Listening report logged yet — click &quot;Log New Report&quot; to add the
-              first one.
+              {canWrite
+                ? 'No Social Listening report logged yet — click "Log New Report" to add the first one.'
+                : "No Social Listening report logged yet."}
             </p>
           )}
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PDFParse } from "pdf-parse";
 import { requireSessionUser } from "@/lib/session";
-import { assertCanAccessSocialMonitor } from "@/lib/rbac";
+import { assertCanWriteSocialMonitor } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import { parseSocialListeningPdfText } from "@/lib/social-listening-pdf-parser";
 
@@ -15,7 +15,7 @@ const MAX_BYTES = 15 * 1024 * 1024;
 export async function POST(request: NextRequest) {
   try {
     const user = await requireSessionUser();
-    assertCanAccessSocialMonitor(user);
+    assertCanWriteSocialMonitor(user);
 
     const formData = await request.formData();
     const file = formData.get("file");

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireSessionUser } from "@/lib/session";
-import { assertCanAccessSituationReport } from "@/lib/rbac";
+import { assertCanAccessSituationReport, assertCanWriteSituationReport } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import { withAudit } from "@/lib/audit";
 import { getSituationReport } from "@/lib/queries/situation-report";
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const user = await requireSessionUser();
-    assertCanAccessSituationReport(user);
+    assertCanWriteSituationReport(user);
     const body = saveSchema.parse(await request.json());
 
     const saved = await withAudit(

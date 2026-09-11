@@ -65,7 +65,14 @@ const SECTION_HEADER_TEXT = /^\d+\.\s+[A-Z]/;
 const SUBLABEL_TEXT = /:$/;
 
 export function SituationReportPrintView({ content }: { content: string }) {
-  const lines = content.split("\n");
+  const allLines = content.split("\n");
+  // The title/reporting-period/date-of-reporting lines at the very top are
+  // dropped for print — the letterhead (seal, command name, and period)
+  // already covers that, so printing both would just repeat it.
+  const firstSectionIndex = allLines.findIndex(
+    (l) => l === l.trimStart() && SECTION_HEADER_TEXT.test(l.trim())
+  );
+  const lines = firstSectionIndex === -1 ? allLines : allLines.slice(firstSectionIndex);
   const blocks: React.ReactNode[] = [];
   let bulletBuffer: string[] = [];
 
@@ -94,12 +101,6 @@ export function SituationReportPrintView({ content }: { content: string }) {
 
     if (trimmed === "") {
       blocks.push(<div key={i} className="h-3" />);
-    } else if (i === 0) {
-      blocks.push(
-        <h1 key={i} className="mb-1 text-[15pt] font-bold uppercase">
-          {trimmed}
-        </h1>
-      );
     } else if (!isIndented && SECTION_HEADER_TEXT.test(trimmed)) {
       blocks.push(
         <h2 key={i} className="mt-3 mb-1 text-[13pt] font-bold uppercase">

@@ -32,7 +32,7 @@ export default async function AuditLogPage({
   if (!user) {
     redirect("/login");
   }
-  if (user.role !== "ADMIN" && user.role !== "COMMAND") {
+  if (user.role !== "ADMIN") {
     notFound();
   }
 

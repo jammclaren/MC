@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
-import { canAccessSocialMonitor } from "@/lib/rbac";
+import { canWriteSocialMonitor } from "@/lib/rbac";
 import { classifyPostContent, classifyPostTopic } from "@/lib/social-classifier";
 
 // How far back to look on every run — generous overlap with the hourly
@@ -37,7 +37,7 @@ async function isAuthorized(request: NextRequest): Promise<boolean> {
     if (authHeader === `Bearer ${cronSecret}`) return true;
   }
   const user = await getSessionUser();
-  return !!user && canAccessSocialMonitor(user);
+  return !!user && canWriteSocialMonitor(user);
 }
 
 async function fetchPageBatch(

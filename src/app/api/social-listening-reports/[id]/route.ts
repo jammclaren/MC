@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireSessionUser } from "@/lib/session";
-import { assertCanAccessSocialMonitor } from "@/lib/rbac";
+import { assertCanWriteSocialMonitor } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import { withAudit } from "@/lib/audit";
 
@@ -45,7 +45,7 @@ const updateReportSchema = z.object({
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireSessionUser();
-    assertCanAccessSocialMonitor(user);
+    assertCanWriteSocialMonitor(user);
     const { id } = await params;
     const body = updateReportSchema.parse(await request.json());
 
@@ -102,7 +102,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireSessionUser();
-    assertCanAccessSocialMonitor(user);
+    assertCanWriteSocialMonitor(user);
     const { id } = await params;
 
     await withAudit(

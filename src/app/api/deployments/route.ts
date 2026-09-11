@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUser } from "@/lib/session";
-import { assertCanReadJtf, assertCanWriteJtf, ForbiddenError, scopeJtfFilter } from "@/lib/rbac";
+import { assertCanReadJtf, assertCanWriteDeployment, ForbiddenError, scopeJtfFilter } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import { withAudit } from "@/lib/audit";
 
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       throw new ForbiddenError("Not authorized to write deployment data");
     }
     const body = createDeploymentSchema.parse(await request.json());
-    assertCanWriteJtf(user, body.jtfId);
+    assertCanWriteDeployment(user, body.jtfId);
 
     const deployment = await withAudit(
       (tx) => tx.troopDeployment.create({ data: body }),

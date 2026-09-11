@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
-import { canAccessSituationReport } from "@/lib/rbac";
+import { canAccessSituationReport, canWriteSituationReport } from "@/lib/rbac";
 import { getSituationReport } from "@/lib/queries/situation-report";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SituationReportEditor } from "@/components/situation-report-editor";
@@ -15,6 +15,7 @@ export default async function SituationReportPage() {
   }
 
   const report = await getSituationReport(user);
+  const canWrite = canWriteSituationReport(user);
 
   return (
     <div className="flex flex-col gap-6">
@@ -29,7 +30,7 @@ export default async function SituationReportPage() {
           <CardTitle className="text-xl">Daily Summary of Reports — {report.date}</CardTitle>
         </CardHeader>
         <CardContent>
-          <SituationReportEditor initial={report} />
+          <SituationReportEditor initial={report} canWrite={canWrite} />
         </CardContent>
       </Card>
     </div>
