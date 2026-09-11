@@ -119,17 +119,20 @@ const SOCIAL_MONITOR_LAUNCHED = true;
 
 /**
  * Social Media Monitor is restricted beyond the usual JTF/command scoping:
- * COMMAND and ADMIN command-wide, plus every WFC_STAFF function (CMO, which
- * owns and can write it; INTELLIGENCE and MANEUVER get read-only visibility
- * into it, see canWriteSocialMonitor below). Every other role, including
- * JTF_COMMANDER/JTF_STAFF, has no access at all — this isn't a JTF-scoped
- * feature. COMMAND is a pure viewer command-wide (see canWriteSocialMonitor,
+ * COMMAND and ADMIN command-wide, a command-wide VIEWER (jtfId === null —
+ * see canReadJtf's doc comment; a JTF-scoped VIEWER doesn't get this, since
+ * the feature itself isn't JTF-scoped), plus every WFC_STAFF function (CMO,
+ * which owns and can write it; INTELLIGENCE and MANEUVER get read-only
+ * visibility into it, see canWriteSocialMonitor below). Every other role,
+ * including JTF_COMMANDER/JTF_STAFF, has no access at all. COMMAND and a
+ * command-wide VIEWER are pure viewers (see canWriteSocialMonitor,
  * canWriteIntelligenceUpdate, canWriteDeployment, canWriteSituationReport) —
- * it never gets write access to anything.
+ * neither ever gets write access to anything.
  */
 export function canAccessSocialMonitor(user: SessionUser): boolean {
   if (!SOCIAL_MONITOR_LAUNCHED) return false;
   if (user.role === "ADMIN" || user.role === "COMMAND") return true;
+  if (user.role === "VIEWER") return user.jtfId === null;
   if (user.role === "WFC_STAFF") {
     return (
       user.warfightingFunction === "CMO" ||
@@ -189,12 +192,16 @@ export function assertCanWriteSituationReport(user: SessionUser): void {
 
 /**
  * Intelligence Update is viewable by ADMIN, COMMAND (read-only rollup —
- * same posture COMMAND already has on other aggregate views), and every
- * WFC_STAFF function: INTELLIGENCE owns and writes it, while CMO and
- * MANEUVER get read-only cross-visibility (see canWriteIntelligenceUpdate).
+ * same posture COMMAND already has on other aggregate views), a command-wide
+ * VIEWER (jtfId === null — see canAccessSocialMonitor's doc comment; a
+ * JTF-scoped VIEWER doesn't get this, since the feature itself isn't
+ * JTF-scoped), and every WFC_STAFF function: INTELLIGENCE owns and writes
+ * it, while CMO and MANEUVER get read-only cross-visibility (see
+ * canWriteIntelligenceUpdate).
  */
 export function canAccessIntelligenceUpdate(user: SessionUser): boolean {
   if (user.role === "ADMIN" || user.role === "COMMAND") return true;
+  if (user.role === "VIEWER") return user.jtfId === null;
   if (user.role === "WFC_STAFF") {
     return (
       user.warfightingFunction === "INTELLIGENCE" ||
