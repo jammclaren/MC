@@ -65,8 +65,14 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
       where: { postedAt: { gte: start, lt: end } },
       orderBy: { postedAt: "desc" },
     }),
+    // Intel Update's activity `date` is a plain date-only field the reporting
+    // officer picks by hand (often backdated to when the activity actually
+    // happened, not when it was filed) — windowing by it would silently
+    // undercount reports filed this cycle about an earlier day's activity.
+    // createdAt (when the report was actually logged) is what the Intel
+    // Update page's own "Reports for the Day" tile uses, so match it here.
     prisma.intelUpdate.findMany({
-      where: { date: { gte: start, lt: end } },
+      where: { createdAt: { gte: start, lt: end } },
     }),
     // The Overall Assessment section below reuses each dashboard page's own
     // assessment engine rather than re-deriving similar analysis inline —
