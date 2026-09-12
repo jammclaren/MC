@@ -978,7 +978,7 @@ export function PriorityMap({
           </LayersControl.BaseLayer>
 
           {provinces && (
-            <LayersControl.Overlay checked name="Province Outline">
+            <LayersControl.Overlay name="Province Outline">
               <LayerGroup>
                 <GeoJSON data={provinces} style={PROVINCE_STYLE} onEachFeature={ProvinceLabel} />
               </LayerGroup>
