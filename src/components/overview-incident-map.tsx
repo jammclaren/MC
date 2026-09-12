@@ -63,7 +63,10 @@ function IncidentMarkers({ markers }: { markers: IncidentMarker[] }) {
             key={marker.id}
             position={[marker.lat, marker.lng]}
             icon={buildIncidentIcon(isRecent ? "PULSE" : marker.markerStyle, zoom)}
-            zIndexOffset={isRecent ? 1000 : 0}
+            // Kept in step with the Situation Map's own incident layer (see
+            // priority-map.tsx) — a recent/pulsing marker always renders on
+            // top of anything else sharing this pane.
+            zIndexOffset={isRecent ? 2000 : 0}
           >
             <Popup>
               <div className="text-xs">
