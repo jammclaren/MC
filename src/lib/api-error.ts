@@ -17,6 +17,15 @@ export function handleApiError(error: unknown): NextResponse {
     );
   }
   if (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2003"
+  ) {
+    return NextResponse.json(
+      { error: "This record is still referenced by other data and can't be deleted" },
+      { status: 409 }
+    );
+  }
+  if (
     error instanceof Error &&
     typeof (error as unknown as { status?: unknown }).status === "number"
   ) {

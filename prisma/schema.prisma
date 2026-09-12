@@ -422,7 +422,12 @@ model IntelMeeAsset {
 model ElectionOpsStatus {
   id                       String       @id @default(cuid())
   electionAreaId           String       @unique
-  electionArea             ElectionArea @relation(fields: [electionAreaId], references: [id])
+  // Cascade: this row only exists to track its own area's BPE funnel
+  // progress and is meaningless without it — deleting the area should
+  // delete its tracking row too, not block the delete (the default for a
+  // required relation like this one is RESTRICT, which is what made
+  // deleting any area with status already logged fail).
+  electionArea             ElectionArea @relation(fields: [electionAreaId], references: [id], onDelete: Cascade)
   paraphTotalTreasurer     Int?
   paraphDeliveredTreasurer Int?
   paraphTotalPrecinct      Int?
