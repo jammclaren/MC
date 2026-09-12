@@ -58,9 +58,10 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
       include: { jtf: { select: { id: true, name: true } } },
     }),
     // Social Media Monitor and Intelligence Update are both command-wide
-    // (no jtfId of their own) — every ADMIN session (the only role that
-    // reaches this generator, see canAccessSituationReport) sees the full
-    // picture here regardless of scopeJtfId above.
+    // (no jtfId of their own) — every session that reaches this generator
+    // (see canAccessSituationReport: ADMIN, COMMAND, and CMO/Intelligence/
+    // Maneuver WFC_STAFF) sees the full picture here regardless of
+    // scopeJtfId above.
     prisma.socialMediaPost.findMany({
       where: { postedAt: { gte: start, lt: end } },
       orderBy: { postedAt: "desc" },
