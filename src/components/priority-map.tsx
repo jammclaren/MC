@@ -553,7 +553,12 @@ function IncidentMarkerItems({
           key={marker.id}
           position={[marker.lat, marker.lng]}
           icon={buildIncidentIcon(isRecent ? "PULSE" : marker.markerStyle, zoom)}
-          zIndexOffset={isRecent ? 1000 : 0}
+          // A recent (pulsing) incident marker must outrank a recent
+          // (pulsing) Intel Update marker too — both use the same 1000
+          // offset, so a tie falls back to pane insertion order, where
+          // "Enemy Activity" (Intel) renders after Incidents and would
+          // otherwise sit on top and hide the incident underneath it.
+          zIndexOffset={isRecent ? 2000 : 0}
         >
           <Popup>
             <div className="text-xs">
