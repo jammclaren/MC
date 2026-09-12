@@ -82,7 +82,12 @@ export function IncidentMarkerFormDialog({
   const [date, setDate] = useState(initial?.date ?? new Date().toISOString().slice(0, 10));
   const [type, setType] = useState(initial?.type ?? "");
   const [result, setResult] = useState(initial?.result ?? "");
-  const [markerStyle, setMarkerStyle] = useState<string>(initial?.markerStyle ?? "PULSE");
+  // Defaults to NONE, matching the plain Log Incident form's schema default
+  // (see Incident.markerStyle in prisma/schema.prisma) — pulsing is meant to
+  // be an automatic "just logged" indicator (see isLatestIncident), not a
+  // style newly-added markers silently keep forever unless someone
+  // remembers to change this dropdown.
+  const [markerStyle, setMarkerStyle] = useState<string>(initial?.markerStyle ?? "NONE");
 
   const parsed = useMemo(() => parseMgrs(mgrsInput), [mgrsInput]);
   const visibleAreas = areaOptions.filter((a) => a.jtfId === jtfId);
