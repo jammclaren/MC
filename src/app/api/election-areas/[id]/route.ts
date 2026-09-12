@@ -6,6 +6,11 @@ import { assertCanWriteJtf } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import { withAudit } from "@/lib/audit";
 
+const pollingCenterSchema = z.object({
+  name: z.string().trim().min(1),
+  numPrecincts: z.number().int().nonnegative().nullable().optional(),
+});
+
 const updateAreaSchema = z.object({
   unitId: z.string().nullable().optional(),
   region: z.string().nullable().optional(),
@@ -17,6 +22,10 @@ const updateAreaSchema = z.object({
   hotspotReason: z.string().nullable().optional(),
   numPrecincts: z.number().int().nonnegative().nullable().optional(),
   numCenters: z.number().int().nonnegative().nullable().optional(),
+  // Sent as the full current list — replaces whatever was on file, same
+  // "form owns the whole state" contract the rest of this route already
+  // uses for scalar fields.
+  pollingCenters: z.array(pollingCenterSchema).optional(),
   registeredVoters: z.number().int().nonnegative().nullable().optional(),
   lat: z.number().nullable().optional(),
   lng: z.number().nullable().optional(),
@@ -43,9 +52,25 @@ export async function PATCH(
     assertCanWriteJtf(user, existing.jtfId);
 
     const body = updateAreaSchema.parse(await request.json());
+    const { pollingCenters, ...areaData } = body;
 
     const updated = await withAudit(
-      (tx) => tx.electionArea.update({ where: { id }, data: body }),
+      async (tx) => {
+        if (pollingCenters !== undefined) {
+          await tx.pollingCenter.deleteMany({ where: { electionAreaId: id } });
+        }
+        return tx.electionArea.update({
+          where: { id },
+          data: {
+            ...areaData,
+            pollingCenters:
+              pollingCenters && pollingCenters.length > 0
+                ? { create: pollingCenters }
+                : undefined,
+          },
+          include: { pollingCenters: true },
+        });
+      },
       {
         userId: user.id,
         action: "UPDATE",

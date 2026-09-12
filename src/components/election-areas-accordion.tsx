@@ -176,6 +176,10 @@ export function ElectionAreasAccordion({
                                   hotspotReason: area.hotspotReason ?? "",
                                   numPrecincts: area.numPrecincts?.toString() ?? "",
                                   numCenters: area.numCenters?.toString() ?? "",
+                                  pollingCenters: area.pollingCenters.map((pc) => ({
+                                    name: pc.name,
+                                    numPrecincts: pc.numPrecincts?.toString() ?? "",
+                                  })),
                                   registeredVoters: area.registeredVoters?.toString() ?? "",
                                   lat: area.lat?.toString() ?? "",
                                   lng: area.lng?.toString() ?? "",

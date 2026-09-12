@@ -7,7 +7,7 @@ export async function listElectionOpsAreas(user: SessionUser, jtfId?: string) {
 
   const areas = await prisma.electionArea.findMany({
     where: { jtfId: scopeJtfId },
-    include: { jtf: { select: { name: true } }, opsStatus: true },
+    include: { jtf: { select: { name: true } }, opsStatus: true, pollingCenters: true },
     orderBy: [{ province: "asc" }, { municipality: "asc" }, { barangay: "asc" }],
   });
 
@@ -27,6 +27,11 @@ export async function listElectionOpsAreas(user: SessionUser, jtfId?: string) {
       hotspotReason: area.hotspotReason,
       numPrecincts: area.numPrecincts,
       numCenters: area.numCenters,
+      pollingCenters: area.pollingCenters.map((pc) => ({
+        id: pc.id,
+        name: pc.name,
+        numPrecincts: pc.numPrecincts,
+      })),
       registeredVoters: area.registeredVoters,
       lat: area.lat,
       lng: area.lng,

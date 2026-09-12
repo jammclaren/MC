@@ -6,6 +6,11 @@ import { assertCanReadJtf, assertCanWriteJtf, scopeJtfFilter } from "@/lib/rbac"
 import { handleApiError } from "@/lib/api-error";
 import { withAudit } from "@/lib/audit";
 
+const pollingCenterSchema = z.object({
+  name: z.string().trim().min(1),
+  numPrecincts: z.number().int().nonnegative().nullable().optional(),
+});
+
 const createAreaSchema = z.object({
   jtfId: z.string().min(1),
   unitId: z.string().optional(),
@@ -18,6 +23,10 @@ const createAreaSchema = z.object({
   hotspotReason: z.string().nullable().optional(),
   numPrecincts: z.number().int().nonnegative().nullable().optional(),
   numCenters: z.number().int().nonnegative().nullable().optional(),
+  // Named polling centers, each with its own precinct count — an area with
+  // two or more physical centers logs one entry per center here, distinct
+  // from the area-wide numPrecincts/numCenters totals above.
+  pollingCenters: z.array(pollingCenterSchema).optional(),
   registeredVoters: z.number().int().nonnegative().nullable().optional(),
   lat: z.number().nullable().optional(),
   lng: z.number().nullable().optional(),
@@ -50,8 +59,20 @@ export async function POST(request: NextRequest) {
     const body = createAreaSchema.parse(await request.json());
     assertCanWriteJtf(user, body.jtfId);
 
+    const { pollingCenters, ...areaData } = body;
+
     const area = await withAudit(
-      (tx) => tx.electionArea.create({ data: body }),
+      (tx) =>
+        tx.electionArea.create({
+          data: {
+            ...areaData,
+            pollingCenters:
+              pollingCenters && pollingCenters.length > 0
+                ? { create: pollingCenters }
+                : undefined,
+          },
+          include: { pollingCenters: true },
+        }),
       {
         userId: user.id,
         action: "CREATE",

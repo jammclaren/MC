@@ -29,6 +29,11 @@ export interface JtfOption {
   name: string;
 }
 
+export interface PollingCenterFormValue {
+  name: string;
+  numPrecincts: string;
+}
+
 export interface ElectionAreaFormInitial {
   id: string;
   jtfId: string;
@@ -39,6 +44,7 @@ export interface ElectionAreaFormInitial {
   hotspotReason: string;
   numPrecincts: string;
   numCenters: string;
+  pollingCenters: PollingCenterFormValue[];
   registeredVoters: string;
   lat: string;
   lng: string;
@@ -81,6 +87,11 @@ export function ElectionAreaFormDialog({
   const [hotspotReason, setHotspotReason] = useState(initial?.hotspotReason ?? "");
   const [numPrecincts, setNumPrecincts] = useState(initial?.numPrecincts ?? "");
   const [numCenters, setNumCenters] = useState(initial?.numCenters ?? "");
+  const [pollingCenters, setPollingCenters] = useState<PollingCenterFormValue[]>(
+    initial?.pollingCenters && initial.pollingCenters.length > 0
+      ? initial.pollingCenters
+      : [{ name: "", numPrecincts: "" }]
+  );
   const [registeredVoters, setRegisteredVoters] = useState(initial?.registeredVoters ?? "");
   const [mgrsInput, setMgrsInput] = useState(() => {
     const lat = initial?.lat ? Number(initial.lat) : NaN;
@@ -118,6 +129,16 @@ export function ElectionAreaFormDialog({
     []
   );
 
+  function updatePollingCenter(index: number, patch: Partial<PollingCenterFormValue>) {
+    setPollingCenters((prev) => prev.map((pc, i) => (i === index ? { ...pc, ...patch } : pc)));
+  }
+  function addPollingCenter() {
+    setPollingCenters((prev) => [...prev, { name: "", numPrecincts: "" }]);
+  }
+  function removePollingCenter(index: number) {
+    setPollingCenters((prev) => prev.filter((_, i) => i !== index));
+  }
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (parsedMgrs && "error" in parsedMgrs) {
@@ -136,6 +157,14 @@ export function ElectionAreaFormDialog({
         hotspotReason: hotspotReason || null,
         numPrecincts: numOrUndefined(numPrecincts) ?? null,
         numCenters: numOrUndefined(numCenters) ?? null,
+        // Blank rows (never named) are dropped rather than saved as an
+        // unnamed center.
+        pollingCenters: pollingCenters
+          .filter((pc) => pc.name.trim() !== "")
+          .map((pc) => ({
+            name: pc.name.trim(),
+            numPrecincts: numOrUndefined(pc.numPrecincts) ?? null,
+          })),
         registeredVoters: numOrUndefined(registeredVoters) ?? null,
         lat: parsedMgrs ? parsedMgrs.lat : null,
         lng: parsedMgrs ? parsedMgrs.lng : null,
@@ -265,6 +294,56 @@ export function ElectionAreaFormDialog({
                 value={hotspotReason}
                 onChange={(e) => setHotspotReason(e.target.value)}
               />
+            </div>
+            <div className="col-span-2 flex flex-col gap-3">
+              <Label>Polling Centers</Label>
+              {pollingCenters.map((pc, index) => (
+                <div key={index} className="flex flex-col gap-2 rounded-md border border-border p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label htmlFor={`pollingCenterName-${index}`} className="text-xs text-muted-foreground">
+                      Name of Polling Center
+                    </Label>
+                    {pollingCenters.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removePollingCenter(index)}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                  <Input
+                    id={`pollingCenterName-${index}`}
+                    placeholder="e.g. Malabang Central Elementary School"
+                    value={pc.name}
+                    onChange={(e) => updatePollingCenter(index, { name: e.target.value })}
+                  />
+                  <Label
+                    htmlFor={`pollingCenterPrecincts-${index}`}
+                    className="text-xs text-muted-foreground"
+                  >
+                    Number of Polling Precincts
+                  </Label>
+                  <Input
+                    id={`pollingCenterPrecincts-${index}`}
+                    type="number"
+                    min={0}
+                    value={pc.numPrecincts}
+                    onChange={(e) => updatePollingCenter(index, { numPrecincts: e.target.value })}
+                  />
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="self-start"
+                onClick={addPollingCenter}
+              >
+                + Add Polling Center
+              </Button>
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="numPrecincts">Precincts</Label>

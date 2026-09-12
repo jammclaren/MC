@@ -230,6 +230,9 @@ model ElectionArea {
   barangay         String?
   hotspotCategory  String?
   hotspotReason    String?
+  // Area-wide totals — kept independent of the named breakdown below
+  // (an area's precinct/center count can be logged before anyone has
+  // named the individual polling centers yet).
   numPrecincts     Int?
   numCenters       Int?
   registeredVoters Int?
@@ -238,9 +241,24 @@ model ElectionArea {
   deployments      TroopDeployment[]
   incidents        Incident[]
   opsStatus        ElectionOpsStatus?
+  pollingCenters   PollingCenter[]
 
   @@index([jtfId])
   @@index([unitId])
+}
+
+// One row per named polling center within an area/barangay, each with its
+// own precinct count — an area with two or more physical polling centers
+// (e.g. two schools each hosting several precincts) logs one row per
+// center here instead of a single blind area-wide precinct number.
+model PollingCenter {
+  id             String       @id @default(cuid())
+  electionAreaId String
+  electionArea   ElectionArea @relation(fields: [electionAreaId], references: [id], onDelete: Cascade)
+  name           String
+  numPrecincts   Int?
+
+  @@index([electionAreaId])
 }
 
 model TroopDeployment {
