@@ -13,6 +13,7 @@ export interface JtfDeploymentCard {
   airAssetCount: number;
   navalAssetCount: number;
   isrAssetCount: number;
+  artilleryAssetCount: number;
   numPrecincts: number;
   registeredVoters: number;
 }
@@ -42,6 +43,8 @@ export interface DeploymentRow {
   navalAssetCount: number;
   isrAssetType: string | null;
   isrAssetCount: number;
+  artilleryAssetType: string | null;
+  artilleryAssetCount: number;
   reportedAt: Date;
 }
 
@@ -53,6 +56,7 @@ export interface DeploymentData {
   totalAirAssets: number;
   totalNavalAssets: number;
   totalIsrAssets: number;
+  totalArtilleryAssets: number;
   rows: DeploymentRow[];
 }
 
@@ -84,6 +88,7 @@ export async function getDeploymentData(
         airAssetCount: true,
         navalAssetCount: true,
         isrAssetCount: true,
+        artilleryAssetCount: true,
       },
     }),
     prisma.troopDeployment.findMany({
@@ -113,6 +118,7 @@ export async function getDeploymentData(
       airAssetCount: deployRows.reduce((sum, r) => sum + r.airAssetCount, 0),
       navalAssetCount: deployRows.reduce((sum, r) => sum + r.navalAssetCount, 0),
       isrAssetCount: deployRows.reduce((sum, r) => sum + r.isrAssetCount, 0),
+      artilleryAssetCount: deployRows.reduce((sum, r) => sum + r.artilleryAssetCount, 0),
       numPrecincts: areaAgg?._sum.numPrecincts ?? 0,
       registeredVoters: areaAgg?._sum.registeredVoters ?? 0,
     };
@@ -147,6 +153,8 @@ export async function getDeploymentData(
     navalAssetCount: d.navalAssetCount,
     isrAssetType: d.isrAssetType,
     isrAssetCount: d.isrAssetCount,
+    artilleryAssetType: d.artilleryAssetType,
+    artilleryAssetCount: d.artilleryAssetCount,
     reportedAt: d.reportedAt,
   }));
 
@@ -158,6 +166,7 @@ export async function getDeploymentData(
     totalAirAssets: jtfCards.reduce((sum, c) => sum + c.airAssetCount, 0),
     totalNavalAssets: jtfCards.reduce((sum, c) => sum + c.navalAssetCount, 0),
     totalIsrAssets: jtfCards.reduce((sum, c) => sum + c.isrAssetCount, 0),
+    totalArtilleryAssets: jtfCards.reduce((sum, c) => sum + c.artilleryAssetCount, 0),
     rows,
   };
 }

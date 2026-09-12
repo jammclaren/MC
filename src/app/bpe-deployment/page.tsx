@@ -2,7 +2,6 @@ import { redirect, notFound } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { getDeploymentData } from "@/lib/queries/deployments";
-import { safePercent } from "@/lib/percentages";
 import { canAccessPage, canWriteDeployment } from "@/lib/rbac";
 import {
   Card,
@@ -12,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { StatTile } from "@/components/stat-tile";
-import { Users, ShieldAlert, Building2, Plane, Ship, Radar } from "lucide-react";
+import { Users, ShieldAlert, Building2, Plane, Ship, Radar, Crosshair } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DeploymentFormDialog } from "@/components/deployment-form-dialog";
 import { DeploymentRowsAccordion } from "@/components/deployment-rows-accordion";
@@ -99,7 +98,6 @@ export default async function BpeDeploymentPage({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {data.jtfCards.map((card) => {
-          const coveragePct = safePercent(card.deployedToPolling, card.registeredVoters);
           return (
             <Card key={card.jtfId}>
               <CardHeader>
@@ -151,10 +149,8 @@ export default async function BpeDeploymentPage({
                   <span className="font-medium">{card.isrAssetCount.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Voter Coverage</span>
-                  <span className="font-medium">
-                    {coveragePct === null ? "—" : `${coveragePct.toFixed(1)}%`}
-                  </span>
+                  <span className="text-muted-foreground">Artillery Assets</span>
+                  <span className="font-medium">{card.artilleryAssetCount.toLocaleString()}</span>
                 </div>
               </CardContent>
             </Card>
@@ -184,6 +180,11 @@ export default async function BpeDeploymentPage({
           <StatTile label="Air Assets" value={data.totalAirAssets.toLocaleString()} icon={Plane} />
           <StatTile label="Naval Assets" value={data.totalNavalAssets.toLocaleString()} icon={Ship} />
           <StatTile label="ISR Assets" value={data.totalIsrAssets.toLocaleString()} icon={Radar} />
+          <StatTile
+            label="Artillery Assets"
+            value={data.totalArtilleryAssets.toLocaleString()}
+            icon={Crosshair}
+          />
         </div>
       </div>
 

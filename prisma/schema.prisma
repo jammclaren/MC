@@ -278,6 +278,8 @@ model TroopDeployment {
   // "Fixed CCTV Node") — same free-text-type-plus-count shape as air/naval.
   isrAssetType             String?
   isrAssetCount            Int           @default(0)
+  artilleryAssetType       String?
+  artilleryAssetCount      Int           @default(0)
   reportedAt               DateTime      @default(now())
 
   @@index([jtfId])

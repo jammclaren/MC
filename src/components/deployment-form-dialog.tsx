@@ -56,6 +56,8 @@ export interface DeploymentFormValues {
   navalAssetCount: number;
   isrAssetType: string;
   isrAssetCount: number;
+  artilleryAssetType: string;
+  artilleryAssetCount: number;
 }
 
 const EMPTY: Omit<DeploymentFormValues, "jtfId"> = {
@@ -78,6 +80,8 @@ const EMPTY: Omit<DeploymentFormValues, "jtfId"> = {
   navalAssetCount: 0,
   isrAssetType: "",
   isrAssetCount: 0,
+  artilleryAssetType: "",
+  artilleryAssetCount: 0,
 };
 
 function numField(value: string): number {
@@ -141,6 +145,7 @@ export function DeploymentFormDialog({
         airAssetType,
         navalAssetType,
         isrAssetType,
+        artilleryAssetType,
         ...rest
       } = values;
       void _id;
@@ -157,6 +162,7 @@ export function DeploymentFormDialog({
         airAssetType: airAssetType.trim() || (isEdit ? null : undefined),
         navalAssetType: navalAssetType.trim() || (isEdit ? null : undefined),
         isrAssetType: isrAssetType.trim() || (isEdit ? null : undefined),
+        artilleryAssetType: artilleryAssetType.trim() || (isEdit ? null : undefined),
       };
 
       const res = await fetch(url, {
@@ -331,6 +337,25 @@ export function DeploymentFormDialog({
                 min={0}
                 value={values.isrAssetCount}
                 onChange={(e) => setField("isrAssetCount", numField(e.target.value))}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="artilleryAssetType">Artillery Asset Type</Label>
+              <Input
+                id="artilleryAssetType"
+                placeholder="e.g. M114 155mm Howitzer"
+                value={values.artilleryAssetType}
+                onChange={(e) => setField("artilleryAssetType", e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="artilleryAssetCount">Artillery Asset Count</Label>
+              <Input
+                id="artilleryAssetCount"
+                type="number"
+                min={0}
+                value={values.artilleryAssetCount}
+                onChange={(e) => setField("artilleryAssetCount", numField(e.target.value))}
               />
             </div>
           </div>
