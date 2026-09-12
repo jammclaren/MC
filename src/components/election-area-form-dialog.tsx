@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { BarangayIndex } from "@/lib/barangay-index";
+import { parseMgrs, toMgrs } from "@/lib/mgrs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,8 +82,18 @@ export function ElectionAreaFormDialog({
   const [numPrecincts, setNumPrecincts] = useState(initial?.numPrecincts ?? "");
   const [numCenters, setNumCenters] = useState(initial?.numCenters ?? "");
   const [registeredVoters, setRegisteredVoters] = useState(initial?.registeredVoters ?? "");
-  const [lat, setLat] = useState(initial?.lat ?? "");
-  const [lng, setLng] = useState(initial?.lng ?? "");
+  const [mgrsInput, setMgrsInput] = useState(() => {
+    const lat = initial?.lat ? Number(initial.lat) : NaN;
+    const lng = initial?.lng ? Number(initial.lng) : NaN;
+    return Number.isNaN(lat) || Number.isNaN(lng) ? "" : toMgrs(lat, lng);
+  });
+  // Coordinates are optional here (unlike the incident marker's required
+  // MGRS field) — a blank field just means "no coordinates on file", not
+  // an error to block submission on.
+  const parsedMgrs = useMemo(
+    () => (mgrsInput.trim() ? parseMgrs(mgrsInput) : null),
+    [mgrsInput]
+  );
 
   const municipalityOptions = useMemo(
     () => barangayIndex?.municipalitiesByProvince[province.trim()] ?? [],
@@ -109,6 +120,10 @@ export function ElectionAreaFormDialog({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (parsedMgrs && "error" in parsedMgrs) {
+      toast.error(parsedMgrs.error);
+      return;
+    }
     setSubmitting(true);
     try {
       const url = isEdit ? `/api/election-areas/${initial!.id}` : "/api/election-areas";
@@ -122,8 +137,8 @@ export function ElectionAreaFormDialog({
         numPrecincts: numOrUndefined(numPrecincts) ?? null,
         numCenters: numOrUndefined(numCenters) ?? null,
         registeredVoters: numOrUndefined(registeredVoters) ?? null,
-        lat: numOrUndefined(lat) ?? null,
-        lng: numOrUndefined(lng) ?? null,
+        lat: parsedMgrs ? parsedMgrs.lat : null,
+        lng: parsedMgrs ? parsedMgrs.lng : null,
       };
       const body = isEdit ? shared : { jtfId, ...shared };
 
@@ -281,25 +296,24 @@ export function ElectionAreaFormDialog({
                 onChange={(e) => setRegisteredVoters(e.target.value)}
               />
             </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="lat">Latitude</Label>
+            <div className="col-span-2 flex flex-col gap-2">
+              <Label htmlFor="mgrs">MGRS Grid Reference (optional)</Label>
               <Input
-                id="lat"
-                type="number"
-                step="any"
-                value={lat}
-                onChange={(e) => setLat(e.target.value)}
+                id="mgrs"
+                placeholder="e.g. 51NUA6789054321"
+                className="font-mono uppercase"
+                value={mgrsInput}
+                onChange={(e) => setMgrsInput(e.target.value)}
               />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="lng">Longitude</Label>
-              <Input
-                id="lng"
-                type="number"
-                step="any"
-                value={lng}
-                onChange={(e) => setLng(e.target.value)}
-              />
+              {parsedMgrs && (
+                <p className="text-xs text-muted-foreground">
+                  {"error" in parsedMgrs ? (
+                    <span className="text-status-critical">{parsedMgrs.error}</span>
+                  ) : (
+                    `${parsedMgrs.lat.toFixed(5)}, ${parsedMgrs.lng.toFixed(5)}`
+                  )}
+                </p>
+              )}
             </div>
           </div>
           <DialogFooter>
