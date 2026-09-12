@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
+import { formatTimestamp24h } from "@/lib/datetime";
 
 /**
  * Fire-and-forget email to every ADMIN when a user's account signs in from a
@@ -30,7 +31,7 @@ export async function notifyAdminsOfNewDevice(params: {
     if (admins.length === 0) return;
 
     const resend = new Resend(apiKey);
-    const when = new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" });
+    const when = formatTimestamp24h(new Date().toISOString());
 
     await resend.emails.send({
       from,

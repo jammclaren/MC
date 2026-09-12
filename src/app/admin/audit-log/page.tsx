@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { formatTimestamp24h } from "@/lib/datetime";
 
 const ENTITIES = [
   "User",
@@ -132,7 +133,7 @@ export default async function AuditLogPage({
               {logs.map((log) => (
                 <TableRow key={log.id}>
                   <TableCell className="whitespace-nowrap">
-                    {log.createdAt.toLocaleString()}
+                    {formatTimestamp24h(log.createdAt.toISOString())}
                   </TableCell>
                   <TableCell>{log.user.name}</TableCell>
                   <TableCell>{log.action}</TableCell>

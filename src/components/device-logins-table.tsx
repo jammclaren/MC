@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { UserDeviceRow } from "@/lib/queries/user-devices";
+import { formatTimestamp24h } from "@/lib/datetime";
 
 export type DeviceLoginRow = Omit<UserDeviceRow, "lastSeenAt"> & {
   lastSeenAt: string;
@@ -94,7 +95,7 @@ export function DeviceLoginsTable({ devices }: { devices: DeviceLoginRow[] }) {
               <span className="block text-xs text-muted-foreground">{device.deviceType}</span>
             </TableCell>
             <TableCell>{device.location ?? "Unknown"}</TableCell>
-            <TableCell>{new Date(device.lastSeenAt).toLocaleString()}</TableCell>
+            <TableCell>{formatTimestamp24h(device.lastSeenAt)}</TableCell>
             <TableCell>
               <Badge variant={STATUS_BADGE[device.status]}>{device.status}</Badge>
             </TableCell>

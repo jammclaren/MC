@@ -108,6 +108,7 @@ export function DailyAssessmentPanel() {
                   timeZone: "Asia/Manila",
                   hour: "2-digit",
                   minute: "2-digit",
+                  hour12: false,
                 })}{" "}
                 PHT
               </span>

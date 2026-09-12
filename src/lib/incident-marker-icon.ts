@@ -1,11 +1,13 @@
 import L from "leaflet";
 import type { IncidentMarker } from "@/lib/queries/incident-markers";
 
-const LATEST_INCIDENT_WINDOW_MS = 60 * 60 * 1000;
+const LATEST_INCIDENT_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 /** Just-logged incidents pulse regardless of their stored markerStyle, so a
  * fresh report catches the eye on the map without anyone having to remember
- * to pick "Pulse" — it fades back to the chosen style after an hour. */
+ * to pick "Pulse" — it fades back to the chosen style after 24 hours. Applies
+ * the same way no matter which form logged the incident (Log Incident or the
+ * map's own Add Marker button), since both write the same createdAt field. */
 export function isLatestIncident(createdAt: string): boolean {
   return Date.now() - new Date(createdAt).getTime() <= LATEST_INCIDENT_WINDOW_MS;
 }
