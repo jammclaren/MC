@@ -165,12 +165,11 @@ export function assertCanWriteSocialMonitor(user: SessionUser): void {
 }
 
 /**
- * Situation Report (Daily Summary of Reports) is written by ADMIN and the
- * three WFC_STAFF functions (CMO, Intelligence, Maneuver/M2) — see
- * canWriteSituationReport. COMMAND can see it read-only per the
- * command-viewer rule — a command-wide document is exactly what a pure
- * viewer should be able to open, but COMMAND never writes anything anywhere.
- * Not visible to any JTF-scoped role.
+ * Situation Report (Daily Summary of Reports) is written by ADMIN and
+ * WFC_STAFF/Maneuver (M2) only — see canWriteSituationReport. CMO and
+ * Intelligence can view it (it folds in every one of their own workspaces
+ * too) but only view/print, same read-only posture as COMMAND under the
+ * command-viewer rule. Not visible to any JTF-scoped role.
  */
 export function canAccessSituationReport(user: SessionUser): boolean {
   if (user.role === "ADMIN" || user.role === "COMMAND") return true;
@@ -192,14 +191,7 @@ export function assertCanAccessSituationReport(user: SessionUser): void {
 
 export function canWriteSituationReport(user: SessionUser): boolean {
   if (user.role === "ADMIN") return true;
-  if (user.role === "WFC_STAFF") {
-    return (
-      user.warfightingFunction === "CMO" ||
-      user.warfightingFunction === "INTELLIGENCE" ||
-      user.warfightingFunction === "MANEUVER"
-    );
-  }
-  return false;
+  return user.role === "WFC_STAFF" && user.warfightingFunction === "MANEUVER";
 }
 
 export function assertCanWriteSituationReport(user: SessionUser): void {
