@@ -4,17 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { listIncidents } from "@/lib/queries/incidents";
 import { canWriteJtf, canModifyEntry } from "@/lib/rbac";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { IncidentFormDialog } from "@/components/incident-form-dialog";
-import { DeleteButton } from "@/components/delete-button";
+import { IncidentsAccordion, type IncidentRow } from "@/components/incidents-accordion";
 
 export default async function IncidentsPage({
   searchParams,
@@ -43,6 +35,36 @@ export default async function IncidentsPage({
   const writableJtfId =
     user.role === "ADMIN" ? undefined : user.jtfId && canWriteJtf(user, user.jtfId) ? user.jtfId : undefined;
   const canCreate = user.role === "ADMIN" || (!!user.jtfId && canWriteJtf(user, user.jtfId));
+
+  const incidentRows: IncidentRow[] = incidents.map((incident) => {
+    const areaLabel =
+      incident.locationLabel ||
+      (incident.electionArea
+        ? [incident.electionArea.barangay, incident.electionArea.municipality]
+            .filter(Boolean)
+            .join(", ") || incident.electionArea.province
+        : "—");
+    return {
+      id: incident.id,
+      date: incident.date,
+      jtfName: incident.jtf.name,
+      areaLabel,
+      type: incident.type,
+      result: incident.result,
+      canEdit: canModifyEntry(user, incident.jtfId, incident.createdById),
+      editInitial: {
+        id: incident.id,
+        jtfId: incident.jtfId,
+        electionAreaId: incident.electionAreaId ?? undefined,
+        locationLabel: incident.locationLabel ?? "",
+        date: incident.date.toISOString().slice(0, 10),
+        type: incident.type,
+        result: incident.result ?? "",
+        lat: incident.lat ?? undefined,
+        lng: incident.lng ?? undefined,
+      },
+    };
+  });
 
   return (
     <div className="flex flex-col gap-6">
@@ -130,76 +152,8 @@ export default async function IncidentsPage({
         <CardHeader>
           <CardTitle>Incidents</CardTitle>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>JTF</TableHead>
-                <TableHead>Area</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Result</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {incidents.map((incident) => {
-                const areaLabel =
-                  incident.locationLabel ||
-                  (incident.electionArea
-                    ? [incident.electionArea.barangay, incident.electionArea.municipality]
-                        .filter(Boolean)
-                        .join(", ") || incident.electionArea.province
-                    : "—");
-                const canModify = canModifyEntry(user, incident.jtfId, incident.createdById);
-                return (
-                  <TableRow key={incident.id}>
-                    <TableCell>{incident.date.toLocaleDateString()}</TableCell>
-                    <TableCell>{incident.jtf.name}</TableCell>
-                    <TableCell>{areaLabel}</TableCell>
-                    <TableCell>{incident.type}</TableCell>
-                    <TableCell>{incident.result ?? "—"}</TableCell>
-                    <TableCell className="text-right">
-                      {canModify && (
-                        <div className="flex justify-end gap-1">
-                          <IncidentFormDialog
-                            jtfOptions={jtfOptions}
-                            initial={{
-                              id: incident.id,
-                              jtfId: incident.jtfId,
-                              electionAreaId: incident.electionAreaId ?? undefined,
-                              locationLabel: incident.locationLabel ?? "",
-                              date: incident.date.toISOString().slice(0, 10),
-                              type: incident.type,
-                              result: incident.result ?? "",
-                              lat: incident.lat ?? undefined,
-                              lng: incident.lng ?? undefined,
-                            }}
-                            trigger={
-                              <Button variant="ghost" size="sm">
-                                Edit
-                              </Button>
-                            }
-                          />
-                          <DeleteButton
-                            url={`/api/incidents/${incident.id}`}
-                            confirmMessage="Delete this incident? This cannot be undone."
-                          />
-                        </div>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              {incidents.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    No incidents match these filters.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+        <CardContent>
+          <IncidentsAccordion rows={incidentRows} jtfOptions={jtfOptions} />
         </CardContent>
       </Card>
     </div>
