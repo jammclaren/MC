@@ -59,6 +59,51 @@ export function assertCanWriteDeployment(user: SessionUser, targetJtfId: string)
   }
 }
 
+/**
+ * Monitored Incidents is also owned by WFC Maneuver ("M2") command-wide,
+ * the same grant already given on Deployment (see canWriteDeployment) —
+ * logging and editing incidents is part of M2's maneuver picture, not
+ * just troop counts. Kept as its own function (rather than folding into
+ * canWriteJtf) so this stays opt-in per page, same discipline as
+ * canWriteDeployment.
+ */
+export function canWriteIncident(user: SessionUser, targetJtfId: string): boolean {
+  if (user.role === "WFC_STAFF" && user.warfightingFunction === "MANEUVER") return true;
+  return canWriteJtf(user, targetJtfId);
+}
+
+export function assertCanWriteIncident(user: SessionUser, targetJtfId: string): void {
+  if (!canWriteIncident(user, targetJtfId)) {
+    throw new ForbiddenError("Not authorized to write incident data for this JTF");
+  }
+}
+
+/**
+ * M2's incident edit/delete access is command-wide like its create access
+ * above — not limited to entries M2 itself created, the same "any JTF"
+ * posture canWriteDeployment already gives it on Deployment rows (which
+ * likewise isn't gated on createdById). JTF_STAFF/BRIGADE_STAFF keep the
+ * existing "own entries only" restriction from canModifyEntry.
+ */
+export function canModifyIncident(
+  user: SessionUser,
+  targetJtfId: string,
+  createdById: string
+): boolean {
+  if (user.role === "WFC_STAFF" && user.warfightingFunction === "MANEUVER") return true;
+  return canModifyEntry(user, targetJtfId, createdById);
+}
+
+export function assertCanModifyIncident(
+  user: SessionUser,
+  targetJtfId: string,
+  createdById: string
+): void {
+  if (!canModifyIncident(user, targetJtfId, createdById)) {
+    throw new ForbiddenError("Not authorized to modify this incident");
+  }
+}
+
 /** JTF_STAFF/BRIGADE_STAFF may only edit/delete entries they created
  * themselves. */
 export function canModifyEntry(

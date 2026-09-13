@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUser } from "@/lib/session";
-import { assertCanModifyEntry } from "@/lib/rbac";
+import { assertCanModifyIncident } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import { withAudit } from "@/lib/audit";
 
@@ -35,7 +35,7 @@ export async function PATCH(
     const { id } = await params;
     const user = await requireSessionUser();
     const existing = await loadIncidentOrThrow(id);
-    assertCanModifyEntry(user, existing.jtfId, existing.createdById);
+    assertCanModifyIncident(user, existing.jtfId, existing.createdById);
 
     const body = updateIncidentSchema.parse(await request.json());
 
@@ -64,7 +64,7 @@ export async function DELETE(
     const { id } = await params;
     const user = await requireSessionUser();
     const existing = await loadIncidentOrThrow(id);
-    assertCanModifyEntry(user, existing.jtfId, existing.createdById);
+    assertCanModifyIncident(user, existing.jtfId, existing.createdById);
 
     await withAudit(
       (tx) => tx.incident.delete({ where: { id } }),

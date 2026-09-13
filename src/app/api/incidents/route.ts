@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireSessionUser } from "@/lib/session";
-import { assertCanReadJtf, assertCanWriteJtf, scopeJtfFilter } from "@/lib/rbac";
+import { assertCanReadJtf, assertCanWriteIncident, scopeJtfFilter } from "@/lib/rbac";
 import { handleApiError } from "@/lib/api-error";
 import { withAudit } from "@/lib/audit";
 
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireSessionUser();
     const body = createIncidentSchema.parse(await request.json());
-    assertCanWriteJtf(user, body.jtfId);
+    assertCanWriteIncident(user, body.jtfId);
 
     const incident = await withAudit(
       (tx) => tx.incident.create({ data: { ...body, createdById: user.id } }),

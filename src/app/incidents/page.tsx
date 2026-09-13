@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { listIncidents } from "@/lib/queries/incidents";
-import { canWriteJtf, canModifyEntry } from "@/lib/rbac";
+import { canWriteIncident, canModifyIncident } from "@/lib/rbac";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { IncidentFormDialog } from "@/components/incident-form-dialog";
@@ -32,9 +32,18 @@ export default async function IncidentsPage({
 
   const jtfOptions = jtfs.map((jtf) => ({ id: jtf.id, name: jtf.name }));
 
+  // A WFC_STAFF/MANEUVER ("M2") account isn't tied to one JTF but owns this
+  // page command-wide, the same "any JTF" write posture ADMIN already has
+  // here (see canWriteIncident) — mirrors bpe-deployment's isDeploymentOwner.
+  const isIncidentOwner =
+    user.role === "ADMIN" || (user.role === "WFC_STAFF" && user.warfightingFunction === "MANEUVER");
   const writableJtfId =
-    user.role === "ADMIN" ? undefined : user.jtfId && canWriteJtf(user, user.jtfId) ? user.jtfId : undefined;
-  const canCreate = user.role === "ADMIN" || (!!user.jtfId && canWriteJtf(user, user.jtfId));
+    isIncidentOwner
+      ? undefined
+      : user.jtfId && canWriteIncident(user, user.jtfId)
+        ? user.jtfId
+        : undefined;
+  const canCreate = isIncidentOwner || (!!user.jtfId && canWriteIncident(user, user.jtfId));
 
   const incidentRows: IncidentRow[] = incidents.map((incident) => {
     const areaLabel =
@@ -51,7 +60,7 @@ export default async function IncidentsPage({
       areaLabel,
       type: incident.type,
       result: incident.result,
-      canEdit: canModifyEntry(user, incident.jtfId, incident.createdById),
+      canEdit: canModifyIncident(user, incident.jtfId, incident.createdById),
       editInitial: {
         id: incident.id,
         jtfId: incident.jtfId,
