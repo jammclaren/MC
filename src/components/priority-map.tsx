@@ -849,9 +849,11 @@ export function PriorityMap({
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const area of areas) {
-      if (area.hotspotCategory) {
-        counts[area.hotspotCategory] = (counts[area.hotspotCategory] ?? 0) + 1;
-      }
+      // Areas with no category set at all are real, common data (not yet
+      // triaged) — bucket them under "Unclassified" instead of silently
+      // dropping them, so the Legend's own rows always add up to `total`.
+      const key = area.hotspotCategory || "Unclassified";
+      counts[key] = (counts[key] ?? 0) + 1;
     }
     return counts;
   }, [areas]);
