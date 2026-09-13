@@ -6,14 +6,18 @@ import { assertCanAccessSocialMonitor, assertCanWriteSocialMonitor } from "@/lib
 import { handleApiError } from "@/lib/api-error";
 import { withAudit } from "@/lib/audit";
 
+// Only label/title/platform (the "does this row count" field the client
+// itself filters on before including a row at all) are required — the
+// sibling fields are real columns but a partially-filled-in row shouldn't
+// 400 the whole report just because one of them was left blank.
 const issueSchema = z.object({
   label: z.string().trim().min(1).max(200),
   mentions: z.coerce.number().int().min(0),
-  engagementLabel: z.string().trim().min(1).max(50),
-  reachLabel: z.string().trim().min(1).max(50),
+  engagementLabel: z.string().trim().max(50).optional().default(""),
+  reachLabel: z.string().trim().max(50).optional().default(""),
   authors: z.coerce.number().int().min(0),
-  status: z.string().trim().min(1).max(100),
-  riskLevel: z.string().trim().min(1).max(100),
+  status: z.string().trim().max(100).optional().default(""),
+  riskLevel: z.string().trim().max(100).optional().default(""),
 });
 
 const platformSchema = z.object({
@@ -23,10 +27,10 @@ const platformSchema = z.object({
 
 const activitySchema = z.object({
   title: z.string().trim().min(1).max(200),
-  subtitle: z.string().trim().min(1).max(300),
+  subtitle: z.string().trim().max(300).optional().default(""),
   sourceUrl: z.string().trim().url().max(500).nullable().optional(),
-  analysis: z.string().trim().min(1).max(4000),
-  assessment: z.string().trim().min(1).max(4000),
+  analysis: z.string().trim().max(4000).optional().default(""),
+  assessment: z.string().trim().max(4000).optional().default(""),
 });
 
 const createReportSchema = z.object({
