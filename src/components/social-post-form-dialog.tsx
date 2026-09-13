@@ -114,7 +114,15 @@ export function SocialPostFormDialog({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? "Request failed");
+        // Zod validation failures come back as a generic "Invalid input"
+        // plus a per-field issues array — surface the first field/reason
+        // instead of leaving the toast a mystery (e.g. a pasted Page/Group
+        // Name over 200 characters).
+        const firstIssue = data.issues?.[0];
+        const message = firstIssue
+          ? `${firstIssue.path?.join(".") ?? "Field"}: ${firstIssue.message}`
+          : (data.error ?? "Request failed");
+        throw new Error(message);
       }
       toast.success(isEdit ? "Post updated" : "Post logged");
       setOpen(false);
@@ -140,6 +148,7 @@ export function SocialPostFormDialog({
               <Input
                 id="pageName"
                 required
+                maxLength={200}
                 placeholder="e.g. Cotabato News Watch"
                 value={pageName}
                 onChange={(e) => setPageName(e.target.value)}
@@ -149,6 +158,7 @@ export function SocialPostFormDialog({
               <Label htmlFor="authorName">Author (optional)</Label>
               <Input
                 id="authorName"
+                maxLength={200}
                 value={authorName}
                 onChange={(e) => setAuthorName(e.target.value)}
               />
@@ -170,6 +180,7 @@ export function SocialPostFormDialog({
               <Input
                 id="postUrl"
                 type="url"
+                maxLength={500}
                 placeholder="https://facebook.com/..."
                 value={postUrl}
                 onChange={(e) => setPostUrl(e.target.value)}
@@ -242,6 +253,7 @@ export function SocialPostFormDialog({
               <Label htmlFor="sourceNote">Source Note (optional)</Label>
               <Input
                 id="sourceNote"
+                maxLength={300}
                 placeholder="e.g. Reported by JTF ORION S2, forwarded via CMO"
                 value={sourceNote}
                 onChange={(e) => setSourceNote(e.target.value)}
