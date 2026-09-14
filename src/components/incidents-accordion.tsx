@@ -36,7 +36,11 @@ interface TypeGroup {
  * used for the Top Incident Types breakdown elsewhere on the dashboard —
  * so the two views agree on category and someone scanning the log can
  * jump straight to, say, every "Fire Fight" instead of scrolling past
- * everything else in date order. */
+ * everything else. `rows` arrives newest-first (see listIncidents'
+ * orderBy), so each group's first row is its most recent incident — groups
+ * are ordered by that, not by how many incidents share the type, so a
+ * type with just one fresh report still surfaces near the top instead of
+ * sinking below busier-but-staler categories. */
 function groupByType(rows: IncidentRow[]): TypeGroup[] {
   const map = new Map<string, IncidentRow[]>();
   for (const row of rows) {
@@ -46,7 +50,7 @@ function groupByType(rows: IncidentRow[]): TypeGroup[] {
   }
   return Array.from(map.entries())
     .map(([type, rows]) => ({ type, rows }))
-    .sort((a, b) => b.rows.length - a.rows.length || a.type.localeCompare(b.type));
+    .sort((a, b) => b.rows[0].date.getTime() - a.rows[0].date.getTime());
 }
 
 /** Per-incident dropdown instead of a wide table — the same detail fields
