@@ -29,6 +29,7 @@ export interface UserRow {
   jtfName: string | null;
   warfightingFunction: UserFormInitial["warfightingFunction"];
   createdAtLabel: string;
+  deviceLoginCount: number;
 }
 
 const ALL_FUNCTIONS_VALUE = "__all__";
@@ -104,6 +105,7 @@ export function UsersTable({
             <TableHead>Role</TableHead>
             <TableHead>JTF / Function</TableHead>
             <TableHead>Created</TableHead>
+            <TableHead className="text-right">Device Logins</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -115,6 +117,7 @@ export function UsersTable({
               <TableCell>{row.role}</TableCell>
               <TableCell>{functionLabel(row)}</TableCell>
               <TableCell>{row.createdAtLabel}</TableCell>
+              <TableCell className="text-right font-mono tabular-nums">{row.deviceLoginCount}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
                   <UserFormDialog
@@ -144,7 +147,7 @@ export function UsersTable({
           ))}
           {filtered.length === 0 && (
             <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground">
+              <TableCell colSpan={7} className="text-center text-muted-foreground">
                 No accounts match this filter.
               </TableCell>
             </TableRow>
