@@ -52,7 +52,7 @@ export function LoginForm({
   return (
     <Card className="w-full max-w-sm bg-card/85 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle>WESMINCOM Tactical C2</CardTitle>
+        <CardTitle>DEGREES</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
