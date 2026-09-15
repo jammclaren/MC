@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
+import { TerrainContourBackground } from "@/components/terrain-contour-background";
 import { LoginForm } from "./LoginForm";
 
 export default async function LoginPage({
@@ -15,8 +16,11 @@ export default async function LoginPage({
   const { callbackUrl, error } = await searchParams;
 
   return (
-    <div className="flex flex-1 items-center justify-center p-6">
-      <LoginForm callbackUrl={callbackUrl ?? "/"} initialError={error} />
+    <div className="relative flex flex-1 items-center justify-center overflow-hidden p-6">
+      <TerrainContourBackground />
+      <div className="relative z-10">
+        <LoginForm callbackUrl={callbackUrl ?? "/"} initialError={error} />
+      </div>
     </div>
   );
 }

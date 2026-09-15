@@ -45,6 +45,29 @@ function ChartTooltip({
   );
 }
 
+/** Every point renders as a plain dot except the most recent day, which
+ * gets an expanding pulse ring (same "live" language as the map's
+ * incident markers) so today's figure reads as current at a glance. */
+function makeRenderDot(lastIndex: number) {
+  return function renderDot(props: {
+    cx?: number;
+    cy?: number;
+    index?: number;
+  }) {
+    const { cx, cy, index } = props;
+    if (cx == null || cy == null || index == null) return <g />;
+    if (index !== lastIndex) {
+      return <circle key={index} cx={cx} cy={cy} r={3} fill="var(--primary)" />;
+    }
+    return (
+      <g key={index}>
+        <circle cx={cx} cy={cy} r={4} fill="var(--primary)" className="chart-today-pulse-ring" />
+        <circle cx={cx} cy={cy} r={4} fill="var(--primary)" />
+      </g>
+    );
+  };
+}
+
 export function IncidentsByDayChart({
   data,
   height = 180,
@@ -52,6 +75,8 @@ export function IncidentsByDayChart({
   data: IncidentsByDayDatum[];
   height?: number | `${number}%`;
 }) {
+  const renderDot = makeRenderDot(data.length - 1);
+
   return (
     <ResponsiveContainer width="100%" height={height}>
       <AreaChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
@@ -76,8 +101,10 @@ export function IncidentsByDayChart({
           stroke="var(--primary)"
           strokeWidth={2}
           fill={`url(#${GRADIENT_ID})`}
-          dot={{ r: 3, fill: "var(--primary)", strokeWidth: 0 }}
+          dot={renderDot}
           activeDot={{ r: 5 }}
+          animationDuration={1400}
+          animationEasing="ease-out"
         />
       </AreaChart>
     </ResponsiveContainer>

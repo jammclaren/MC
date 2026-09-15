@@ -43,14 +43,28 @@ export function DeploymentBarChart({ data }: { data: DeploymentBarChartDatum[] }
           name="Deployed to Polling Precincts"
           fill="var(--chart-1)"
           radius={[2, 2, 0, 0]}
+          animationDuration={1000}
+          animationEasing="ease-out"
+          animationBegin={0}
         />
         <Bar
           dataKey="deployedToPollingCenters"
           name="Deployed to Polling Centers"
           fill="var(--chart-3)"
           radius={[2, 2, 0, 0]}
+          animationDuration={1000}
+          animationEasing="ease-out"
+          animationBegin={120}
         />
-        <Bar dataKey="qrf" name="QRF" fill="var(--chart-2)" radius={[2, 2, 0, 0]} />
+        <Bar
+          dataKey="qrf"
+          name="QRF"
+          fill="var(--chart-2)"
+          radius={[2, 2, 0, 0]}
+          animationDuration={1000}
+          animationEasing="ease-out"
+          animationBegin={240}
+        />
       </BarChart>
     </ResponsiveContainer>
   );
