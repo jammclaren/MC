@@ -10,15 +10,16 @@ import { useEffect, useState } from "react";
 export function RadialGauge({
   pct,
   size = 118,
+  radius = 50,
   strokeWidth = 10,
-  color = "var(--status-good)",
+  color = "var(--chart-3)",
 }: {
   pct: number;
   size?: number;
+  radius?: number;
   strokeWidth?: number;
   color?: string;
 }) {
-  const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const [reduceMotion] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -38,7 +39,7 @@ export function RadialGauge({
         cy={size / 2}
         r={radius}
         fill="none"
-        stroke="var(--border)"
+        stroke="rgba(255,255,255,0.06)"
         strokeWidth={strokeWidth}
       />
       <circle

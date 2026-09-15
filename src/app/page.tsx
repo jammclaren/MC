@@ -111,8 +111,8 @@ export default async function OverviewPage() {
         canAccessSituationMap={canAccessPage(user, "situation-map")}
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="sm:col-span-2 lg:col-span-1">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Card>
           <CardHeader>
             <p className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
               Sector-Wide // Ops Status
@@ -121,15 +121,15 @@ export default async function OverviewPage() {
           </CardHeader>
           <CardContent className="flex items-center gap-5">
             <RadialGauge pct={paraphernaliaPct} />
-            <div className="flex flex-col gap-1">
-              <span className="font-mono text-3xl font-semibold tabular-nums">
+            <div className="flex flex-col gap-1.5">
+              <span className="font-display text-3xl font-bold tabular-nums">
                 {paraphernaliaPct.toFixed(1)}%
               </span>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 {data.paraphernaliaDeliveredCount.toLocaleString()} /{" "}
                 {data.paraphernaliaTrackedCount.toLocaleString()} areas
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground/70">
                 {paraphernaliaIncomplete.toLocaleString()} area
                 {paraphernaliaIncomplete === 1 ? "" : "s"} incomplete
               </span>
@@ -137,7 +137,7 @@ export default async function OverviewPage() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-3">
+        <Card>
           <CardHeader>
             <CardTitle>Status of Election Operations</CardTitle>
           </CardHeader>
@@ -146,7 +146,7 @@ export default async function OverviewPage() {
           </CardContent>
         </Card>
 
-        <Card className="sm:col-span-2 lg:col-span-4">
+        <Card>
           <CardHeader>
             <CardTitle>Troop Deployment Recapitulation</CardTitle>
           </CardHeader>
