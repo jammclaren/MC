@@ -119,13 +119,13 @@ export default async function OverviewPage() {
             </p>
             <CardTitle>Paraphernalia Delivered</CardTitle>
           </CardHeader>
-          <CardContent className="flex items-center gap-5">
-            <RadialGauge pct={paraphernaliaPct} />
-            <div className="flex flex-col gap-1.5">
-              <span className="font-display text-3xl font-bold tabular-nums">
+          <CardContent className="flex flex-1 flex-col items-center justify-center gap-3 py-4">
+            <RadialGauge pct={paraphernaliaPct} size={168} radius={70} strokeWidth={13} />
+            <div className="flex flex-col items-center gap-1.5">
+              <span className="font-display text-4xl font-bold tabular-nums">
                 {paraphernaliaPct.toFixed(1)}%
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-sm text-muted-foreground">
                 {data.paraphernaliaDeliveredCount.toLocaleString()} /{" "}
                 {data.paraphernaliaTrackedCount.toLocaleString()} areas
               </span>
