@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DeploymentBarChart } from "@/components/charts/deployment-bar-chart";
+import { RadialGauge } from "@/components/charts/radial-gauge";
 import { StatTile } from "@/components/stat-tile";
 import { FunnelPanel } from "@/components/funnel-panel";
 import { DailyAssessmentPanel } from "@/components/daily-assessment-panel";
@@ -46,6 +47,11 @@ export default async function OverviewPage() {
   ]);
   const now = nowMs();
   const canSubmitAssessment = !!user.jtfId && canWriteJtf(user, user.jtfId);
+  const paraphernaliaPct =
+    data.paraphernaliaTrackedCount > 0
+      ? (data.paraphernaliaDeliveredCount / data.paraphernaliaTrackedCount) * 100
+      : 0;
+  const paraphernaliaIncomplete = data.paraphernaliaTrackedCount - data.paraphernaliaDeliveredCount;
 
   return (
     <div className="flex flex-col gap-8">
@@ -105,8 +111,33 @@ export default async function OverviewPage() {
         canAccessSituationMap={canAccessPage(user, "situation-map")}
       />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="sm:col-span-2 lg:col-span-1">
+          <CardHeader>
+            <p className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+              Sector-Wide // Ops Status
+            </p>
+            <CardTitle>Paraphernalia Delivered</CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center gap-5">
+            <RadialGauge pct={paraphernaliaPct} />
+            <div className="flex flex-col gap-1">
+              <span className="font-mono text-3xl font-semibold tabular-nums">
+                {paraphernaliaPct.toFixed(1)}%
+              </span>
+              <span className="text-sm text-muted-foreground">
+                {data.paraphernaliaDeliveredCount.toLocaleString()} /{" "}
+                {data.paraphernaliaTrackedCount.toLocaleString()} areas
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {paraphernaliaIncomplete.toLocaleString()} area
+                {paraphernaliaIncomplete === 1 ? "" : "s"} incomplete
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-3">
           <CardHeader>
             <CardTitle>Status of Election Operations</CardTitle>
           </CardHeader>
@@ -115,7 +146,7 @@ export default async function OverviewPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="sm:col-span-2 lg:col-span-4">
           <CardHeader>
             <CardTitle>Troop Deployment Recapitulation</CardTitle>
           </CardHeader>

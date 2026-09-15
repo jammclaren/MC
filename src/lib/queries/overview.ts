@@ -63,6 +63,8 @@ export interface OverviewData {
   recentIncidents: RecentIncidentRow[];
   recentIncidentCount30d: number;
   priorityAreaCount: number;
+  paraphernaliaDeliveredCount: number;
+  paraphernaliaTrackedCount: number;
   electionOpsFunnel: FunnelStage[];
   incidentsByDay: IncidentsByDay[];
   topPriorityAreas: PriorityAreaSummary[];
@@ -171,17 +173,16 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
   const countWhere = (predicate: (status: NonNullable<(typeof electionAreasForRollup)[number]["opsStatus"]>) => boolean) =>
     electionAreasForRollup.filter((a) => a.opsStatus && predicate(a.opsStatus)).length;
 
+  const paraphernaliaDeliveredCount = countWhere(
+    (s) =>
+      s.paraphTotalPrecinct != null &&
+      s.paraphTotalPrecinct > 0 &&
+      s.paraphDeliveredPrecinct === s.paraphTotalPrecinct
+  );
+
   const electionOpsFunnel: FunnelStage[] = [
     { label: "Total Areas", count: totalAreas },
-    {
-      label: "Paraphernalia Delivered",
-      count: countWhere(
-        (s) =>
-          s.paraphTotalPrecinct != null &&
-          s.paraphTotalPrecinct > 0 &&
-          s.paraphDeliveredPrecinct === s.paraphTotalPrecinct
-      ),
-    },
+    { label: "Paraphernalia Delivered", count: paraphernaliaDeliveredCount },
     { label: "ACM Tested & Sealed", count: countWhere((s) => s.acmTestedSealed) },
     { label: "Voting Started", count: countWhere((s) => s.votingStarted) },
     { label: "Voting Closed", count: countWhere((s) => s.votingClosed) },
@@ -284,6 +285,8 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     recentIncidents: recentIncidentRows,
     recentIncidentCount30d,
     priorityAreaCount,
+    paraphernaliaDeliveredCount,
+    paraphernaliaTrackedCount: totalAreas,
     electionOpsFunnel,
     incidentsByDay,
     topPriorityAreas,
