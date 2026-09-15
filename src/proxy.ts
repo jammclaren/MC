@@ -68,16 +68,30 @@ export default auth(async (req) => {
   return NextResponse.next();
 });
 
+// How stale `lastSeenAt` has to be before this request bothers refreshing
+// it — caps the write to roughly once per device per window instead of once
+// per request, since this fires on nearly every authenticated page load.
+// The "online" figure on User Management treats anything newer than this
+// (plus a little slack) as active.
+const ACTIVITY_TOUCH_THROTTLE_MS = 2 * 60 * 1000;
+
 /** Only new-style sessions carry a deviceId (see auth.ts) — a session from
- * before this feature shipped has none and is never checked or kickable. */
+ * before this feature shipped has none and is never checked or kickable.
+ * Also opportunistically refreshes `lastSeenAt` so it reflects live usage,
+ * not just the last time this device submitted credentials — otherwise
+ * every device would look stale within moments of signing in. */
 async function isDeviceKicked(session: { user: { deviceId: string | null } } | null): Promise<boolean> {
   const deviceId = session?.user.deviceId;
   if (!deviceId) return false;
   const device = await prisma.userDevice.findUnique({
     where: { id: deviceId },
-    select: { status: true },
+    select: { status: true, lastSeenAt: true },
   });
-  return device?.status === "KICKED";
+  if (!device) return false;
+  if (Date.now() - device.lastSeenAt.getTime() > ACTIVITY_TOUCH_THROTTLE_MS) {
+    await prisma.userDevice.update({ where: { id: deviceId }, data: { lastSeenAt: new Date() } });
+  }
+  return device.status === "KICKED";
 }
 
 export const config = {

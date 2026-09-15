@@ -1,13 +1,20 @@
 import { redirect, notFound } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { nowMs } from "@/lib/time";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatTile } from "@/components/stat-tile";
 import { AnimatedCounter } from "@/components/animated-counter";
 import { UserFormDialog } from "@/components/user-form-dialog";
 import { UsersTable } from "@/components/users-table";
-import { Users, Smartphone } from "lucide-react";
+import { Users, Smartphone, Radio } from "lucide-react";
+
+// Devices get their `lastSeenAt` opportunistically refreshed on every
+// authenticated request (throttled — see proxy.ts), so anything newer than
+// this window is treated as "online" — a little looser than the refresh
+// throttle itself so a device isn't flagged offline between touches.
+const ONLINE_WINDOW_MS = 5 * 60 * 1000;
 
 export default async function AdminUsersPage() {
   const user = await getSessionUser();
@@ -18,7 +25,8 @@ export default async function AdminUsersPage() {
     notFound();
   }
 
-  const [users, jtfs, activeDeviceCounts] = await Promise.all([
+  const onlineSince = new Date(nowMs() - ONLINE_WINDOW_MS);
+  const [users, jtfs, activeDeviceCounts, onlineDevices] = await Promise.all([
     prisma.user.findMany({
       select: {
         id: true,
@@ -42,12 +50,18 @@ export default async function AdminUsersPage() {
       where: { status: { not: "KICKED" } },
       _count: { _all: true },
     }),
+    prisma.userDevice.findMany({
+      where: { status: { not: "KICKED" }, lastSeenAt: { gte: onlineSince } },
+      select: { userId: true },
+    }),
   ]);
   const jtfOptions = jtfs.map((jtf) => ({ id: jtf.id, name: jtf.name }));
   const activeDeviceCountByUserId = new Map(
     activeDeviceCounts.map((row) => [row.userId, row._count._all])
   );
   const totalDeviceLogins = activeDeviceCounts.reduce((sum, row) => sum + row._count._all, 0);
+  const onlineDeviceCount = onlineDevices.length;
+  const onlineUserCount = new Set(onlineDevices.map((d) => d.userId)).size;
 
   return (
     <div className="flex flex-col gap-6">
@@ -64,6 +78,13 @@ export default async function AdminUsersPage() {
           label="Total Device Logins"
           value={<AnimatedCounter value={totalDeviceLogins} />}
           icon={Smartphone}
+        />
+        <StatTile
+          label="Online Now"
+          value={<AnimatedCounter value={onlineDeviceCount} />}
+          icon={Radio}
+          tone={onlineDeviceCount > 0 ? "good" : "default"}
+          hint={`${onlineUserCount.toLocaleString()} user${onlineUserCount === 1 ? "" : "s"}`}
         />
       </div>
 
