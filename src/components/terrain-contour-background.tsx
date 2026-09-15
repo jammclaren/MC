@@ -85,7 +85,13 @@ export function TerrainContourBackground() {
       ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
     resize();
-    window.addEventListener("resize", resize);
+    // A plain window "resize" listener misses viewport changes that don't
+    // fire it — a mobile browser's address bar collapsing/expanding as the
+    // page scrolls, or an orientation change on some tablets — which left
+    // the canvas sized for a stale height. ResizeObserver reacts to the
+    // canvas's own rendered box instead, so it catches those too.
+    const observer = new ResizeObserver(resize);
+    observer.observe(canvas);
 
     function drawFrame(t: number) {
       ctx!.clearRect(0, 0, w, h);
@@ -145,7 +151,15 @@ export function TerrainContourBackground() {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduceMotion) {
       drawFrame(0);
-      return () => window.removeEventListener("resize", resize);
+      // No animation loop is running to pick up a resize on its own —
+      // redraw the single static frame whenever the box changes size.
+      observer.disconnect();
+      const staticObserver = new ResizeObserver(() => {
+        resize();
+        drawFrame(0);
+      });
+      staticObserver.observe(canvas);
+      return () => staticObserver.disconnect();
     }
 
     let raf = 0;
@@ -158,7 +172,7 @@ export function TerrainContourBackground() {
     raf = requestAnimationFrame(loop);
 
     return () => {
-      window.removeEventListener("resize", resize);
+      observer.disconnect();
       cancelAnimationFrame(raf);
     };
   }, []);
