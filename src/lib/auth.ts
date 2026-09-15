@@ -43,6 +43,14 @@ class DeviceKickedError extends CredentialsSignin {
   code = "device_kicked";
 }
 
+/** Thrown when a NEW device tries to log into an account that has already
+ * reached its admin-set `maxDevices` cap. Devices already on file keep
+ * working even if the cap is lowered later — this only blocks adding
+ * another one past the limit. */
+class DeviceLimitReachedError extends CredentialsSignin {
+  code = "device_limit_reached";
+}
+
 /**
  * Finds or creates the UserDevice row for this login's (user, browser)
  * fingerprint. Existing sessions from before this feature shipped never
@@ -50,7 +58,7 @@ class DeviceKickedError extends CredentialsSignin {
  * device-review/kick system (see proxy.ts).
  */
 async function resolveLoginDevice(
-  user: { id: string; name: string; email: string },
+  user: { id: string; name: string; email: string; maxDevices: number | null },
   request: Request
 ): Promise<string> {
   const { userAgent, ipAddress, location } = extractRequestMeta(request);
@@ -69,6 +77,15 @@ async function resolveLoginDevice(
       data: { lastSeenAt: new Date(), ipAddress, location },
     });
     return existing.id;
+  }
+
+  if (user.maxDevices != null) {
+    const activeDeviceCount = await prisma.userDevice.count({
+      where: { userId: user.id, status: { not: "KICKED" } },
+    });
+    if (activeDeviceCount >= user.maxDevices) {
+      throw new DeviceLimitReachedError();
+    }
   }
 
   const { deviceLabel, deviceType } = parseDeviceInfo(userAgent);

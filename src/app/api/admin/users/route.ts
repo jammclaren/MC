@@ -35,6 +35,7 @@ const createUserSchema = z
     role: roleSchema,
     jtfId: z.string().optional(),
     warfightingFunction: warfightingFunctionSchema.optional(),
+    maxDevices: z.number().int().positive().nullable().optional(),
   })
   .refine(
     (data) =>
@@ -68,6 +69,7 @@ export async function GET() {
         jtf: { select: { name: true } },
         warfightingFunction: true,
         createdAt: true,
+        maxDevices: true,
       },
       orderBy: { name: "asc" },
     });
@@ -95,6 +97,7 @@ export async function POST(request: NextRequest) {
             role: body.role,
             jtfId: body.jtfId,
             warfightingFunction: body.warfightingFunction,
+            maxDevices: body.maxDevices,
           },
           select: {
             id: true,
@@ -103,6 +106,7 @@ export async function POST(request: NextRequest) {
             role: true,
             jtfId: true,
             warfightingFunction: true,
+            maxDevices: true,
           },
         }),
       {
@@ -116,6 +120,7 @@ export async function POST(request: NextRequest) {
           role: body.role,
           jtfId: body.jtfId,
           warfightingFunction: body.warfightingFunction,
+          maxDevices: body.maxDevices,
         },
       }
     );

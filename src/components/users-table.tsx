@@ -30,6 +30,7 @@ export interface UserRow {
   warfightingFunction: UserFormInitial["warfightingFunction"];
   createdAtLabel: string;
   deviceLoginCount: number;
+  maxDevices: number | null;
 }
 
 const ALL_FUNCTIONS_VALUE = "__all__";
@@ -117,7 +118,12 @@ export function UsersTable({
               <TableCell>{row.role}</TableCell>
               <TableCell>{functionLabel(row)}</TableCell>
               <TableCell>{row.createdAtLabel}</TableCell>
-              <TableCell className="text-right font-mono tabular-nums">{row.deviceLoginCount}</TableCell>
+              <TableCell className="text-right font-mono tabular-nums">
+                {row.deviceLoginCount}
+                {row.maxDevices != null && (
+                  <span className="text-muted-foreground"> / {row.maxDevices}</span>
+                )}
+              </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
                   <UserFormDialog
@@ -128,6 +134,7 @@ export function UsersTable({
                       role: row.role,
                       jtfId: row.jtfId,
                       warfightingFunction: row.warfightingFunction,
+                      maxDevices: row.maxDevices,
                     }}
                     trigger={
                       <Button variant="ghost" size="sm">

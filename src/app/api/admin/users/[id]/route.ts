@@ -33,6 +33,7 @@ const updateUserSchema = z.object({
   jtfId: z.string().nullable().optional(),
   warfightingFunction: warfightingFunctionSchema.nullable().optional(),
   password: z.string().min(8).optional(),
+  maxDevices: z.number().int().positive().nullable().optional(),
 });
 
 export async function PATCH(
@@ -60,6 +61,7 @@ export async function PATCH(
             role: true,
             jtfId: true,
             warfightingFunction: true,
+            maxDevices: true,
           },
         }),
       {

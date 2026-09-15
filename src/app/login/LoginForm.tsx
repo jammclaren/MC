@@ -40,7 +40,9 @@ export function LoginForm({
       setError(
         result.code === "device_kicked"
           ? "This device's access was revoked by an administrator."
-          : "Invalid email or password."
+          : result.code === "device_limit_reached"
+            ? "This account has reached its device login limit. Contact an administrator."
+            : "Invalid email or password."
       );
       return;
     }

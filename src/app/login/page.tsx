@@ -16,7 +16,7 @@ export default async function LoginPage({
   const { callbackUrl, error } = await searchParams;
 
   return (
-    <div className="relative flex flex-1 items-center justify-center overflow-hidden p-6">
+    <div className="relative flex h-full items-center justify-center overflow-hidden p-6">
       <TerrainContourBackground />
       <div className="relative z-10">
         <LoginForm callbackUrl={callbackUrl ?? "/"} initialError={error} />

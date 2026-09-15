@@ -67,6 +67,7 @@ export interface UserFormInitial {
   role: Role;
   jtfId: string | null;
   warfightingFunction: WarfightingFunction | null;
+  maxDevices: number | null;
 }
 
 export function UserFormDialog({
@@ -91,6 +92,9 @@ export function UserFormDialog({
   );
   const [warfightingFunction, setWarfightingFunction] = useState<WarfightingFunction | "">(
     initial?.warfightingFunction ?? ""
+  );
+  const [maxDevices, setMaxDevices] = useState<string>(
+    initial?.maxDevices != null ? String(initial.maxDevices) : ""
   );
 
   // JTF_COMMANDER/JTF_STAFF/BRIGADE_STAFF are always scoped to one JTF.
@@ -133,12 +137,14 @@ export function UserFormDialog({
       const url = isEdit ? `/api/admin/users/${initial!.id}` : "/api/admin/users";
       const method = isEdit ? "PATCH" : "POST";
       const resolvedJtfId = showJtf && jtfId && jtfId !== NO_JTF_VALUE ? jtfId : null;
+      const resolvedMaxDevices = maxDevices.trim() ? Number(maxDevices) : null;
       const body = isEdit
         ? {
             name,
             role,
             jtfId: resolvedJtfId,
             warfightingFunction: needsWfc ? warfightingFunction : null,
+            maxDevices: resolvedMaxDevices,
             ...(password ? { password } : {}),
           }
         : {
@@ -148,6 +154,7 @@ export function UserFormDialog({
             role,
             jtfId: resolvedJtfId ?? undefined,
             warfightingFunction: needsWfc ? warfightingFunction : undefined,
+            maxDevices: resolvedMaxDevices,
           };
 
       const res = await fetch(url, {
@@ -276,6 +283,18 @@ export function UserFormDialog({
                 </Select>
               </div>
             )}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="maxDevices">Max Device Logins (blank = unlimited)</Label>
+              <Input
+                id="maxDevices"
+                type="number"
+                min={1}
+                step={1}
+                placeholder="Unlimited"
+                value={maxDevices}
+                onChange={(e) => setMaxDevices(e.target.value)}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button type="submit" disabled={submitting}>

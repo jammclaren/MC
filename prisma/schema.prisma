@@ -119,6 +119,7 @@ model User {
   jtfId               String?
   jtf                 JTF?                 @relation(fields: [jtfId], references: [id])
   warfightingFunction WarfightingFunction? // set for WFC_STAFF, null otherwise
+  maxDevices          Int? // cap on concurrent (non-KICKED) UserDevice rows; null = unlimited
   createdAt           DateTime             @default(now())
   auditLogs           AuditLog[]
   jtfAssessments      JtfAssessment[]

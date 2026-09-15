@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react";
 
 export interface StatTileProps {
   label: string;
-  value: string | number;
+  value: React.ReactNode;
   unit?: string;
   icon?: LucideIcon;
   tone?: "default" | "good" | "warning" | "critical";
