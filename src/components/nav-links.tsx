@@ -115,9 +115,10 @@ export function NavLinks({ links }: { links: readonly NavLinkItem[] }) {
       </div>
 
       {/* Neumorphic segmented control — an inset "track" holding the whole
-          row, with the active page rendered as a raised chip floating on
-          top of it rather than a plain underline, matching the app-wide
-          soft-UI treatment (see .neu-inset/.neu-raised-interactive). */}
+          row. Every link is its own raised pill (same treatment as the
+          Select/Dropdown trigger — see .neu-raised-interactive), with the
+          active page distinguished by a teal fill instead of the neutral
+          card color the rest sit at. */}
       <nav className="neu-inset flex items-center gap-1 rounded-full bg-secondary/60 p-1 text-sm">
         {visibleLinks.map((link) => {
           const active = isActive(pathname, link.href);
@@ -126,11 +127,11 @@ export function NavLinks({ links }: { links: readonly NavLinkItem[] }) {
               key={link.href}
               href={link.href}
               className={cn(
-                "flex items-center",
+                "neu-raised-interactive flex items-center",
                 ITEM_CLASS,
                 active
-                  ? "neu-raised-interactive bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-primary"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card text-muted-foreground hover:text-primary"
               )}
             >
               {link.label}
@@ -142,11 +143,12 @@ export function NavLinks({ links }: { links: readonly NavLinkItem[] }) {
           <DropdownMenu>
             <DropdownMenuTrigger
               className={cn(
+                "neu-raised-interactive",
                 ITEM_CLASS,
                 "flex items-center gap-1 outline-none",
                 overflowHasActive
-                  ? "neu-raised-interactive bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-primary"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card text-muted-foreground hover:text-primary"
               )}
             >
               More

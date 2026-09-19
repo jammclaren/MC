@@ -72,19 +72,19 @@
    * custom property, which invalidates the whole font-family list wherever
    * it's used as a fallback (including .font-display below). */
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --background: #111317;
+  --background: #26262b;
   --foreground: #ffffff;
-  --card: #1f2329;
+  --card: #26262b;
   --card-foreground: #ffffff;
-  --popover: #1f2329;
+  --popover: #26262b;
   --popover-foreground: #ffffff;
   --primary: #2dd4bf;
   --primary-foreground: #1f2329;
-  --secondary: #272c33;
+  --secondary: #302f36;
   --secondary-foreground: #ffffff;
-  --muted: #1a1e23;
+  --muted: #242328;
   --muted-foreground: #9aa0a6;
-  --accent: #16302b;
+  --accent: #1d2b28;
   --accent-foreground: #ffffff;
   --destructive: #e66767;
   --border: rgba(255, 255, 255, 0.1);
@@ -99,33 +99,33 @@
   --status-warning: #fab219;
   --status-serious: #ec835a;
   --status-critical: #d03b3b;
-  --gridline: #23262b;
-  --axis-baseline: #34383f;
+  --gridline: #302f36;
+  --axis-baseline: #403f47;
   --radius: 0.375rem;
-  --sidebar: #1f2329;
+  --sidebar: #26262b;
   --sidebar-foreground: #ffffff;
   --sidebar-primary: #2dd4bf;
   --sidebar-primary-foreground: #1f2329;
-  --sidebar-accent: #16302b;
+  --sidebar-accent: #1d2b28;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.1);
   --sidebar-ring: #2dd4bf;
 }
 
 .dark {
-  --background: #111317;
+  --background: #26262b;
   --foreground: #ffffff;
-  --card: #1f2329;
+  --card: #26262b;
   --card-foreground: #ffffff;
-  --popover: #1f2329;
+  --popover: #26262b;
   --popover-foreground: #ffffff;
   --primary: #2dd4bf;
   --primary-foreground: #1f2329;
-  --secondary: #272c33;
+  --secondary: #302f36;
   --secondary-foreground: #ffffff;
-  --muted: #1a1e23;
+  --muted: #242328;
   --muted-foreground: #9aa0a6;
-  --accent: #16302b;
+  --accent: #1d2b28;
   --accent-foreground: #ffffff;
   --destructive: #e66767;
   --border: rgba(255, 255, 255, 0.1);
@@ -136,11 +136,11 @@
   --chart-3: #199e70;
   --chart-4: #c98500;
   --chart-5: #9085e9;
-  --sidebar: #1f2329;
+  --sidebar: #26262b;
   --sidebar-foreground: #ffffff;
   --sidebar-primary: #2dd4bf;
   --sidebar-primary-foreground: #1f2329;
-  --sidebar-accent: #16302b;
+  --sidebar-accent: #1d2b28;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.1);
   --sidebar-ring: #2dd4bf;
@@ -152,11 +152,6 @@
   }
   body {
     @apply bg-background text-foreground;
-    background-image:
-      linear-gradient(rgba(45, 212, 191, 0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(45, 212, 191, 0.05) 1px, transparent 1px);
-    background-size: 40px 40px;
-    background-attachment: fixed;
   }
   html {
     @apply font-sans;
@@ -597,21 +592,6 @@
   right: 0;
 }
 
-/* Console-panel corner notches on every Card, plus a soft glow riding the
- * existing top accent border — the same visual language as the priority
- * map's HudFrame, applied app-wide. */
-[data-slot="card"] {
-  clip-path: polygon(
-    12px 0,
-    100% 0,
-    100% calc(100% - 12px),
-    calc(100% - 12px) 100%,
-    0 100%,
-    0 12px
-  );
-  box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.18) inset,
-    0 -1px 12px -2px rgba(45, 212, 191, 0.55);
-}
 
 /* Daily Summary of Reports print support — hidden on screen, shown only
  * when actually printing; and the tactical console chrome (nav bar, HUD

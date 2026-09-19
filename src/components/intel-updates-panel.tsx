@@ -10,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 import { IntelUpdateFormDialog } from "@/components/intel-update-form-dialog";
 import { DeleteButton } from "@/components/delete-button";
 import type { IntelUpdateRow } from "@/lib/queries/intel-updates";
@@ -78,12 +79,15 @@ export function IntelUpdatesPanel({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Input
-          placeholder="Search by type of activity, threat group, or keywords..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-md border-2 border-status-warning"
-        />
+        <div className="relative w-full max-w-md">
+          <Input
+            placeholder="Search by type of activity, threat group, or keywords..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="rounded-full pr-9"
+          />
+          <Search className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground" />
+        </div>
         {groups.length > 0 && (
           <Button variant="outline" size="sm" onClick={() => setListHidden((v) => !v)}>
             {listHidden ? "Show Provinces" : "Hide Provinces"}

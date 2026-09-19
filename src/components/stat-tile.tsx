@@ -11,7 +11,7 @@ export interface StatTileProps {
 }
 
 const TONE_CLASSES: Record<NonNullable<StatTileProps["tone"]>, string> = {
-  default: "text-primary",
+  default: "text-foreground",
   good: "text-status-good",
   warning: "text-status-warning",
   critical: "text-status-critical",
@@ -30,7 +30,7 @@ export function StatTile({
   hint,
 }: StatTileProps) {
   return (
-    <div className="neu-raised relative flex flex-col gap-1 overflow-hidden rounded-md border-t-2 border-t-primary/60 bg-card px-4 py-3 ring-1 ring-foreground/10">
+    <div className="neu-raised relative flex flex-col gap-1 overflow-hidden rounded-md bg-card px-4 py-3">
       <div className="flex items-center justify-between">
         <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
           {label}
