@@ -50,11 +50,15 @@ export function TopIncidentTypesChart({
               {d.label}
             </span>
             <div className="flex items-center gap-3">
-              <div className="neu-inset h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-input">
+              <div className="neu-inset relative h-2.5 min-w-0 flex-1 rounded-full bg-input">
                 <div
-                  className={`h-full rounded-full transition-all ${isOther ? "bg-muted-foreground/50" : "bg-primary"}`}
+                  className={`relative h-full rounded-full transition-all ${isOther ? "bg-chart-5" : "bg-primary"}`}
                   style={{ width: `${Math.max(widthPct, 3)}%` }}
-                />
+                >
+                  <span
+                    className={`neu-raised absolute top-1/2 right-0 size-4 -translate-y-1/2 translate-x-1/2 rounded-full ${isOther ? "bg-white/80" : "bg-white"}`}
+                  />
+                </div>
               </div>
               <span className="shrink-0 font-mono text-sm tabular-nums text-foreground">
                 {d.count.toLocaleString()}
