@@ -26,9 +26,9 @@ function NavBadge({ count }: { count: number }) {
   );
 }
 
-const GAP_PX = 20; // matches gap-5 below
+const GAP_PX = 4; // matches gap-1 below
 const ITEM_CLASS =
-  "shrink-0 py-4 font-display text-xs font-semibold tracking-wide whitespace-nowrap uppercase";
+  "shrink-0 rounded-full px-3 py-1.5 font-display text-xs font-semibold tracking-wide whitespace-nowrap uppercase transition-all";
 
 function isActive(pathname: string, href: string): boolean {
   return href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -101,7 +101,7 @@ export function NavLinks({ links }: { links: readonly NavLinkItem[] }) {
       <div
         ref={rulerRef}
         aria-hidden
-        className="pointer-events-none absolute top-0 left-0 flex items-center gap-5 opacity-0"
+        className="pointer-events-none absolute top-0 left-0 flex items-center gap-1 opacity-0"
       >
         {links.map((link) => (
           <span key={link.href} className={cn(ITEM_CLASS, "flex items-center")}>
@@ -114,7 +114,11 @@ export function NavLinks({ links }: { links: readonly NavLinkItem[] }) {
         </span>
       </div>
 
-      <nav className="flex items-center gap-5 text-sm">
+      {/* Neumorphic segmented control — an inset "track" holding the whole
+          row, with the active page rendered as a raised chip floating on
+          top of it rather than a plain underline, matching the app-wide
+          soft-UI treatment (see .neu-inset/.neu-raised-interactive). */}
+      <nav className="neu-inset flex items-center gap-1 rounded-full bg-secondary/60 p-1 text-sm">
         {visibleLinks.map((link) => {
           const active = isActive(pathname, link.href);
           return (
@@ -122,11 +126,10 @@ export function NavLinks({ links }: { links: readonly NavLinkItem[] }) {
               key={link.href}
               href={link.href}
               className={cn(
-                "relative flex items-center",
+                "flex items-center",
                 ITEM_CLASS,
-                "transition-colors",
                 active
-                  ? "text-foreground after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-primary after:content-['']"
+                  ? "neu-raised-interactive bg-card text-foreground"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -140,8 +143,10 @@ export function NavLinks({ links }: { links: readonly NavLinkItem[] }) {
             <DropdownMenuTrigger
               className={cn(
                 ITEM_CLASS,
-                "flex items-center gap-1 outline-none transition-colors",
-                overflowHasActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                "flex items-center gap-1 outline-none",
+                overflowHasActive
+                  ? "neu-raised-interactive bg-card text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               More
