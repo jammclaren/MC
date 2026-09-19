@@ -485,13 +485,17 @@
   );
 }
 
-/* "jamisal" signature woven into the login background — small, low-
- * opacity cursive so it reads as part of the photo's vine rather than a
- * stamped watermark. */
-.login-signature {
+/* "jamisal" signature woven into the login background — a curved SVG
+ * textPath (see LoginBackground) traces the word along a tendril-like
+ * path instead of a straight line, in a soft leaf-green at a "soft-light"
+ * blend so the photo's own shadows and highlights show through the
+ * letters rather than sitting flatly on top of it, reading as grown into
+ * the vine instead of a stamped watermark. */
+.login-signature-text {
   font-family: var(--font-cursive);
-  color: rgba(224, 242, 254, 0.4);
-  text-shadow: 0 0 6px rgba(34, 211, 238, 0.25);
+  font-size: 30px;
+  fill: rgba(196, 214, 168, 0.75);
+  mix-blend-mode: soft-light;
 }
 
 /* ---------------------------------------------------------------------

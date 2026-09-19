@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -8,16 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 
 type Mode = "signin" | "signup";
 
 function SignInFields({
   callbackUrl,
   initialError,
+  onSwitchToSignUp,
 }: {
   callbackUrl: string;
   initialError?: string;
+  onSwitchToSignUp: () => void;
 }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -58,10 +59,11 @@ function SignInFields({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">Username</Label>
         <Input
           id="email"
-          type="email"
+          type="text"
+          inputMode="email"
           autoComplete="username"
           required
           value={email}
@@ -80,13 +82,31 @@ function SignInFields({
         />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
+      <div className="flex items-center justify-between text-sm">
+        <button
+          type="button"
+          onClick={() =>
+            toast.info("Contact your administrator to reset your password.")
+          }
+          className="text-muted-foreground hover:text-foreground"
+        >
+          Forgot Password
+        </button>
+        <button
+          type="button"
+          onClick={onSwitchToSignUp}
+          className="font-medium text-primary hover:underline"
+        >
+          Signup
+        </button>
+      </div>
       <Button
         type="submit"
         disabled={submitting}
         size="lg"
         className="mt-1 w-full shadow-[0_0_14px_-2px_var(--primary)] hover:shadow-[0_0_20px_-2px_var(--primary)]"
       >
-        {submitting ? "Signing in..." : "Sign in"}
+        {submitting ? "Signing in..." : "Login"}
       </Button>
     </form>
   );
@@ -96,7 +116,7 @@ function SignInFields({
 // not self-service — this form mirrors the reference design but never
 // creates an account. Submitting it just points the visitor at the real
 // path to get access.
-function SignUpFields() {
+function SignUpFields({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -159,6 +179,15 @@ function SignUpFields() {
         />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
+      <div className="text-sm">
+        <button
+          type="button"
+          onClick={onSwitchToSignIn}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          Already have an account? <span className="font-medium text-primary">Sign In</span>
+        </button>
+      </div>
       <Button
         type="submit"
         size="lg"
@@ -177,46 +206,56 @@ export function LoginForm({
   callbackUrl: string;
   initialError?: string;
 }) {
+  const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<Mode>("signin");
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Click-outside-to-close, same pattern as a standard dropdown/popover.
+  useEffect(() => {
+    if (!open) return;
+    function handlePointerDown(event: PointerEvent) {
+      if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [open]);
 
   return (
-    <Card className="login-card-in w-full max-w-sm bg-card/90 backdrop-blur-md">
-      <CardHeader>
-        <div className="mb-2 flex gap-1 rounded-md bg-muted/50 p-1">
-          <button
-            type="button"
-            onClick={() => setMode("signin")}
-            className={cn(
-              "flex-1 rounded-[calc(var(--radius-md)-4px)] py-1.5 text-sm font-medium transition-colors",
-              mode === "signin"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            Sign In
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("signup")}
-            className={cn(
-              "flex-1 rounded-[calc(var(--radius-md)-4px)] py-1.5 text-sm font-medium transition-colors",
-              mode === "signup"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            Sign Up
-          </button>
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="fixed top-4 right-4 z-20 rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground shadow-[0_0_14px_-2px_var(--primary)] transition-colors hover:bg-primary/80 sm:top-6 sm:right-6"
+      >
+        {open ? "Close" : "Sign In"}
+      </button>
+      {open && (
+        <div
+          ref={panelRef}
+          className="fixed top-16 right-4 left-4 z-20 flex justify-end sm:top-16 sm:left-auto sm:right-6"
+        >
+          <Card className="login-card-in w-full max-w-sm bg-card/90 backdrop-blur-md">
+            <CardHeader>
+              <CardTitle className="text-center text-2xl tracking-wide text-primary">
+                {mode === "signin" ? "SIGN IN" : "SIGN UP"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {mode === "signin" ? (
+                <SignInFields
+                  callbackUrl={callbackUrl}
+                  initialError={initialError}
+                  onSwitchToSignUp={() => setMode("signup")}
+                />
+              ) : (
+                <SignUpFields onSwitchToSignIn={() => setMode("signin")} />
+              )}
+            </CardContent>
+          </Card>
         </div>
-        <CardTitle>{mode === "signin" ? "DEGREES" : "CREATE ACCOUNT"}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {mode === "signin" ? (
-          <SignInFields callbackUrl={callbackUrl} initialError={initialError} />
-        ) : (
-          <SignUpFields />
-        )}
-      </CardContent>
-    </Card>
+      )}
+    </>
   );
 }

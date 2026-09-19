@@ -28,9 +28,24 @@ export function LoginBackground() {
       />
       <div className="login-grid-overlay absolute inset-0" />
       <LoginCursorGlow />
-      <span className="login-signature absolute bottom-[18%] left-[8%] text-3xl sm:text-4xl">
-        jamisal
-      </span>
+      {/* "jamisal" traced along a curved path so it reads as a tendril
+          growing through the vine rather than a flat label sitting on top
+          of it — mix-blend-mode lets the underlying photo's own light/dark
+          tones show through the letters instead of covering them. */}
+      <svg
+        className="login-signature pointer-events-none absolute bottom-[8%] left-[2%] h-32 w-72 sm:h-36 sm:w-80"
+        viewBox="0 0 300 140"
+        aria-hidden="true"
+      >
+        <defs>
+          <path id="jamisal-vine-path" d="M8,118 C48,58 88,128 148,78 C198,36 232,92 292,42" fill="none" />
+        </defs>
+        <text className="login-signature-text">
+          <textPath href="#jamisal-vine-path" startOffset="2">
+            jamisal
+          </textPath>
+        </text>
+      </svg>
     </div>
   );
 }

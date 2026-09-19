@@ -21,12 +21,12 @@ export default async function LoginPage({
     // flexbox value (flex-1 with no explicit height), which browsers don't
     // reliably treat as "definite" for a descendant's `height:100%` to
     // resolve against, so h-full here intermittently collapsed to the
-    // content's own height instead of filling the viewport.
-    <div className="fixed inset-0 flex items-center justify-center overflow-hidden p-6 md:justify-end md:pr-16 lg:pr-24">
+    // content's own height instead of filling the viewport. LoginForm
+    // positions its own trigger button and panel via `fixed`, so this
+    // container no longer needs to center or offset anything itself.
+    <div className="fixed inset-0 overflow-hidden">
       <LoginBackground />
-      <div className="relative z-10">
-        <LoginForm callbackUrl={callbackUrl ?? "/"} initialError={error} />
-      </div>
+      <LoginForm callbackUrl={callbackUrl ?? "/"} initialError={error} />
     </div>
   );
 }
