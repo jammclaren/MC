@@ -1,6 +1,6 @@
 import { safePercent } from "@/lib/percentages";
 import { isViolentIncidentType } from "@/lib/incident-classification";
-import { PROVINCE_TO_JTF } from "@/lib/queries/election-board";
+import { PROVINCE_TO_JTF } from "@/lib/province-jtf";
 import type { OverviewData } from "@/lib/queries/overview";
 
 /**
@@ -106,14 +106,6 @@ export function computeDailyAssessment(
   const remaining = daysRemaining(data.bpe.endDate);
   const voterCoveragePct = safePercent(data.totalDeployed, data.totalRegisteredVoters);
 
-  const totalAreas = data.electionOpsFunnel.find((s) => s.label === "Total Areas")?.count ?? 0;
-  const paraphDelivered =
-    data.electionOpsFunnel.find((s) => s.label === "Paraphernalia Delivered")?.count ?? 0;
-  const acmSealed =
-    data.electionOpsFunnel.find((s) => s.label === "ACM Tested & Sealed")?.count ?? 0;
-  const paraphPct = safePercent(paraphDelivered, totalAreas);
-  const acmPct = safePercent(acmSealed, totalAreas);
-
   const analysis: string[] = [];
   analysis.push(
     `${data.totalDeployed.toLocaleString()} personnel deployed to polling (${data.totalQrf.toLocaleString()} QRF) BARMM-wide.`
@@ -129,11 +121,6 @@ export function computeDailyAssessment(
   analysis.push(
     `${data.priorityAreaCount.toLocaleString()} area(s) score at or above the Red-hotspot priority threshold.`
   );
-  if (totalAreas > 0) {
-    analysis.push(
-      `Of ${totalAreas.toLocaleString()} BPE-tracked polling area(s), ${paraphPct?.toFixed(0) ?? 0}% have paraphernalia delivered and ${acmPct?.toFixed(0) ?? 0}% have ACM tested and sealed.`
-    );
-  }
   analysis.push(
     remaining === null
       ? "The BPE 2026 window has concluded."
@@ -196,19 +183,6 @@ export function computeDailyAssessment(
     operational.push(
       "The 14-day incident trend is decreasing — maintain current joint patrol tempo across JTFs; do not draw down coordination measures until the trend holds for a full reporting cycle."
     );
-  }
-
-  if (totalAreas > 0 && remaining !== null && remaining <= 14) {
-    if (paraphPct !== null && paraphPct < 80) {
-      operational.push(
-        `Only ${paraphPct.toFixed(0)}% of tracked areas have paraphernalia delivered with ${remaining} day(s) remaining — coordinate with COMELEC/BEO field offices to expedite delivery on the outstanding areas.`
-      );
-    }
-    if (acmPct !== null && acmPct < 80) {
-      operational.push(
-        `Only ${acmPct.toFixed(0)}% of tracked areas have ACM tested and sealed with ${remaining} day(s) remaining — schedule joint testing/sealing teams to clear the backlog ahead of polling.`
-      );
-    }
   }
 
   // Per-JTF operational note: a JTF whose incident share (from monitored

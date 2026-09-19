@@ -29,11 +29,6 @@ export interface RecentIncidentRow {
   isPriority: boolean;
 }
 
-export interface FunnelStage {
-  label: string;
-  count: number;
-}
-
 export interface IncidentsByDay {
   date: string; // YYYY-MM-DD
   count: number;
@@ -63,9 +58,6 @@ export interface OverviewData {
   recentIncidents: RecentIncidentRow[];
   recentIncidentCount30d: number;
   priorityAreaCount: number;
-  paraphernaliaDeliveredCount: number;
-  paraphernaliaTrackedCount: number;
-  electionOpsFunnel: FunnelStage[];
   incidentsByDay: IncidentsByDay[];
   topPriorityAreas: PriorityAreaSummary[];
   bpe: {
@@ -96,7 +88,6 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     recentIncidents,
     recentIncidentCount30d,
     scoredAreas,
-    electionAreasForRollup,
     registeredVotersAgg,
     incidentsForDailyChart,
   ] = await Promise.all([
@@ -138,18 +129,6 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
       where: { jtfId: detailScopeJtfId, date: { gte: windowStart } },
     }),
     getScoredAreas(user),
-    // Scoped to areas actively tracked for BPE polling ops (they have an
-    // ElectionOpsStatus row) — excludes barangay-level threat-categorization
-    // entries that exist purely for the hotspot/priority map, so those don't
-    // inflate "Total Areas" in the funnel below.
-    prisma.electionArea.findMany({
-      where: { jtfId: rollupScopeJtfId, opsStatus: { isNot: null } },
-      select: { opsStatus: true },
-    }),
-    // Registered voters are entered independently of ops-status tracking
-    // (staff may log a barangay's voter roll before anyone has touched its
-    // paraphernalia/canvassing status), so this sums every ElectionArea
-    // with a figure on file rather than only opsStatus-tracked ones.
     prisma.electionArea.aggregate({
       where: { jtfId: rollupScopeJtfId },
       _sum: { registeredVoters: true },
@@ -168,26 +147,6 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
   ).length;
 
   const totalRegisteredVoters = registeredVotersAgg._sum.registeredVoters ?? 0;
-
-  const totalAreas = electionAreasForRollup.length;
-  const countWhere = (predicate: (status: NonNullable<(typeof electionAreasForRollup)[number]["opsStatus"]>) => boolean) =>
-    electionAreasForRollup.filter((a) => a.opsStatus && predicate(a.opsStatus)).length;
-
-  const paraphernaliaDeliveredCount = countWhere(
-    (s) =>
-      s.paraphTotalPrecinct != null &&
-      s.paraphTotalPrecinct > 0 &&
-      s.paraphDeliveredPrecinct === s.paraphTotalPrecinct
-  );
-
-  const electionOpsFunnel: FunnelStage[] = [
-    { label: "Total Areas", count: totalAreas },
-    { label: "Paraphernalia Delivered", count: paraphernaliaDeliveredCount },
-    { label: "ACM Tested & Sealed", count: countWhere((s) => s.acmTestedSealed) },
-    { label: "Voting Started", count: countWhere((s) => s.votingStarted) },
-    { label: "Voting Closed", count: countWhere((s) => s.votingClosed) },
-    { label: "Provincial Proclaimed", count: countWhere((s) => s.provincialProclaimed) },
-  ];
 
   const incidentsByDayMap = new Map<string, { count: number; types: Set<string> }>();
   const today = new Date();
@@ -285,9 +244,6 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     recentIncidents: recentIncidentRows,
     recentIncidentCount30d,
     priorityAreaCount,
-    paraphernaliaDeliveredCount,
-    paraphernaliaTrackedCount: totalAreas,
-    electionOpsFunnel,
     incidentsByDay,
     topPriorityAreas,
     bpe: {

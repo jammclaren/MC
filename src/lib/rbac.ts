@@ -43,8 +43,8 @@ export function canWriteJtf(user: SessionUser, targetJtfId: string): boolean {
  * JTF_COMMANDER/JTF_STAFF, a WFC_STAFF account isn't tied to one JTF, so
  * ownership here means the same "any JTF" write access ADMIN already has
  * on this one page. CMO and Intelligence get read-only cross-visibility
- * (see canAccessPage's WFC_INTELLIGENCE_BLOCKED_PAGES and the bpe-deployment
- * page itself) but not this. Kept separate from canWriteJtf/assertCanWriteJtf
+ * (see the bpe-deployment page itself) but not this. Kept separate from
+ * canWriteJtf/assertCanWriteJtf
  * so this grant never leaks into RIDO/HVI Log/Incidents/Election Areas etc.,
  * which stay JTF-scoped-roles-only.
  */
@@ -121,32 +121,18 @@ export function canModifyEntry(
 
 /**
  * BRIGADE_STAFF has the narrowest nav/page surface of any JTF-scoped
- * role: Overview, Monitored Incidents, Election Status, and Election
- * Profile only — no Situation Map, no Deployment. Every other role keeps
- * its existing full access to these four pages; this only ever removes
- * access, never grants it beyond what a role already had.
+ * role: Overview and Monitored Incidents only — no Situation Map, no
+ * Deployment. Every other role keeps its existing full access to these
+ * pages; this only ever removes access, never grants it beyond what a
+ * role already had.
  */
 const BRIGADE_STAFF_BLOCKED_PAGES = ["situation-map", "deployment"] as const;
 
-/**
- * WFC Intelligence is scoped down to Overview, Monitored Incidents,
- * Situation Map, its own Intelligence Update page, and (view-only, see
- * canAccessSocialMonitor/canWriteSocialMonitor) Social Media Monitor and
- * Deployment — no Election Status or Election Profile (those belong to
- * election ops, not intelligence).
- */
-const WFC_INTELLIGENCE_BLOCKED_PAGES = ["election-status", "election-profile"] as const;
-
-type RestrictablePage =
-  | (typeof BRIGADE_STAFF_BLOCKED_PAGES)[number]
-  | (typeof WFC_INTELLIGENCE_BLOCKED_PAGES)[number];
+type RestrictablePage = (typeof BRIGADE_STAFF_BLOCKED_PAGES)[number];
 
 export function canAccessPage(user: SessionUser, page: RestrictablePage): boolean {
   if (user.role === "BRIGADE_STAFF") {
     return !(BRIGADE_STAFF_BLOCKED_PAGES as readonly string[]).includes(page);
-  }
-  if (user.role === "WFC_STAFF" && user.warfightingFunction === "INTELLIGENCE") {
-    return !(WFC_INTELLIGENCE_BLOCKED_PAGES as readonly string[]).includes(page);
   }
   return true;
 }

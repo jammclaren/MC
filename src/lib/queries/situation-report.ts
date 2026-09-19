@@ -11,7 +11,6 @@ import { TOPIC_LABELS } from "@/lib/social-classifier";
 import type { SocialPostTopic } from "@/generated/prisma/client";
 import { reportWindow, manilaTimeLabel, todayManilaIso } from "@/lib/reporting-period";
 import { getSocialListeningReport } from "@/lib/queries/social-listening";
-import { listElectionProvinces, getElectionBoardData } from "@/lib/queries/election-board";
 
 export interface SituationReport {
   date: string;
@@ -50,7 +49,6 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
     allIntelRows,
     socialMonitorData,
     socialListeningReport,
-    electionProvinces,
   ] = await Promise.all([
     prisma.incident.findMany({
       where: { jtfId: scopeJtfId, date: { gte: start, lt: end } },
@@ -89,20 +87,11 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
     // once per 2200H-2200H cycle (same "latest on file" default the
     // Social Media Monitor page itself uses).
     getSocialListeningReport(),
-    listElectionProvinces(user),
   ]);
 
   const dailyAssessment = computeDailyAssessment(data, jtfAssessments);
   const intelAssessment = computeIntelAssessment(allIntelRows);
   const socialAssessment = computeSocialMonitorAssessment(socialMonitorData);
-
-  // Election Board (COMELEC vote-count) data is real but almost always
-  // all-zero before polls close on 14 September — a per-province note is
-  // only worth printing once actual encoding has started somewhere.
-  const electionBoards = await Promise.all(
-    electionProvinces.map((province) => getElectionBoardData(user, province))
-  );
-  const reportingProvinces = electionBoards.filter((b) => b.reportingPct > 0);
 
   const socialViolent = windowSocialPosts.filter((p) => p.classification === "VIOLENT").length;
   const socialNonViolent = windowSocialPosts.filter((p) => p.classification === "NON_VIOLENT").length;
@@ -145,11 +134,6 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
     ? [...socialListeningReport.platformMentions].sort((a, b) => b.mentions - a.mentions)[0]
     : undefined;
 
-  const totalAreas = data.electionOpsFunnel.find((s) => s.label === "Total Areas")?.count ?? 0;
-  const paraphDelivered =
-    data.electionOpsFunnel.find((s) => s.label === "Paraphernalia Delivered")?.count ?? 0;
-  const acmSealed = data.electionOpsFunnel.find((s) => s.label === "ACM Tested & Sealed")?.count ?? 0;
-
   const lines: string[] = [];
 
   lines.push(`DAILY SUMMARY OF REPORTS — ${date}`);
@@ -185,11 +169,6 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
   lines.push(
     `${data.totalDeployed.toLocaleString()} personnel remain deployed to polling (${data.totalQrf.toLocaleString()} QRF) BARMM-wide.`
   );
-  if (totalAreas > 0) {
-    lines.push(
-      `Of ${totalAreas.toLocaleString()} BPE-tracked polling area(s) on file, ${paraphDelivered.toLocaleString()} have paraphernalia delivered and ${acmSealed.toLocaleString()} have ACM tested and sealed.`
-    );
-  }
   lines.push("");
 
   lines.push("2. INCIDENTS (this reporting period)");
@@ -279,24 +258,7 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
   }
   lines.push("");
 
-  lines.push("7. ELECTION OPERATIONS STATUS");
-  lines.push(`Registered voters (BARMM): ${data.totalRegisteredVoters.toLocaleString()}`);
-  for (const stage of data.electionOpsFunnel) {
-    lines.push(`  - ${stage.label}: ${stage.count.toLocaleString()}`);
-  }
-  if (reportingProvinces.length > 0) {
-    lines.push("Election Board (encoding underway):");
-    for (const board of reportingProvinces) {
-      const leader = board.leaderboard[0];
-      lines.push(
-        `  - ${board.province}: ${board.reportingPct.toFixed(1)}% reporting` +
-          (leader ? `; ${leader.nameOnBallot} leads with ${leader.votesEncoded.toLocaleString()} vote(s).` : ".")
-      );
-    }
-  }
-  lines.push("");
-
-  lines.push("8. OVERALL ASSESSMENT & TREND");
+  lines.push("7. OVERALL ASSESSMENT & TREND");
   const totalReports = windowIncidents.length + windowSocialPosts.length + windowIntelRows.length;
   lines.push(
     `${totalReports.toLocaleString()} total report(s) this reporting period — ${windowIncidents.length.toLocaleString()} incident(s), ${windowSocialPosts.length.toLocaleString()} social media post(s), ${windowIntelRows.length.toLocaleString()} intelligence report(s).`
@@ -316,7 +278,7 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
   for (const line of socialAssessment.analysis) lines.push(`  - ${line}`);
   lines.push("");
 
-  lines.push("9. RECOMMENDATIONS");
+  lines.push("8. RECOMMENDATIONS");
   lines.push("Strategic:");
   for (const r of dailyAssessment.recommendations.strategic) lines.push(`  - ${r}`);
   lines.push("Operational:");
@@ -335,7 +297,7 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
   }
   lines.push("");
 
-  lines.push("10. COMMANDER'S ADDENDUM");
+  lines.push("9. COMMANDER'S ADDENDUM");
   lines.push("[Add narrative assessment here]");
 
   return lines.join("\n");

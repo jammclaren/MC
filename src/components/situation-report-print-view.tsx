@@ -10,7 +10,7 @@ import { Fragment } from "react";
  * other assessment in this app — it only styles text that's already there.
  */
 
-// Kept as a small standalone list (not imported from election-board.ts)
+// Kept as a small standalone list (not imported from @/lib/province-jtf)
 // so this stays a plain client-safe component with no server/Prisma
 // import chain — update alongside PROVINCE_TO_JTF if the roster changes.
 const HIGHLIGHT_TERMS = [

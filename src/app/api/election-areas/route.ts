@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     const areas = await prisma.electionArea.findMany({
       where: { jtfId: scopeJtfId },
-      include: { unit: true, opsStatus: true },
+      include: { unit: true },
       orderBy: [{ province: "asc" }, { municipality: "asc" }, { barangay: "asc" }],
     });
     return NextResponse.json(areas);

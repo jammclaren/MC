@@ -15,9 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DeploymentBarChart } from "@/components/charts/deployment-bar-chart";
-import { RadialGauge } from "@/components/charts/radial-gauge";
 import { StatTile } from "@/components/stat-tile";
-import { FunnelPanel } from "@/components/funnel-panel";
 import { DailyAssessmentPanel } from "@/components/daily-assessment-panel";
 import { JtfAssessmentCard } from "@/components/jtf-assessment-card";
 import { OverviewIncidentOpsPanel } from "@/components/overview-incident-ops-panel";
@@ -47,11 +45,6 @@ export default async function OverviewPage() {
   ]);
   const now = nowMs();
   const canSubmitAssessment = !!user.jtfId && canWriteJtf(user, user.jtfId);
-  const paraphernaliaPct =
-    data.paraphernaliaTrackedCount > 0
-      ? (data.paraphernaliaDeliveredCount / data.paraphernaliaTrackedCount) * 100
-      : 0;
-  const paraphernaliaIncomplete = data.paraphernaliaTrackedCount - data.paraphernaliaDeliveredCount;
 
   return (
     <div className="flex flex-col gap-8">
@@ -111,81 +104,45 @@ export default async function OverviewPage() {
         canAccessSituationMap={canAccessPage(user, "situation-map")}
       />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <p className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-              Sector-Wide // Ops Status
-            </p>
-            <CardTitle>Paraphernalia Delivered</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-1 flex-col items-center justify-center gap-3 py-4">
-            <RadialGauge pct={paraphernaliaPct} size={168} radius={70} strokeWidth={13} />
-            <div className="flex flex-col items-center gap-1.5">
-              <span className="font-display text-4xl font-bold tabular-nums">
-                {paraphernaliaPct.toFixed(1)}%
-              </span>
-              <span className="text-sm text-muted-foreground">
-                {data.paraphernaliaDeliveredCount.toLocaleString()} /{" "}
-                {data.paraphernaliaTrackedCount.toLocaleString()} areas
-              </span>
-              <span className="text-xs text-muted-foreground/70">
-                {paraphernaliaIncomplete.toLocaleString()} area
-                {paraphernaliaIncomplete === 1 ? "" : "s"} incomplete
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Status of Election Operations</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FunnelPanel stages={data.electionOpsFunnel} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Troop Deployment Recapitulation</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-6">
-            <DeploymentBarChart data={data.jtfDeployments} />
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>JTF</TableHead>
-                  <TableHead className="text-right">Deployed to Polling Precincts</TableHead>
-                  <TableHead className="text-right">Deployed to Polling Centers</TableHead>
-                  <TableHead className="text-right">QRF</TableHead>
+      <Card>
+        <CardHeader>
+          <CardTitle>Troop Deployment Recapitulation</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-6">
+          <DeploymentBarChart data={data.jtfDeployments} />
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>JTF</TableHead>
+                <TableHead className="text-right">Deployed to Polling Precincts</TableHead>
+                <TableHead className="text-right">Deployed to Polling Centers</TableHead>
+                <TableHead className="text-right">QRF</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.jtfDeployments.map((row) => (
+                <TableRow key={row.jtfId}>
+                  <TableCell>{row.jtfName}</TableCell>
+                  <TableCell className="text-right">
+                    {row.deployedToPolling.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {row.deployedToPollingCenters.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="text-right">{row.qrf.toLocaleString()}</TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.jtfDeployments.map((row) => (
-                  <TableRow key={row.jtfId}>
-                    <TableCell>{row.jtfName}</TableCell>
-                    <TableCell className="text-right">
-                      {row.deployedToPolling.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {row.deployedToPollingCenters.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-right">{row.qrf.toLocaleString()}</TableCell>
-                  </TableRow>
-                ))}
-                {data.jtfDeployments.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                      No deployment data yet.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+              ))}
+              {data.jtfDeployments.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                    No deployment data yet.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
       <JtfAssessmentCard assessments={jtfAssessments} canSubmit={canSubmitAssessment} />
 

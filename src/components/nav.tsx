@@ -17,8 +17,6 @@ const NAV_LINKS = [
   { href: "/priority-map", label: "Situation Map", page: "situation-map" },
   { href: "/incidents", label: "Monitored Incidents" },
   { href: "/bpe-deployment", label: "Deployment", page: "deployment" },
-  { href: "/election-ops", label: "Election Status", page: "election-status" },
-  { href: "/election-board", label: "Election Profile", page: "election-profile" },
 ] as const;
 
 const ADMIN_LINKS = [

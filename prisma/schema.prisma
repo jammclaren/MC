@@ -145,7 +145,6 @@ model JTF {
   accomplishments AccomplishmentRecord[]
   rido            RidoSettlement[]
   electionAreas   ElectionArea[]
-  candidates      Candidate[]
   assessments     JtfAssessment[]
   meeAssets       IntelMeeAsset[]
 }
@@ -241,7 +240,6 @@ model ElectionArea {
   lng              Float?
   deployments      TroopDeployment[]
   incidents        Incident[]
-  opsStatus        ElectionOpsStatus?
   pollingCenters   PollingCenter[]
 
   @@index([jtfId])
@@ -436,91 +434,6 @@ model IntelMeeAsset {
   createdAt   DateTime @default(now())
 
   @@index([jtfId])
-}
-
-model ElectionOpsStatus {
-  id                       String       @id @default(cuid())
-  electionAreaId           String       @unique
-  // Cascade: this row only exists to track its own area's BPE funnel
-  // progress and is meaningless without it — deleting the area should
-  // delete its tracking row too, not block the delete (the default for a
-  // required relation like this one is RESTRICT, which is what made
-  // deleting any area with status already logged fail).
-  electionArea             ElectionArea @relation(fields: [electionAreaId], references: [id], onDelete: Cascade)
-  paraphTotalTreasurer     Int?
-  paraphDeliveredTreasurer Int?
-  paraphTotalPrecinct      Int?
-  paraphDeliveredPrecinct  Int?
-  // Current physical location/stage of the paraphernalia (e.g. "At
-  // COMELEC/Regional Office", "In Transit to Treasurer", "At Municipal
-  // Treasurer", "In Transit to Precinct", "At Precinct", "Delivered &
-  // Confirmed") — free text like transmissionStatus below, distinct from
-  // the delivered/total counts above (this tracks *where*, those track
-  // *how much*).
-  paraphLocation           String?
-  acmTestedSealed          Boolean      @default(false)
-  votingStarted            Boolean      @default(false)
-  votingClosed             Boolean      @default(false)
-  transmissionStatus       String?
-  municipalCanvassPct      Float?
-  municipalProclaimed      Boolean      @default(false)
-  provincialCanvassPct     Float?
-  provincialProclaimed     Boolean      @default(false)
-  updatedAt                DateTime     @updatedAt
-}
-
-// --- 2026 BARMM Parliamentary Election (Sept 14, 2026 — same date as the
-// BPE 2026 window tracked elsewhere in this app) candidate/party roster.
-// Vote counts are manually encoded by staff as results come in, same
-// convention as every other figure in this app — never fabricated,
-// starting at 0 pre-election.
-
-model Party {
-  id              String                @id @default(cuid())
-  abbreviation    String                @unique
-  name            String
-  candidates      Candidate[]
-  provinceResults PartyProvinceResult[]
-}
-
-// A party's directly-entered vote total for a province — for party-list
-// results reported without a per-candidate breakdown. Additive with (not a
-// replacement for) any votes already attributed to this party's individual
-// Candidate rows in that province.
-model PartyProvinceResult {
-  id           String   @id @default(cuid())
-  partyId      String
-  party        Party    @relation(fields: [partyId], references: [id], onDelete: Cascade)
-  province     String
-  votesEncoded Int      @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@unique([partyId, province])
-  @@index([province])
-}
-
-model Candidate {
-  id           String   @id @default(cuid())
-  jtfId        String
-  jtf          JTF      @relation(fields: [jtfId], references: [id])
-  province     String
-  district     String?
-  nameOnBallot String
-  partyId      String?
-  party        Party?   @relation(fields: [partyId], references: [id])
-  isCocFiler   Boolean  @default(true)
-  votesEncoded Int      @default(0)
-  // Provenance for this row's data, e.g. a news source or "COMELEC CLC
-  // (Regional), May 13 2026" — not operational OPSEC, just a citation.
-  sourceNote   String?
-  createdById  String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@index([jtfId])
-  @@index([province])
-  @@index([partyId])
 }
 
 model AuditLog {

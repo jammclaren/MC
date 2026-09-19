@@ -6,7 +6,7 @@ import { listIntelUpdates } from "@/lib/queries/intel-updates";
 import { listIntelOverallAssessments } from "@/lib/queries/intel-overall-assessment";
 import { listIntelMeeAssets } from "@/lib/queries/intel-mee";
 import { computeIntelAssessment } from "@/lib/intel-assessment";
-import { PROVINCE_TO_JTF } from "@/lib/queries/election-board";
+import { PROVINCE_TO_JTF } from "@/lib/province-jtf";
 import { nowMs } from "@/lib/time";
 import { currentReportWindow } from "@/lib/reporting-period";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
