@@ -52,7 +52,7 @@ export function LoginForm({
   }
 
   return (
-    <Card className="w-full max-w-sm bg-card/85 backdrop-blur-sm">
+    <Card className="login-card-in w-full max-w-sm bg-card/90 backdrop-blur-md">
       <CardHeader>
         <CardTitle>DEGREES</CardTitle>
       </CardHeader>
@@ -81,7 +81,12 @@ export function LoginForm({
             />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button type="submit" disabled={submitting} className="w-full">
+          <Button
+            type="submit"
+            disabled={submitting}
+            size="lg"
+            className="mt-1 w-full shadow-[0_0_14px_-2px_var(--primary)] hover:shadow-[0_0_20px_-2px_var(--primary)]"
+          >
             {submitting ? "Signing in..." : "Sign in"}
           </Button>
         </form>

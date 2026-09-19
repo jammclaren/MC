@@ -29,10 +29,13 @@ export default auth(async (req) => {
 
   // Manifest icons must be fetchable without a session — browsers and the
   // Android TWA/APK tooling read them unauthenticated to validate the PWA.
+  // /images/ is likewise static public assets (e.g. the login background)
+  // that must render on the login page itself, before any session exists.
   if (
     PUBLIC_PATHS.includes(pathname) ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/icon-") ||
+    pathname.startsWith("/images/") ||
     pathname.startsWith("/.well-known/")
   ) {
     return NextResponse.next();

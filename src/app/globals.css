@@ -364,6 +364,90 @@
 }
 
 /* ---------------------------------------------------------------------
+ * Neumorphism (soft-UI) — layered on top of, not instead of, the existing
+ * HUD panel look (accent border, ring). Dark-theme neumorphism reads
+ * mainly through shadow contrast rather than surface-color difference,
+ * since the panel/page background are already close in value — so the
+ * "highlight" side is a faint lift, not a literal light color, and the
+ * "shadow" side does most of the work. Raised = resting surfaces (cards,
+ * tiles, buttons); inset = surfaces that take input (fields), reading as
+ * pressed into the panel rather than sitting on it. Pressed = the raised
+ * shadow collapsed toward inset, for a button's own active state.
+ * --------------------------------------------------------------------- */
+.neu-raised {
+  box-shadow:
+    9px 9px 18px rgba(0, 0, 0, 0.55),
+    -7px -7px 16px rgba(255, 255, 255, 0.035);
+}
+/* Interactive variant (buttons, anything clickable) — the static
+ * .neu-raised alone would make purely informational cards look like they
+ * react to hover/press, implying interactivity they don't have. */
+.neu-raised-interactive {
+  box-shadow:
+    9px 9px 18px rgba(0, 0, 0, 0.55),
+    -7px -7px 16px rgba(255, 255, 255, 0.035);
+  transition: box-shadow 0.15s ease;
+}
+.neu-raised-interactive:hover {
+  box-shadow:
+    10px 10px 20px rgba(0, 0, 0, 0.6),
+    -8px -8px 18px rgba(255, 255, 255, 0.045);
+}
+.neu-raised-interactive:active {
+  box-shadow:
+    inset 4px 4px 9px rgba(0, 0, 0, 0.55),
+    inset -3px -3px 7px rgba(255, 255, 255, 0.03);
+}
+.neu-inset {
+  box-shadow:
+    inset 4px 4px 9px rgba(0, 0, 0, 0.5),
+    inset -3px -3px 7px rgba(255, 255, 255, 0.03);
+}
+
+/* Sign-in background — a slow, continuous Ken Burns drift (scale + pan)
+ * on the photo behind the login card. Long duration and a subtle range so
+ * it reads as ambient atmosphere, not a slideshow effect. */
+@keyframes login-bg-drift {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    transform: scale(1.08) translate(-1.5%, 1%);
+  }
+  100% {
+    transform: scale(1) translate(0, 0);
+  }
+}
+.login-bg-photo {
+  animation: login-bg-drift 32s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-bg-photo {
+    animation: none;
+  }
+}
+
+/* Login card entrance — a single settle-in on mount, not a loop. */
+@keyframes login-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.login-card-in {
+  animation: login-card-in 0.7s cubic-bezier(0.16, 0.9, 0.28, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-card-in {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------
  * Futuristic command-center viewport chrome — a persistent HUD frame and
  * a slow ambient scan-line sweep, both purely decorative (pointer-events
  * disabled) and fixed to the viewport rather than any one page, so every

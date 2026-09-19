@@ -30,7 +30,7 @@ export function StatTile({
   hint,
 }: StatTileProps) {
   return (
-    <div className="relative flex flex-col gap-1 overflow-hidden rounded-md border-t-2 border-t-primary/60 bg-card px-4 py-3 ring-1 ring-foreground/10">
+    <div className="neu-raised relative flex flex-col gap-1 overflow-hidden rounded-md border-t-2 border-t-primary/60 bg-card px-4 py-3 ring-1 ring-foreground/10">
       <div className="flex items-center justify-between">
         <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
           {label}
