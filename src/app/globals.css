@@ -503,6 +503,24 @@
   mix-blend-mode: soft-light;
 }
 
+/* Crisper duplicate of the same textPath, revealed by proximity to the
+ * cursor (see LoginSignatureReveal) rather than always shown — full
+ * opacity/contrast and no blend-mode, so it reads clearly once found
+ * instead of staying as blended-in as the base copy above. The parent
+ * <g>'s opacity (set inline by LoginSignatureReveal) is what actually
+ * drives the reveal; this transition just smooths it. */
+.login-signature-bright {
+  transition: opacity 0.12s ease-out;
+}
+.login-signature-text-bright {
+  font-family: var(--font-cursive);
+  font-size: 34px;
+  fill: rgba(226, 238, 206, 0.95);
+  stroke: rgba(40, 30, 16, 0.7);
+  stroke-width: 2.5px;
+  paint-order: stroke fill;
+}
+
 /* ---------------------------------------------------------------------
  * Futuristic command-center viewport chrome — a persistent HUD frame and
  * a slow ambient scan-line sweep, both purely decorative (pointer-events

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { LoginCursorGlow } from "@/components/login-cursor-glow";
+import { LoginSignatureReveal } from "@/components/login-signature-reveal";
 
 /**
  * Slow Ken Burns drift on the sign-in photo, with a vignette darkening
@@ -34,7 +35,9 @@ export function LoginBackground() {
           gives the letterforms a twisted, rope-like thickness closer to
           the vine's own strands, and mix-blend-mode lets the photo's own
           light/dark tones show through instead of sitting flatly on top
-          of it. */}
+          of it. The base copy stays unrecognizably faint; a second,
+          crisper copy (LoginSignatureReveal) fades in only when the
+          cursor is right on it. */}
       <svg
         className="login-signature pointer-events-none absolute bottom-[24%] left-[26%] h-14 w-32 sm:h-16 sm:w-36"
         viewBox="0 0 260 130"
@@ -48,6 +51,13 @@ export function LoginBackground() {
             jamisal
           </textPath>
         </text>
+        <LoginSignatureReveal>
+          <text className="login-signature-text-bright">
+            <textPath href="#jamisal-vine-path" startOffset="2">
+              jamisal
+            </textPath>
+          </text>
+        </LoginSignatureReveal>
       </svg>
     </div>
   );
