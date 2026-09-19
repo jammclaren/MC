@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { SitRepBarChart } from "@/components/charts/sitrep-bar-chart";
+import { SitRepCapsuleChart } from "@/components/charts/sitrep-capsule-chart";
 import { StatTile } from "@/components/stat-tile";
 import { DailyAssessmentPanel } from "@/components/daily-assessment-panel";
 import { JtfAssessmentCard } from "@/components/jtf-assessment-card";
@@ -66,10 +66,10 @@ export default async function OverviewPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>SITREP Recapitulation</CardTitle>
+          <CardTitle>DISPOLOC</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
-          <SitRepBarChart
+          <SitRepCapsuleChart
             data={data.jtfSitReps.map((row) => ({
               jtfName: row.jtfName,
               totalStrength: row.totalStrength,
