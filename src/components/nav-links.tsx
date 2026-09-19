@@ -130,7 +130,7 @@ export function NavLinks({ links }: { links: readonly NavLinkItem[] }) {
                 ITEM_CLASS,
                 active
                   ? "neu-raised-interactive bg-card text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-primary"
               )}
             >
               {link.label}
@@ -146,7 +146,7 @@ export function NavLinks({ links }: { links: readonly NavLinkItem[] }) {
                 "flex items-center gap-1 outline-none",
                 overflowHasActive
                   ? "neu-raised-interactive bg-card text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-primary"
               )}
             >
               More
