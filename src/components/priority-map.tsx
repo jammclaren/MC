@@ -82,9 +82,9 @@ const DEFAULT_CENTER: [number, number] = [7.2, 124.2];
 const DEFAULT_ZOOM = 8;
 
 const PROVINCE_STYLE: L.PathOptions = {
-  color: "#22d3ee",
+  color: "#2dd4bf",
   weight: 1.5,
-  fillColor: "#0a3a3f",
+  fillColor: "#123330",
   fillOpacity: 0.3,
   interactive: false,
   className: "province-outline-glow",

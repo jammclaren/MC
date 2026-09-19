@@ -72,25 +72,25 @@
    * custom property, which invalidates the whole font-family list wherever
    * it's used as a fallback (including .font-display below). */
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --background: #090d0e;
+  --background: #111317;
   --foreground: #ffffff;
-  --card: #0f1a1c;
+  --card: #1f2329;
   --card-foreground: #ffffff;
-  --popover: #0f1a1c;
+  --popover: #1f2329;
   --popover-foreground: #ffffff;
-  --primary: #22d3ee;
-  --primary-foreground: #05181b;
-  --secondary: #172325;
+  --primary: #2dd4bf;
+  --primary-foreground: #1f2329;
+  --secondary: #272c33;
   --secondary-foreground: #ffffff;
-  --muted: #131e20;
-  --muted-foreground: #8fa8ac;
-  --accent: #0d2b30;
+  --muted: #1a1e23;
+  --muted-foreground: #9aa0a6;
+  --accent: #16302b;
   --accent-foreground: #ffffff;
   --destructive: #e66767;
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.15);
-  --ring: #22d3ee;
-  --chart-1: #22d3ee;
+  --ring: #2dd4bf;
+  --chart-1: #2dd4bf;
   --chart-2: #d95926;
   --chart-3: #199e70;
   --chart-4: #c98500;
@@ -99,51 +99,51 @@
   --status-warning: #fab219;
   --status-serious: #ec835a;
   --status-critical: #d03b3b;
-  --gridline: #1e2a2b;
-  --axis-baseline: #2c3839;
+  --gridline: #23262b;
+  --axis-baseline: #34383f;
   --radius: 0.375rem;
-  --sidebar: #0f1a1c;
+  --sidebar: #1f2329;
   --sidebar-foreground: #ffffff;
-  --sidebar-primary: #22d3ee;
-  --sidebar-primary-foreground: #05181b;
-  --sidebar-accent: #0d2b30;
+  --sidebar-primary: #2dd4bf;
+  --sidebar-primary-foreground: #1f2329;
+  --sidebar-accent: #16302b;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.1);
-  --sidebar-ring: #22d3ee;
+  --sidebar-ring: #2dd4bf;
 }
 
 .dark {
-  --background: #090d0e;
+  --background: #111317;
   --foreground: #ffffff;
-  --card: #0f1a1c;
+  --card: #1f2329;
   --card-foreground: #ffffff;
-  --popover: #0f1a1c;
+  --popover: #1f2329;
   --popover-foreground: #ffffff;
-  --primary: #22d3ee;
-  --primary-foreground: #05181b;
-  --secondary: #172325;
+  --primary: #2dd4bf;
+  --primary-foreground: #1f2329;
+  --secondary: #272c33;
   --secondary-foreground: #ffffff;
-  --muted: #131e20;
-  --muted-foreground: #8fa8ac;
-  --accent: #0d2b30;
+  --muted: #1a1e23;
+  --muted-foreground: #9aa0a6;
+  --accent: #16302b;
   --accent-foreground: #ffffff;
   --destructive: #e66767;
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.15);
-  --ring: #22d3ee;
-  --chart-1: #22d3ee;
+  --ring: #2dd4bf;
+  --chart-1: #2dd4bf;
   --chart-2: #d95926;
   --chart-3: #199e70;
   --chart-4: #c98500;
   --chart-5: #9085e9;
-  --sidebar: #0f1a1c;
+  --sidebar: #1f2329;
   --sidebar-foreground: #ffffff;
-  --sidebar-primary: #22d3ee;
-  --sidebar-primary-foreground: #05181b;
-  --sidebar-accent: #0d2b30;
+  --sidebar-primary: #2dd4bf;
+  --sidebar-primary-foreground: #1f2329;
+  --sidebar-accent: #16302b;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.1);
-  --sidebar-ring: #22d3ee;
+  --sidebar-ring: #2dd4bf;
 }
 
 @layer base {
@@ -153,8 +153,8 @@
   body {
     @apply bg-background text-foreground;
     background-image:
-      linear-gradient(rgba(34, 211, 238, 0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(34, 211, 238, 0.05) 1px, transparent 1px);
+      linear-gradient(rgba(45, 212, 191, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(45, 212, 191, 0.05) 1px, transparent 1px);
     background-size: 40px 40px;
     background-attachment: fixed;
   }
@@ -196,33 +196,33 @@
 /* Leaflet ships light-mode chrome by default; re-theme it to match the
  * tactical dark console instead of leaving white zoom buttons/attribution. */
 .leaflet-container {
-  background-color: #060b14 !important;
+  background-color: #101216 !important;
   background-image:
     repeating-linear-gradient(
       0deg,
-      rgba(34, 211, 238, 0.07) 0px,
-      rgba(34, 211, 238, 0.07) 1px,
+      rgba(45, 212, 191, 0.07) 0px,
+      rgba(45, 212, 191, 0.07) 1px,
       transparent 1px,
       transparent 22px
     ),
     repeating-linear-gradient(
       90deg,
-      rgba(34, 211, 238, 0.07) 0px,
-      rgba(34, 211, 238, 0.07) 1px,
+      rgba(45, 212, 191, 0.07) 0px,
+      rgba(45, 212, 191, 0.07) 1px,
       transparent 1px,
       transparent 22px
     ),
     repeating-linear-gradient(
       0deg,
-      rgba(34, 211, 238, 0.16) 0px,
-      rgba(34, 211, 238, 0.16) 1px,
+      rgba(45, 212, 191, 0.16) 0px,
+      rgba(45, 212, 191, 0.16) 1px,
       transparent 1px,
       transparent 132px
     ),
     repeating-linear-gradient(
       90deg,
-      rgba(34, 211, 238, 0.16) 0px,
-      rgba(34, 211, 238, 0.16) 1px,
+      rgba(45, 212, 191, 0.16) 0px,
+      rgba(45, 212, 191, 0.16) 1px,
       transparent 1px,
       transparent 132px
     ) !important;
@@ -243,9 +243,9 @@
 }
 
 /* Recolors the "Tactical Blueprint" base layer's neutral-gray tiles into
- * a glowing cyan wireframe-on-near-black look. sepia() gives the
+ * a glowing teal wireframe-on-near-black look. sepia() gives the
  * grayscale source a hue to rotate; hue-rotate() carries that from
- * sepia's ~39deg to cyan's ~188deg (#22d3ee); saturate() pushes it
+ * sepia's ~39deg to teal's ~172deg (#2dd4bf); saturate() pushes it
  * vivid. Kept as a filter chain rather than a mix-blend-mode overlay —
  * Leaflet's tile containers carry their own `transform` for GPU-
  * accelerated positioning, which isolates them into their own
@@ -258,7 +258,7 @@
  * image. Reduced opacity gives the fill a translucent, hologram-over-
  * the-HUD-grid read instead of a flat solid basemap. */
 .leaflet-tacticalBlueprint-pane {
-  filter: sepia(1) hue-rotate(149deg) saturate(5) brightness(0.85) contrast(1.15);
+  filter: sepia(1) hue-rotate(133deg) saturate(5) brightness(0.85) contrast(1.15);
   opacity: 0.4;
 }
 /* A blurred, brighter duplicate of the same tiles sitting one pane behind
@@ -266,7 +266,7 @@
  * into a soft halo, reading as boundaries lit from within rather than a
  * flat recolor. */
 .leaflet-tacticalBlueprintGlow-pane {
-  filter: sepia(1) hue-rotate(149deg) saturate(6) brightness(1.6) blur(3px);
+  filter: sepia(1) hue-rotate(133deg) saturate(6) brightness(1.6) blur(3px);
   opacity: 0.5;
 }
 
@@ -278,7 +278,7 @@
  * opaque raster image only outlines the tile's rectangle, not the
  * line-work drawn inside it). */
 .province-outline-glow {
-  filter: drop-shadow(0 0 3px #22d3ee) drop-shadow(0 0 7px #22d3ee);
+  filter: drop-shadow(0 0 3px #2dd4bf) drop-shadow(0 0 7px #2dd4bf);
 }
 /* Hidden per request — Esri/OSM's free tile terms do still ask for
  * attribution to be shown somewhere in the app; if that matters for this
@@ -447,7 +447,7 @@
   }
 }
 
-/* Login background — faint cyan grid, permanently visible at low
+/* Login background — faint teal grid, permanently visible at low
  * opacity, with a second brighter copy of the same grid revealed only
  * within a spotlight (see .login-cursor-glow / LoginCursorGlow). On load
  * the spotlight sweeps through a short scripted path on its own (the
@@ -458,13 +458,13 @@
  * replacing it. */
 .login-grid-overlay {
   background-image:
-    repeating-linear-gradient(0deg, rgba(34, 211, 238, 0.1) 0 1px, transparent 1px 56px),
-    repeating-linear-gradient(90deg, rgba(34, 211, 238, 0.1) 0 1px, transparent 1px 56px);
+    repeating-linear-gradient(0deg, rgba(45, 212, 191, 0.1) 0 1px, transparent 1px 56px),
+    repeating-linear-gradient(90deg, rgba(45, 212, 191, 0.1) 0 1px, transparent 1px 56px);
 }
 .login-grid-overlay-bright {
   background-image:
-    repeating-linear-gradient(0deg, rgba(34, 211, 238, 0.85) 0 1px, transparent 1px 56px),
-    repeating-linear-gradient(90deg, rgba(34, 211, 238, 0.85) 0 1px, transparent 1px 56px);
+    repeating-linear-gradient(0deg, rgba(45, 212, 191, 0.85) 0 1px, transparent 1px 56px),
+    repeating-linear-gradient(90deg, rgba(45, 212, 191, 0.85) 0 1px, transparent 1px 56px);
   -webkit-mask-image: radial-gradient(
     circle 220px at var(--mx, 50%) var(--my, 50%),
     black 0%,
@@ -479,8 +479,8 @@
   inset: 0;
   background: radial-gradient(
     circle 220px at var(--mx, 50%) var(--my, 50%),
-    rgba(34, 211, 238, 0.3) 0%,
-    rgba(34, 211, 238, 0.08) 45%,
+    rgba(45, 212, 191, 0.3) 0%,
+    rgba(45, 212, 191, 0.08) 45%,
     transparent 75%
   );
 }
@@ -596,8 +596,8 @@
     0 100%,
     0 12px
   );
-  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.18) inset,
-    0 -1px 12px -2px rgba(34, 211, 238, 0.55);
+  box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.18) inset,
+    0 -1px 12px -2px rgba(45, 212, 191, 0.55);
 }
 
 /* Daily Summary of Reports print support — hidden on screen, shown only
