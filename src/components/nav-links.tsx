@@ -129,7 +129,7 @@ export function NavLinks({ links }: { links: readonly NavLinkItem[] }) {
                 "flex items-center",
                 ITEM_CLASS,
                 active
-                  ? "neu-raised-interactive bg-card text-foreground"
+                  ? "neu-raised-interactive bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-primary"
               )}
             >
@@ -145,7 +145,7 @@ export function NavLinks({ links }: { links: readonly NavLinkItem[] }) {
                 ITEM_CLASS,
                 "flex items-center gap-1 outline-none",
                 overflowHasActive
-                  ? "neu-raised-interactive bg-card text-foreground"
+                  ? "neu-raised-interactive bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-primary"
               )}
             >
