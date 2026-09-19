@@ -52,17 +52,19 @@ export function SitRepCapsuleChart({
                 return (
                   <div
                     key={s.name}
-                    className="neu-inset relative flex w-5 flex-col justify-end overflow-hidden rounded-full bg-input"
+                    className="neu-inset relative flex w-5 flex-col justify-end rounded-full bg-input"
                     style={{ height: trackHeight }}
                     title={`${s.name}: ${value.toLocaleString()}`}
                   >
                     <div
-                      className="w-full rounded-full transition-all"
+                      className="relative w-full rounded-full transition-all"
                       style={{
                         height: `${Math.max(fillPct, value > 0 ? 6 : 0)}%`,
                         background: `linear-gradient(to bottom, color-mix(in oklch, ${s.color}, white 35%), ${s.color})`,
                       }}
-                    />
+                    >
+                      <span className="neu-raised absolute top-0 left-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" />
+                    </div>
                   </div>
                 );
               })}

@@ -31,17 +31,19 @@ export function CapsuleBarChart({
         return (
           <div key={d.label} className="flex flex-col items-center gap-2">
             <div
-              className="neu-inset relative flex w-7 flex-col justify-end overflow-hidden rounded-full bg-input"
+              className="neu-inset relative flex w-7 flex-col justify-end rounded-full bg-input"
               style={{ height: trackHeight }}
               title={`${d.label}: ${d.count.toLocaleString()}`}
             >
               <div
-                className="w-full rounded-full transition-all"
+                className="relative w-full rounded-full transition-all"
                 style={{
                   height: `${Math.max(fillPct, d.count > 0 ? 6 : 0)}%`,
                   background: "linear-gradient(to bottom, #5eead4, var(--primary))",
                 }}
-              />
+              >
+                <span className="neu-raised absolute top-0 left-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" />
+              </div>
             </div>
             <span className="text-xs whitespace-nowrap text-muted-foreground">{d.label}</span>
           </div>
