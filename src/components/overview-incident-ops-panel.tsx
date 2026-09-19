@@ -8,7 +8,6 @@ import { LabeledBarChart } from "@/components/charts/labeled-bar-chart";
 import { IncidentsByDayChart, type IncidentsByDayDatum } from "@/components/charts/incidents-by-day-chart";
 import { TopIncidentTypesChart } from "@/components/charts/top-incident-types-chart";
 import { SeverityMixChart } from "@/components/charts/severity-mix-chart";
-import { PriorityLeaderboard, type LeaderboardEntry } from "@/components/priority-leaderboard";
 import { OverviewIncidentMapLoader } from "@/components/overview-incident-map-loader";
 import { isViolentIncidentType } from "@/lib/incident-classification";
 import type { IncidentMarker } from "@/lib/queries/incident-markers";
@@ -19,13 +18,11 @@ const LAST_24H_MS = 24 * 60 * 60 * 1000;
 
 export function OverviewIncidentOpsPanel({
   markers,
-  topPriorityAreas,
   incidentsByDay,
   now,
   canAccessSituationMap = true,
 }: {
   markers: IncidentMarker[];
-  topPriorityAreas: LeaderboardEntry[];
   incidentsByDay: IncidentsByDayDatum[];
   /** Request-time timestamp (ms), computed server-side and passed down so
    * the "last 24h" calculation stays a pure function of props. */
@@ -150,12 +147,6 @@ export function OverviewIncidentOpsPanel({
           </div>
 
           <div className="flex flex-col gap-4">
-            <div>
-              <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-                Priority Leaderboard
-              </h3>
-              <PriorityLeaderboard entries={topPriorityAreas} />
-            </div>
             <div>
               <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
                 Top Incident Types

@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import type { ScoredArea } from "@/lib/queries/priority-areas";
 import type { IncidentMarker } from "@/lib/queries/incident-markers";
 import type { IntelMarker } from "@/lib/queries/intel-markers";
 import type { ElectionAreaOption, JtfOption } from "@/components/incident-marker-form-dialog";
@@ -20,34 +19,28 @@ const PriorityMap = dynamic(
 );
 
 export function PriorityMapLoader({
-  areas,
   markers,
   intelMarkers,
   jtfOptions,
   areaOptions,
   lockJtfId,
   canCreateMarker,
-  writableJtfIds,
 }: {
-  areas: ScoredArea[];
   markers: IncidentMarker[];
   intelMarkers: IntelMarker[];
   jtfOptions: JtfOption[];
   areaOptions: ElectionAreaOption[];
   lockJtfId?: string;
   canCreateMarker: boolean;
-  writableJtfIds: string[];
 }) {
   return (
     <PriorityMap
-      areas={areas}
       markers={markers}
       intelMarkers={intelMarkers}
       jtfOptions={jtfOptions}
       areaOptions={areaOptions}
       lockJtfId={lockJtfId}
       canCreateMarker={canCreateMarker}
-      writableJtfIds={writableJtfIds}
     />
   );
 }

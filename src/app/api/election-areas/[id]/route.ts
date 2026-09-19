@@ -18,8 +18,6 @@ const updateAreaSchema = z.object({
   city: z.string().nullable().optional(),
   municipality: z.string().nullable().optional(),
   barangay: z.string().nullable().optional(),
-  hotspotCategory: z.string().nullable().optional(),
-  hotspotReason: z.string().nullable().optional(),
   numPrecincts: z.number().int().nonnegative().nullable().optional(),
   numCenters: z.number().int().nonnegative().nullable().optional(),
   // Sent as the full current list — replaces whatever was on file, same

@@ -19,7 +19,7 @@ import { StatTile } from "@/components/stat-tile";
 import { DailyAssessmentPanel } from "@/components/daily-assessment-panel";
 import { JtfAssessmentCard } from "@/components/jtf-assessment-card";
 import { OverviewIncidentOpsPanel } from "@/components/overview-incident-ops-panel";
-import { Users, ShieldAlert, TriangleAlert, Crosshair, Vote } from "lucide-react";
+import { Users, ShieldAlert, TriangleAlert, Crosshair } from "lucide-react";
 
 export default async function OverviewPage() {
   const user = await getSessionUser();
@@ -37,12 +37,7 @@ export default async function OverviewPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        <StatTile
-          label="Registered Voters (BARMM)"
-          value={data.totalRegisteredVoters.toLocaleString()}
-          icon={Vote}
-        />
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         <StatTile label="Total Strength" value={data.totalStrength.toLocaleString()} icon={Users} />
         <StatTile
           label="Critical Assets"
@@ -60,18 +55,10 @@ export default async function OverviewPage() {
           icon={TriangleAlert}
           tone={data.recentIncidentCount30d > 0 ? "warning" : "default"}
         />
-        <StatTile
-          label="Priority Areas"
-          value={data.priorityAreaCount.toLocaleString()}
-          icon={Crosshair}
-          tone={data.priorityAreaCount > 0 ? "critical" : "good"}
-          hint="score ≥ Red-hotspot baseline"
-        />
       </div>
 
       <OverviewIncidentOpsPanel
         markers={incidentMarkers}
-        topPriorityAreas={data.topPriorityAreas}
         incidentsByDay={data.incidentsByDay}
         now={now}
         canAccessSituationMap={canAccessPage(user, "situation-map")}

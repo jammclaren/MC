@@ -173,7 +173,6 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
 
   lines.push("2. INCIDENTS (this reporting period)");
   lines.push(`Logged: ${windowIncidents.length}`);
-  lines.push(`Priority/flagged areas (overall): ${data.priorityAreaCount}`);
   lines.push("Most Recent Incident by JTF:");
   for (const j of data.jtfSitReps) {
     const r = mostRecentIncidentByJtf.get(j.jtfId);

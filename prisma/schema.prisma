@@ -229,8 +229,6 @@ model ElectionArea {
   city             String?
   municipality     String?
   barangay         String?
-  hotspotCategory  String?
-  hotspotReason    String?
   // Area-wide totals — kept independent of the named breakdown below
   // (an area's precinct/center count can be logged before anyone has
   // named the individual polling centers yet).

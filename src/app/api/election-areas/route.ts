@@ -19,8 +19,6 @@ const createAreaSchema = z.object({
   city: z.string().nullable().optional(),
   municipality: z.string().nullable().optional(),
   barangay: z.string().nullable().optional(),
-  hotspotCategory: z.string().nullable().optional(),
-  hotspotReason: z.string().nullable().optional(),
   numPrecincts: z.number().int().nonnegative().nullable().optional(),
   numCenters: z.number().int().nonnegative().nullable().optional(),
   // Named polling centers, each with its own precinct count — an area with

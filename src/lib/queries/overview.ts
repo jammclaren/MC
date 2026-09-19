@@ -1,12 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { scopeJtfFilter, type SessionUser } from "@/lib/rbac";
-import {
-  computePriorityScore,
-  PRIORITY_FLAG_THRESHOLD,
-  RECENT_INCIDENT_WINDOW_DAYS,
-} from "@/lib/priority-score";
-import { getScoredAreas } from "@/lib/queries/priority-areas";
 import { getSitRepData, type JtfSitRepSummary } from "@/lib/queries/sitreps";
+
+// How far back "recent incidents" looks for the 30-day count and
+// window-scoped queries below.
+const RECENT_INCIDENT_WINDOW_DAYS = 30;
 
 export interface RecentIncidentRow {
   id: string;
@@ -15,7 +13,6 @@ export interface RecentIncidentRow {
   result: string | null;
   jtfName: string;
   areaLabel: string | null;
-  isPriority: boolean;
 }
 
 export interface IncidentsByDay {
@@ -26,14 +23,6 @@ export interface IncidentsByDay {
   types: string[];
 }
 
-export interface PriorityAreaSummary {
-  id: string;
-  label: string;
-  province: string;
-  hotspotCategory: string | null;
-  priorityScore: number;
-}
-
 export interface OverviewData {
   jtfSitReps: JtfSitRepSummary[];
   totalStrength: number;
@@ -42,9 +31,7 @@ export interface OverviewData {
   totalRegisteredVoters: number;
   recentIncidents: RecentIncidentRow[];
   recentIncidentCount30d: number;
-  priorityAreaCount: number;
   incidentsByDay: IncidentsByDay[];
-  topPriorityAreas: PriorityAreaSummary[];
   bpe: {
     startDate: string; // ISO timestamp
     endDate: string; // ISO timestamp
@@ -71,7 +58,6 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     sitRepData,
     recentIncidents,
     recentIncidentCount30d,
-    scoredAreas,
     registeredVotersAgg,
     incidentsForDailyChart,
   ] = await Promise.all([
@@ -82,20 +68,12 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
       take: 10,
       include: {
         jtf: { select: { name: true } },
-        electionArea: {
-          include: {
-            incidents: {
-              where: { date: { gte: windowStart } },
-              select: { type: true, date: true },
-            },
-          },
-        },
+        electionArea: { select: { barangay: true, municipality: true, province: true } },
       },
     }),
     prisma.incident.count({
       where: { jtfId: detailScopeJtfId, date: { gte: windowStart } },
     }),
-    getScoredAreas(user),
     prisma.electionArea.aggregate({
       where: { jtfId: rollupScopeJtfId },
       _sum: { registeredVoters: true },
@@ -108,10 +86,6 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
       select: { date: true, type: true },
     }),
   ]);
-
-  const priorityAreaCount = scoredAreas.filter(
-    (area) => area.priorityScore >= PRIORITY_FLAG_THRESHOLD
-  ).length;
 
   const totalRegisteredVoters = registeredVotersAgg._sum.registeredVoters ?? 0;
 
@@ -134,31 +108,7 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     ([date, { count, types }]) => ({ date, count, types: Array.from(types) })
   );
 
-  const topPriorityAreas: PriorityAreaSummary[] = scoredAreas.slice(0, 5).map((area) => ({
-    id: area.id,
-    label:
-      [area.barangay, area.municipality, area.province].filter(Boolean).join(", ") ||
-      area.province,
-    province: area.province,
-    hotspotCategory: area.hotspotCategory,
-    priorityScore: area.priorityScore,
-  }));
-
   const recentIncidentRows: RecentIncidentRow[] = recentIncidents.map((incident) => {
-    let isPriority = false;
-    if (incident.electionArea) {
-      const area = incident.electionArea;
-      // See priority-areas.ts — SITREP has no per-area deployment figure,
-      // so the coverage deduction is always 0 here now.
-      const score = computePriorityScore({
-        hotspotCategory: area.hotspotCategory,
-        incidents: area.incidents,
-        deployedToPolling: 0,
-        registeredVoters: area.registeredVoters,
-      });
-      isPriority = score >= PRIORITY_FLAG_THRESHOLD;
-    }
-
     const areaLabel =
       incident.locationLabel ||
       (incident.electionArea
@@ -174,7 +124,6 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
       result: incident.result,
       jtfName: incident.jtf.name,
       areaLabel,
-      isPriority,
     };
   });
 
@@ -186,9 +135,7 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     totalRegisteredVoters,
     recentIncidents: recentIncidentRows,
     recentIncidentCount30d,
-    priorityAreaCount,
     incidentsByDay,
-    topPriorityAreas,
     bpe: {
       startDate: BPE_START.toISOString(),
       endDate: BPE_END.toISOString(),

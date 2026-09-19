@@ -40,8 +40,6 @@ export interface ElectionAreaFormInitial {
   province: string;
   municipality: string;
   barangay: string;
-  hotspotCategory: string;
-  hotspotReason: string;
   numPrecincts: string;
   numCenters: string;
   pollingCenters: PollingCenterFormValue[];
@@ -49,8 +47,6 @@ export interface ElectionAreaFormInitial {
   lat: string;
   lng: string;
 }
-
-const HOTSPOT_CATEGORIES = ["Red", "Orange", "Yellow", "Green"] as const;
 
 function numOrUndefined(value: string): number | undefined {
   if (value.trim() === "") return undefined;
@@ -83,8 +79,6 @@ export function ElectionAreaFormDialog({
   const [province, setProvince] = useState(initial?.province ?? "");
   const [municipality, setMunicipality] = useState(initial?.municipality ?? "");
   const [barangay, setBarangay] = useState(initial?.barangay ?? "");
-  const [hotspotCategory, setHotspotCategory] = useState<string>(initial?.hotspotCategory ?? "");
-  const [hotspotReason, setHotspotReason] = useState(initial?.hotspotReason ?? "");
   const [numPrecincts, setNumPrecincts] = useState(initial?.numPrecincts ?? "");
   const [numCenters, setNumCenters] = useState(initial?.numCenters ?? "");
   const [pollingCenters, setPollingCenters] = useState<PollingCenterFormValue[]>(
@@ -121,13 +115,6 @@ export function ElectionAreaFormDialog({
     () => jtfOptions.map((jtf) => ({ value: jtf.id, label: jtf.name })),
     [jtfOptions]
   );
-  const hotspotItems = useMemo(
-    () => [
-      { value: "__none__", label: "Unclassified" },
-      ...HOTSPOT_CATEGORIES.map((c) => ({ value: c, label: c })),
-    ],
-    []
-  );
 
   function updatePollingCenter(index: number, patch: Partial<PollingCenterFormValue>) {
     setPollingCenters((prev) => prev.map((pc, i) => (i === index ? { ...pc, ...patch } : pc)));
@@ -153,8 +140,6 @@ export function ElectionAreaFormDialog({
         province,
         municipality: municipality || null,
         barangay: barangay || null,
-        hotspotCategory: hotspotCategory || null,
-        hotspotReason: hotspotReason || null,
         numPrecincts: numOrUndefined(numPrecincts) ?? null,
         numCenters: numOrUndefined(numCenters) ?? null,
         // Blank rows (never named) are dropped rather than saved as an
@@ -264,36 +249,6 @@ export function ElectionAreaFormDialog({
                   ))}
                 </datalist>
               )}
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label>Hotspot Category</Label>
-              <Select
-                items={hotspotItems}
-                value={hotspotCategory || "__none__"}
-                onValueChange={(v: string | null) =>
-                  setHotspotCategory(!v || v === "__none__" ? "" : v)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Unclassified" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">Unclassified</SelectItem>
-                  {HOTSPOT_CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="hotspotReason">Hotspot Reason</Label>
-              <Input
-                id="hotspotReason"
-                value={hotspotReason}
-                onChange={(e) => setHotspotReason(e.target.value)}
-              />
             </div>
             <div className="col-span-2 flex flex-col gap-3">
               <Label>Polling Centers</Label>

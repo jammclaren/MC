@@ -1,6 +1,5 @@
 import { safePercent } from "@/lib/percentages";
 import { isViolentIncidentType } from "@/lib/incident-classification";
-import { PROVINCE_TO_JTF } from "@/lib/province-jtf";
 import type { OverviewData } from "@/lib/queries/overview";
 
 /**
@@ -49,17 +48,30 @@ export interface DailyAssessment {
   recommendations: RecommendationTiers;
 }
 
-// Priority-area count thresholds for the overall severity call — plain,
-// editable constants (same spirit as computePriorityScore), not a model.
-const CRITICAL_PRIORITY_AREA_THRESHOLD = 200;
-const ELEVATED_PRIORITY_AREA_THRESHOLD = 50;
-const MODERATE_PRIORITY_AREA_THRESHOLD = 10;
+// 30-day incident count thresholds for the overall severity call — plain,
+// editable constants, not a model. An increasing trend bumps the level up
+// one step (capped at CRITICAL): a rising trajectory is itself reason to
+// caution the level up, not just the raw count.
+const CRITICAL_INCIDENT_THRESHOLD = 30;
+const ELEVATED_INCIDENT_THRESHOLD = 15;
+const MODERATE_INCIDENT_THRESHOLD = 5;
+const SEVERITY_ORDER: SeverityLevel[] = ["LOW", "MODERATE", "ELEVATED", "CRITICAL"];
 
-function severityFromPriorityAreas(priorityAreaCount: number): SeverityLevel {
-  if (priorityAreaCount >= CRITICAL_PRIORITY_AREA_THRESHOLD) return "CRITICAL";
-  if (priorityAreaCount >= ELEVATED_PRIORITY_AREA_THRESHOLD) return "ELEVATED";
-  if (priorityAreaCount >= MODERATE_PRIORITY_AREA_THRESHOLD) return "MODERATE";
-  return "LOW";
+function severityFromIncidents(
+  recentIncidentCount30d: number,
+  trend: "increasing" | "decreasing" | "stable"
+): SeverityLevel {
+  let level: SeverityLevel;
+  if (recentIncidentCount30d >= CRITICAL_INCIDENT_THRESHOLD) level = "CRITICAL";
+  else if (recentIncidentCount30d >= ELEVATED_INCIDENT_THRESHOLD) level = "ELEVATED";
+  else if (recentIncidentCount30d >= MODERATE_INCIDENT_THRESHOLD) level = "MODERATE";
+  else level = "LOW";
+
+  if (trend === "increasing") {
+    const idx = SEVERITY_ORDER.indexOf(level);
+    level = SEVERITY_ORDER[Math.min(idx + 1, SEVERITY_ORDER.length - 1)];
+  }
+  return level;
 }
 
 function incidentTrendFrom(incidentsByDay: OverviewData["incidentsByDay"]) {
@@ -101,8 +113,8 @@ export function computeDailyAssessment(
   data: OverviewData,
   jtfAssessments: JtfAssessmentInput[] = []
 ): DailyAssessment {
-  const severityLevel = severityFromPriorityAreas(data.priorityAreaCount);
   const incidentTrend = incidentTrendFrom(data.incidentsByDay);
+  const severityLevel = severityFromIncidents(data.recentIncidentCount30d, incidentTrend);
   const remaining = daysRemaining(data.bpe.endDate);
   const voterCoveragePct = safePercent(data.totalStrength, data.totalRegisteredVoters);
 
@@ -119,9 +131,6 @@ export function computeDailyAssessment(
     `${data.recentIncidentCount30d.toLocaleString()} incident(s) reported in the last 30 days; the 14-day trend is ${incidentTrend}.`
   );
   analysis.push(
-    `${data.priorityAreaCount.toLocaleString()} area(s) score at or above the Red-hotspot priority threshold.`
-  );
-  analysis.push(
     remaining === null
       ? "The BPE 2026 window has concluded."
       : `${remaining} day(s) remain in the BPE 2026 window.`
@@ -132,34 +141,16 @@ export function computeDailyAssessment(
 
   if (severityLevel === "CRITICAL" || severityLevel === "ELEVATED") {
     strategic.push(
-      `Sustain a heightened BARMM-wide security posture through the remainder of the BPE 2026 window — ${data.priorityAreaCount.toLocaleString()} area(s) are at or above the Red-hotspot priority threshold. Consider requesting augmentation forces from higher headquarters if this count continues to climb.`
+      `Sustain a heightened BARMM-wide security posture through the remainder of the BPE 2026 window — ${data.recentIncidentCount30d.toLocaleString()} incident(s) in the last 30 days with ${incidentTrend === "increasing" ? "an" : "a"} ${incidentTrend} trend. Consider requesting augmentation forces from higher headquarters if this trend continues.`
     );
   } else {
     strategic.push(
-      `Current BARMM-wide priority-area count (${data.priorityAreaCount.toLocaleString()}) does not warrant additional force augmentation beyond standing allocations — maintain present command-wide posture.`
+      `Current BARMM-wide incident volume (${data.recentIncidentCount30d.toLocaleString()} in the last 30 days, ${incidentTrend} trend) does not warrant additional force augmentation beyond standing allocations — maintain present command-wide posture.`
     );
   }
 
-  // Cross-reference the top priority areas' province against per-JTF
-  // deployment totals to flag a JTF that is carrying high-priority ground
-  // without a commensurate share of deployed strength.
   const sitRepByJtf = new Map(data.jtfSitReps.map((d) => [d.jtfName, d]));
   const totalStrengthAll = data.totalStrength || 1;
-  const jtfPriorityHits = new Map<string, number>();
-  for (const area of data.topPriorityAreas) {
-    const jtfName = PROVINCE_TO_JTF[area.province];
-    if (jtfName) jtfPriorityHits.set(jtfName, (jtfPriorityHits.get(jtfName) ?? 0) + 1);
-  }
-  for (const [jtfName, hits] of jtfPriorityHits) {
-    const sitRep = sitRepByJtf.get(jtfName);
-    if (!sitRep) continue;
-    const strengthSharePct = (sitRep.totalStrength / totalStrengthAll) * 100;
-    if (hits >= 2 && strengthSharePct < 20) {
-      strategic.push(
-        `${jtfName} holds ${hits} of the top ${data.topPriorityAreas.length} BARMM-wide priority areas but only ${strengthSharePct.toFixed(0)}% of total strength — consider reallocating units from lower-priority JTFs to rebalance command-wide risk.`
-      );
-    }
-  }
 
   if (
     remaining !== null &&
@@ -207,16 +198,6 @@ export function computeDailyAssessment(
   // ---- Tactical: specific areas and incident types ----
   const tactical: string[] = [];
 
-  if (data.topPriorityAreas.length > 0) {
-    const top3 = data.topPriorityAreas
-      .slice(0, 3)
-      .map((a) => a.label)
-      .join("; ");
-    tactical.push(
-      `Position or reinforce troop/QRF presence at the highest-scoring priority areas: ${top3}.`
-    );
-  }
-
   const violentIncidents = data.recentIncidents.filter((i) => isViolentIncidentType(i.type));
   if (violentIncidents.length > 0) {
     const named = violentIncidents
@@ -233,17 +214,6 @@ export function computeDailyAssessment(
   if (violentIncidents.length >= 2) {
     tactical.push(
       `${violentIncidents.length} armed/violent-type incident(s) appear among the most recently monitored — recommend checkpoint reinforcement and short-interval security reviews at the affected areas until the pattern breaks.`
-    );
-  }
-
-  const priorityIncidents = data.recentIncidents.filter((i) => i.isPriority);
-  if (priorityIncidents.length > 0) {
-    const named = priorityIncidents
-      .slice(0, 3)
-      .map((i) => i.areaLabel ?? i.jtfName)
-      .join("; ");
-    tactical.push(
-      `Flag the following areas for immediate follow-up patrol given a recent incident at an already priority-scored location: ${named}.`
     );
   }
 
