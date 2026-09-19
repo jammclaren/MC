@@ -50,9 +50,9 @@ export function TopIncidentTypesChart({
               {d.label}
             </span>
             <div className="flex items-center gap-3">
-              <div className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted">
+              <div className="neu-inset h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-input">
                 <div
-                  className={`h-full rounded-full transition-all ${isOther ? "bg-muted-foreground/50" : "bg-primary shadow-[0_0_8px_var(--primary)]"}`}
+                  className={`h-full rounded-full transition-all ${isOther ? "bg-muted-foreground/50" : "bg-primary"}`}
                   style={{ width: `${Math.max(widthPct, 3)}%` }}
                 />
               </div>

@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PanelTopClose, PanelTopOpen } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { NavLinks, type NavLinkItem } from "@/components/nav-links";
 import { LiveClock } from "@/components/live-clock";
 import { SignOutButton } from "@/components/sign-out-button";
@@ -40,10 +39,8 @@ export function NavTopBar({
 
   if (collapsed) {
     return (
-      <header className="sticky top-0 z-40 flex justify-end border-b border-primary/30 bg-background/95 px-3 py-1 backdrop-blur supports-backdrop-filter:bg-background/80">
-        <Button variant="ghost" size="icon" onClick={toggle} aria-label="Show navigation bar">
-          <PanelTopOpen className="size-4" />
-        </Button>
+      <header className="sticky top-0 z-40 flex justify-end border-b border-primary/30 bg-background/95 px-3 py-1.5 backdrop-blur supports-backdrop-filter:bg-background/80">
+        <Switch checked={collapsed} onCheckedChange={toggle} aria-label="Show navigation bar" />
       </header>
     );
   }
@@ -74,14 +71,7 @@ export function NavTopBar({
             {roleLine}
           </span>
           <SignOutButton />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggle}
-            aria-label="Hide navigation bar"
-          >
-            <PanelTopClose className="size-4" />
-          </Button>
+          <Switch checked={collapsed} onCheckedChange={toggle} aria-label="Hide navigation bar" />
         </div>
       </div>
     </header>
