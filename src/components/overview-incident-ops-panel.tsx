@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatTile } from "@/components/stat-tile";
-import { LabeledBarChart } from "@/components/charts/labeled-bar-chart";
+import { CapsuleBarChart } from "@/components/charts/capsule-bar-chart";
 import { IncidentsByDayChart, type IncidentsByDayDatum } from "@/components/charts/incidents-by-day-chart";
 import { TopIncidentTypesChart } from "@/components/charts/top-incident-types-chart";
 import { SeverityMixChart } from "@/components/charts/severity-mix-chart";
@@ -108,7 +108,7 @@ export function OverviewIncidentOpsPanel({
                 Incidents by JTF
               </h3>
               <div className="min-h-[140px] flex-1">
-                <LabeledBarChart data={stats.jtfChartData} height="100%" />
+                <CapsuleBarChart data={stats.jtfChartData} />
               </div>
             </div>
             <div className="flex min-h-0 flex-1 flex-col">
