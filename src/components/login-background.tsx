@@ -28,17 +28,20 @@ export function LoginBackground() {
       />
       <div className="login-grid-overlay absolute inset-0" />
       <LoginCursorGlow />
-      {/* "jamisal" traced along a curved path so it reads as a tendril
-          growing through the vine rather than a flat label sitting on top
-          of it — mix-blend-mode lets the underlying photo's own light/dark
-          tones show through the letters instead of covering them. */}
+      {/* "jamisal" traced along a curved path through the vine ball itself
+          (not the plain background below it) so it reads as a tendril
+          growing out of the actual vines — the stroke behind the fill
+          gives the letterforms a twisted, rope-like thickness closer to
+          the vine's own strands, and mix-blend-mode lets the photo's own
+          light/dark tones show through instead of sitting flatly on top
+          of it. */}
       <svg
-        className="login-signature pointer-events-none absolute bottom-[8%] left-[2%] h-32 w-72 sm:h-36 sm:w-80"
-        viewBox="0 0 300 140"
+        className="login-signature pointer-events-none absolute bottom-[24%] left-[26%] h-28 w-64 sm:h-32 sm:w-72"
+        viewBox="0 0 260 130"
         aria-hidden="true"
       >
         <defs>
-          <path id="jamisal-vine-path" d="M8,118 C48,58 88,128 148,78 C198,36 232,92 292,42" fill="none" />
+          <path id="jamisal-vine-path" d="M6,102 C38,52 68,112 118,70 C158,36 188,82 254,40" fill="none" />
         </defs>
         <text className="login-signature-text">
           <textPath href="#jamisal-vine-path" startOffset="2">
