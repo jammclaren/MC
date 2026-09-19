@@ -30,7 +30,7 @@ import {
 } from "@/components/tactical-blueprint-pane";
 import { Button } from "@/components/ui/button";
 import { DeleteButton } from "@/components/delete-button";
-import { MapPin } from "lucide-react";
+import { MapPin, Crosshair } from "lucide-react";
 
 // The base-layer switcher (bottom-left, under the zoom control) offers a
 // live OpenStreetMap tile layer alongside an offline "Tactical Grid" option
@@ -183,92 +183,115 @@ function RestoreBaseLayer() {
   return null;
 }
 
-/** Renders the per-activity-type checklist as genuinely indented children
- * directly inside Leaflet's own layers control, immediately under the
- * "Enemy Activity" row — react-leaflet's LayersControl has no API for
- * nested/grouped overlays (Leaflet's native control is one flat list), so
- * this finds "Enemy Activity"'s own rendered <label> and portals a real
- * checkbox list into a container inserted right after it.
+/** Standalone icon control for the "Logged Enemy Activity" layer, kept out
+ * of Leaflet's own multi-layer LayersControl (base layers + Province
+ * Outline + per-JTF Logged Incidents) since enemy activity reads as a
+ * distinct, higher-alert category of its own — a single red-outlined
+ * icon, stacked directly under the layers control rather than buried as
+ * one more row inside it.
  *
- * Leaflet's control doesn't just append new rows — on certain redraws
- * (adding/removing an overlay) it calls `empty()` on the whole overlays
- * list and rebuilds every row from scratch, which silently deletes any
- * DOM Leaflet doesn't own itself, including a container inserted this
- * way. A MutationObserver on that list re-inserts it every time that
- * happens, instead of a one-shot attach that only ever survives until
- * the next redraw.
- *
- * Each checkbox here drives React state (enabledActivityTypes) rather
- * than its own separate Leaflet layer — only one real layer ("Enemy
- * Activity" itself) is ever added to the map, so a type being checked
- * both here and as part of the whole group can never double-render the
- * same marker. Must be rendered as a MapContainer descendant (needs
- * useMap()). */
-function EnemyActivityTypeFilter({
+ * Portaled into Leaflet's own topleft control corner (`.leaflet-top.
+ * leaflet-left`) as a sibling right after `.leaflet-control-layers`, so
+ * it inherits Leaflet's native control spacing/stacking instead of
+ * needing hand-rolled absolute positioning — same DOM-insertion approach
+ * as the old per-type filter, including the MutationObserver, since nothing
+ * guarantees this corner's children survive every Leaflet-internal
+ * redraw. Must be rendered as a MapContainer descendant (needs useMap()). */
+function EnemyActivityControl({
+  visible,
+  onToggleVisible,
   types,
   enabled,
   onToggleType,
+  totalCount,
 }: {
+  visible: boolean;
+  onToggleVisible: () => void;
   types: Map<string, IntelMarker[]>;
   enabled: Set<string> | null;
   onToggleType: (type: string) => void;
+  totalCount: number;
 }) {
   const map = useMap();
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
-
-  const hasTypes = types.size > 0;
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    if (!hasTypes) return;
-
-    const overlaysList = map.getContainer().querySelector<HTMLElement>(".leaflet-control-layers-overlays");
-    if (!overlaysList) return;
+    const corner = map.getContainer().querySelector<HTMLElement>(".leaflet-top.leaflet-left");
+    if (!corner) return;
 
     let current: HTMLDivElement | null = null;
 
     function attach() {
-      if (current && overlaysList!.contains(current)) return;
-      const labels = overlaysList!.querySelectorAll<HTMLLabelElement>("label");
-      for (const label of labels) {
-        if (label.textContent?.trim() === "Enemy Activity") {
-          current = document.createElement("div");
-          label.insertAdjacentElement("afterend", current);
-          setPortalTarget(current);
-          return;
-        }
+      if (current && corner!.contains(current)) return;
+      current = document.createElement("div");
+      current.className = "leaflet-control";
+      const layersControl = corner!.querySelector<HTMLElement>(".leaflet-control-layers");
+      if (layersControl) {
+        layersControl.insertAdjacentElement("afterend", current);
+      } else {
+        corner!.appendChild(current);
       }
+      setPortalTarget(current);
     }
 
     attach();
     const observer = new MutationObserver(attach);
-    observer.observe(overlaysList, { childList: true });
+    observer.observe(corner, { childList: true });
     return () => {
       observer.disconnect();
       current?.remove();
     };
-  }, [hasTypes, map]);
+  }, [map]);
 
-  if (!portalTarget || !hasTypes) return null;
+  if (!portalTarget) return null;
 
   return createPortal(
-    <div className="flex flex-col gap-1 py-1 pl-6">
-      {[...types.entries()].map(([type, markers]) => {
-        const checked = enabled === null || enabled.has(type);
-        return (
-          <label key={type} className="flex items-center gap-2 text-xs">
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setExpanded((e) => !e)}
+        title="Logged Enemy Activity"
+        className="flex size-[30px] items-center justify-center rounded-[4px] border border-status-critical bg-card text-status-critical shadow-md transition-opacity hover:bg-accent"
+        style={{ opacity: visible ? 1 : 0.45 }}
+      >
+        <Crosshair className="size-4" />
+      </button>
+      {expanded && (
+        <div className="absolute top-0 left-[34px] z-[1000] w-56 rounded-md border border-status-critical/40 bg-card/95 p-2 text-xs shadow-lg backdrop-blur-sm">
+          <label className="flex items-center gap-2 border-b border-border pb-2 font-medium">
             <input
               type="checkbox"
-              className="size-3.5 rounded border-border accent-primary"
-              checked={checked}
-              onChange={() => onToggleType(type)}
+              className="size-3.5 rounded border-border accent-status-critical"
+              checked={visible}
+              onChange={onToggleVisible}
             />
-            <span className="flex-1">{type}</span>
-            <span className="font-mono font-semibold text-muted-foreground">
-              — <span className="text-status-critical">{markers.length}</span>
-            </span>
+            <span className="flex-1">Logged Enemy Activity</span>
+            <span className="font-mono text-muted-foreground">{totalCount}</span>
           </label>
-        );
-      })}
+          {visible && types.size > 0 && (
+            <div className="mt-2 flex flex-col gap-1">
+              {[...types.entries()].map(([type, markers]) => {
+                const checked = enabled === null || enabled.has(type);
+                return (
+                  <label key={type} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      className="size-3.5 rounded border-border accent-status-critical"
+                      checked={checked}
+                      onChange={() => onToggleType(type)}
+                    />
+                    <span className="flex-1">{type}</span>
+                    <span className="font-mono font-semibold text-muted-foreground">
+                      {markers.length}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>,
     portalTarget
   );
@@ -482,6 +505,10 @@ export function PriorityMap({
     });
   }
 
+  // Kept out of Leaflet's own LayersControl (see EnemyActivityControl) and
+  // defaulted on, matching the old in-control checkbox's `checked` default.
+  const [enemyActivityVisible, setEnemyActivityVisible] = useState(true);
+
   return (
     // `isolate` scopes Leaflet's internal pane z-indices (tiles/tooltips/
     // popups go up to z-index 700) into their own stacking context, so
@@ -549,21 +576,24 @@ export function PriorityMap({
               </LayersControl.Overlay>
             );
           })}
-          {intelMarkers.length > 0 && (
-            <LayersControl.Overlay checked name="Enemy Activity">
-              <LayerGroup>
-                <IntelMarkerItems markers={visibleIntelMarkers} />
-              </LayerGroup>
-            </LayersControl.Overlay>
-          )}
         </LayersControl>
         {provinces && <FitToBounds data={provinces} />}
         <RestoreBaseLayer />
-        <EnemyActivityTypeFilter
-          types={intelMarkersByActivityType}
-          enabled={enabledActivityTypes}
-          onToggleType={toggleActivityType}
-        />
+        {enemyActivityVisible && intelMarkers.length > 0 && (
+          <LayerGroup>
+            <IntelMarkerItems markers={visibleIntelMarkers} />
+          </LayerGroup>
+        )}
+        {intelMarkers.length > 0 && (
+          <EnemyActivityControl
+            visible={enemyActivityVisible}
+            onToggleVisible={() => setEnemyActivityVisible((v) => !v)}
+            types={intelMarkersByActivityType}
+            enabled={enabledActivityTypes}
+            onToggleType={toggleActivityType}
+            totalCount={intelMarkers.length}
+          />
+        )}
       </MapContainer>
       <HudFrame />
       {canCreateMarker && (
