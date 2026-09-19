@@ -36,7 +36,7 @@ export function LoginBackground() {
           light/dark tones show through instead of sitting flatly on top
           of it. */}
       <svg
-        className="login-signature pointer-events-none absolute bottom-[24%] left-[26%] h-28 w-64 sm:h-32 sm:w-72"
+        className="login-signature pointer-events-none absolute bottom-[24%] left-[26%] h-14 w-32 sm:h-16 sm:w-36"
         viewBox="0 0 260 130"
         aria-hidden="true"
       >

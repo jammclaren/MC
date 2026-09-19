@@ -490,14 +490,14 @@
  * along a tendril-like path instead of a straight line, and the stroke
  * behind the fill gives each letter a twisted, rope-like thickness
  * closer to an actual vine strand than flat script. Soft-light blend
- * lets the photo's own shadows and highlights show through the letters
- * rather than sitting flatly on top of it, reading as grown out of the
- * vine instead of a stamped watermark. */
+ * plus low fill/stroke opacity keeps it a easter egg — unrecognizable at
+ * a glance, only readable up close — rather than a watermark that jumps
+ * out at the vine. */
 .login-signature-text {
   font-family: var(--font-cursive);
   font-size: 34px;
-  fill: rgba(206, 222, 176, 0.85);
-  stroke: rgba(58, 46, 26, 0.55);
+  fill: rgba(206, 222, 176, 0.4);
+  stroke: rgba(58, 46, 26, 0.28);
   stroke-width: 2.5px;
   paint-order: stroke fill;
   mix-blend-mode: soft-light;
