@@ -167,6 +167,9 @@
   .font-display {
     font-family: var(--font-display), var(--font-sans);
   }
+  .font-dune {
+    font-family: var(--font-dune-rise), var(--font-display), var(--font-sans);
+  }
   .text-status-good {
     color: var(--status-good);
   }
@@ -191,6 +194,16 @@
   .bg-status-critical {
     background-color: var(--status-critical);
   }
+}
+
+/* "MONITORING" in the nav wordmark — a desert-sunset gradient (amber to
+ * rose to violet) clipped to the text, pairing with the Dune Rise display
+ * face (see .font-dune) it's always used alongside. */
+.text-sunset-gradient {
+  background: linear-gradient(90deg, #ffb347 0%, #ff7b54 35%, #ff5f8f 65%, #b35fd6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* Leaflet ships light-mode chrome by default; re-theme it to match the

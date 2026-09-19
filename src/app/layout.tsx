@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Rajdhani, Alex_Brush } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { Nav } from "@/components/nav";
 import { Toaster } from "@/components/ui/sonner";
@@ -32,6 +33,15 @@ const alexBrush = Alex_Brush({
   weight: ["400"],
 });
 
+// "Dune Rise" (Fontswan, SIL OFL 1.1 — see src/fonts/Dune_Rise_LICENSE.txt)
+// isn't on Google Fonts, so it's self-hosted locally instead. Used only for
+// the "WMC MONITORING" nav logo wordmark.
+const duneRise = localFont({
+  src: "../fonts/Dune_Rise.ttf",
+  variable: "--font-dune-rise",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "WESMINCOM Tactical C2 Dashboard",
   description: "Internal command-and-control monitoring dashboard for WESMINCOM.",
@@ -45,7 +55,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${rajdhani.variable} ${alexBrush.variable} dark h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${rajdhani.variable} ${alexBrush.variable} ${duneRise.variable} dark h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <div className="hud-viewport-frame" aria-hidden="true">

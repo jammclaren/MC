@@ -62,8 +62,8 @@ export function NavTopBar({
               className="size-8"
             />
             <span className="flex size-2 rounded-full bg-status-good shadow-[0_0_6px_var(--status-good)]" />
-            <span className="hidden font-display text-base font-bold tracking-widest uppercase md:inline">
-              WESMINCOM <span className="text-primary">DASHBOARD</span>
+            <span className="font-dune hidden text-base tracking-widest uppercase md:inline">
+              WMC <span className="text-sunset-gradient">MONITORING</span>
             </span>
           </div>
           <NavLinks links={links} />
