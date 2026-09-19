@@ -447,6 +447,53 @@
   }
 }
 
+/* Login background — faint cyan grid, permanently visible at low
+ * opacity, with a second brighter copy of the same grid revealed only
+ * within a spotlight (see .login-cursor-glow / LoginCursorGlow). On load
+ * the spotlight sweeps through a short scripted path on its own (the
+ * reference video's intro), then hands off to the live cursor position
+ * once that finishes — matching the reference video, where the grid's
+ * glow keeps moving briefly before it starts tracking the pointer.
+ * Layered over the photo background (see LoginBackground), never
+ * replacing it. */
+.login-grid-overlay {
+  background-image:
+    repeating-linear-gradient(0deg, rgba(34, 211, 238, 0.1) 0 1px, transparent 1px 56px),
+    repeating-linear-gradient(90deg, rgba(34, 211, 238, 0.1) 0 1px, transparent 1px 56px);
+}
+.login-grid-overlay-bright {
+  background-image:
+    repeating-linear-gradient(0deg, rgba(34, 211, 238, 0.85) 0 1px, transparent 1px 56px),
+    repeating-linear-gradient(90deg, rgba(34, 211, 238, 0.85) 0 1px, transparent 1px 56px);
+  -webkit-mask-image: radial-gradient(
+    circle 220px at var(--mx, 50%) var(--my, 50%),
+    black 0%,
+    transparent 75%
+  );
+  mask-image: radial-gradient(circle 220px at var(--mx, 50%) var(--my, 50%), black 0%, transparent 75%);
+}
+/* A soft color bloom under the bright grid, same spotlight shape, so the
+ * revealed area reads as a glow and not just brighter line-work. */
+.login-cursor-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle 220px at var(--mx, 50%) var(--my, 50%),
+    rgba(34, 211, 238, 0.3) 0%,
+    rgba(34, 211, 238, 0.08) 45%,
+    transparent 75%
+  );
+}
+
+/* "jamisal" signature woven into the login background — small, low-
+ * opacity cursive so it reads as part of the photo's vine rather than a
+ * stamped watermark. */
+.login-signature {
+  font-family: var(--font-cursive);
+  color: rgba(224, 242, 254, 0.4);
+  text-shadow: 0 0 6px rgba(34, 211, 238, 0.25);
+}
+
 /* ---------------------------------------------------------------------
  * Futuristic command-center viewport chrome — a persistent HUD frame and
  * a slow ambient scan-line sweep, both purely decorative (pointer-events

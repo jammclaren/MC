@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Rajdhani } from "next/font/google";
+import { Geist, Geist_Mono, Rajdhani, Alex_Brush } from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/nav";
 import { Toaster } from "@/components/ui/sonner";
@@ -23,6 +23,15 @@ const rajdhani = Rajdhani({
   weight: ["500", "600", "700"],
 });
 
+// Handwritten script face used only for the small "jamisal" signature
+// woven into the login page's background — self-hosted like the faces
+// above, not a runtime Google Fonts request.
+const alexBrush = Alex_Brush({
+  variable: "--font-cursive",
+  subsets: ["latin"],
+  weight: ["400"],
+});
+
 export const metadata: Metadata = {
   title: "WESMINCOM Tactical C2 Dashboard",
   description: "Internal command-and-control monitoring dashboard for WESMINCOM.",
@@ -36,7 +45,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${rajdhani.variable} dark h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${rajdhani.variable} ${alexBrush.variable} dark h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <div className="hud-viewport-frame" aria-hidden="true">

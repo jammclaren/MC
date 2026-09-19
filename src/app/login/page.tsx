@@ -22,7 +22,7 @@ export default async function LoginPage({
     // reliably treat as "definite" for a descendant's `height:100%` to
     // resolve against, so h-full here intermittently collapsed to the
     // content's own height instead of filling the viewport.
-    <div className="fixed inset-0 flex items-center justify-center overflow-hidden p-6">
+    <div className="fixed inset-0 flex items-center justify-center overflow-hidden p-6 md:justify-end md:pr-16 lg:pr-24">
       <LoginBackground />
       <div className="relative z-10">
         <LoginForm callbackUrl={callbackUrl ?? "/"} initialError={error} />
