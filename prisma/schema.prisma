@@ -130,6 +130,7 @@ model User {
   intelMeeAssets      IntelMeeAsset[]
   devices             UserDevice[]
   socialListeningReports SocialListeningReport[]
+  sitReps             SitRep[]
 
   @@index([jtfId])
 }
@@ -140,7 +141,7 @@ model JTF {
   areaOfOps       String?
   users           User[]
   units           Unit[]
-  deployments     TroopDeployment[]
+  sitReps         SitRep[]
   incidents       Incident[]
   accomplishments AccomplishmentRecord[]
   rido            RidoSettlement[]
@@ -238,7 +239,6 @@ model ElectionArea {
   registeredVoters Int?
   lat              Float?
   lng              Float?
-  deployments      TroopDeployment[]
   incidents        Incident[]
   pollingCenters   PollingCenter[]
 
@@ -260,47 +260,93 @@ model PollingCenter {
   @@index([electionAreaId])
 }
 
-model TroopDeployment {
-  id                       String        @id @default(cuid())
-  jtfId                    String
-  jtf                      JTF           @relation(fields: [jtfId], references: [id])
-  electionAreaId           String?
-  electionArea             ElectionArea? @relation(fields: [electionAreaId], references: [id])
-  // The battalion actually deployed, and the brigade it's OPCON to or
-  // attached to — was a single free-text "unitLabel" field; split so the
-  // unit-level breakdown can group battalions under their brigade.
-  battalion                String?
-  brigade                  String?
-  // "Deployed to Polling Precincts" in the UI — the original field, kept
-  // as-is at the DB level (existing reports already mean this) alongside
-  // the newer, distinct polling-center count below.
-  deployedToPolling        Int           @default(0)
-  deployedToPollingCenters Int           @default(0)
-  qrf                      Int           @default(0)
-  afpOfficers              Int           @default(0)
-  afpEnlisted              Int           @default(0)
-  caa                      Int           @default(0)
-  wavsTav                  Int           @default(0)
-  pnpOfficers              Int           @default(0)
-  pnpEnlisted              Int           @default(0)
-  pcg                      Int           @default(0)
-  checkpointOps            Int           @default(0)
-  // Free-text type (e.g. "UH-1H Huey", "Rigid Hull Inflatable Boat") since
-  // units report whatever asset they actually have, not a fixed catalog.
-  airAssetType             String?
-  airAssetCount            Int           @default(0)
-  navalAssetType           String?
-  navalAssetCount          Int           @default(0)
-  // ISR = Intelligence, Surveillance & Reconnaissance (e.g. "RQ-11 Raven UAV",
-  // "Fixed CCTV Node") — same free-text-type-plus-count shape as air/naval.
-  isrAssetType             String?
-  isrAssetCount            Int           @default(0)
-  artilleryAssetType       String?
-  artilleryAssetCount      Int           @default(0)
-  reportedAt               DateTime      @default(now())
+// --- Daily SITREP (replaces the old TroopDeployment log) — one row per
+// JTF submission, task-organized: a SITREP groups its units under one or
+// more named Task Groups (e.g. "TG UNIFIER"), each with its own unit
+// strength table and critical assets, plus command-wide checkpoint-ops
+// and activity reporting for that submission.
+model SitRep {
+  id            String   @id @default(cuid())
+  jtfId         String
+  jtf           JTF      @relation(fields: [jtfId], references: [id])
+  createdById   String
+  createdBy     User     @relation(fields: [createdById], references: [id])
+  reportedAt    DateTime @default(now())
+
+  taskGroups          TaskGroup[]
+  // Self-reported total, independent of how many rows are itemized below
+  // — a unit may know its total checkpoint count before every individual
+  // checkpoint has been logged with a location.
+  checkpointOpsTotal  Int              @default(0)
+  checkpointBreakdown CheckpointOp[]
+  armedEngagement     ArmedEngagement?
+  significantActivities SignificantActivity[]
 
   @@index([jtfId])
-  @@index([electionAreaId])
+}
+
+model TaskGroup {
+  id             String                   @id @default(cuid())
+  sitRepId       String
+  sitRep         SitRep                   @relation(fields: [sitRepId], references: [id], onDelete: Cascade)
+  name           String // e.g. "TG UNIFIER"
+  units          TaskGroupUnit[]
+  criticalAssets TaskGroupCriticalAsset[]
+
+  @@index([sitRepId])
+}
+
+model TaskGroupUnit {
+  id          String    @id @default(cuid())
+  taskGroupId String
+  taskGroup   TaskGroup @relation(fields: [taskGroupId], references: [id], onDelete: Cascade)
+  unitName    String // e.g. "40IB"
+  strength    Int       @default(0)
+
+  @@index([taskGroupId])
+}
+
+model TaskGroupCriticalAsset {
+  id          String    @id @default(cuid())
+  taskGroupId String
+  taskGroup   TaskGroup @relation(fields: [taskGroupId], references: [id], onDelete: Cascade)
+  unitName    String // e.g. "6FAB"
+
+  @@index([taskGroupId])
+}
+
+model CheckpointOp {
+  id       String  @id @default(cuid())
+  sitRepId String
+  sitRep   SitRep  @relation(fields: [sitRepId], references: [id], onDelete: Cascade)
+  location String // MGRS
+  unit     String
+  remarks  String?
+
+  @@index([sitRepId])
+}
+
+// One armed-engagement entry per SITREP submission — a JTF that logs
+// more than one engagement in a cycle files a separate SITREP for each,
+// same one-report-per-submission convention as the rest of the app.
+model ArmedEngagement {
+  id               String @id @default(cuid())
+  sitRepId         String @unique
+  sitRep           SitRep @relation(fields: [sitRepId], references: [id], onDelete: Cascade)
+  unitInvolved     String
+  confrontedThreat String
+  location         String
+  results          String
+}
+
+model SignificantActivity {
+  id       String @id @default(cuid())
+  sitRepId String
+  sitRep   SitRep @relation(fields: [sitRepId], references: [id], onDelete: Cascade)
+  text     String
+  order    Int    @default(0)
+
+  @@index([sitRepId])
 }
 
 model Incident {

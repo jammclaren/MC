@@ -167,7 +167,7 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
       : "No intelligence reports logged this cycle."
   );
   lines.push(
-    `${data.totalDeployed.toLocaleString()} personnel remain deployed to polling (${data.totalQrf.toLocaleString()} QRF) BARMM-wide.`
+    `${data.totalStrength.toLocaleString()} personnel strength on file (${data.totalCriticalAssets.toLocaleString()} critical asset(s)) BARMM-wide.`
   );
   lines.push("");
 
@@ -175,7 +175,7 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
   lines.push(`Logged: ${windowIncidents.length}`);
   lines.push(`Priority/flagged areas (overall): ${data.priorityAreaCount}`);
   lines.push("Most Recent Incident by JTF:");
-  for (const j of data.jtfDeployments) {
+  for (const j of data.jtfSitReps) {
     const r = mostRecentIncidentByJtf.get(j.jtfId);
     lines.push(
       r
@@ -250,11 +250,14 @@ export async function generateSitrepDraft(user: SessionUser, date: string): Prom
   );
   lines.push("");
 
-  lines.push("6. DEPLOYMENT");
-  lines.push(`Total deployed to polling: ${data.totalDeployed.toLocaleString()}`);
-  lines.push(`Total QRF: ${data.totalQrf.toLocaleString()}`);
-  for (const j of data.jtfDeployments) {
-    lines.push(`  - ${j.jtfName}: ${j.deployedToPolling.toLocaleString()} deployed, ${j.qrf.toLocaleString()} QRF`);
+  lines.push("6. SITREP");
+  lines.push(`Total strength: ${data.totalStrength.toLocaleString()}`);
+  lines.push(`Total critical assets: ${data.totalCriticalAssets.toLocaleString()}`);
+  lines.push(`Total checkpoint operations: ${data.totalCheckpointOps.toLocaleString()}`);
+  for (const j of data.jtfSitReps) {
+    lines.push(
+      `  - ${j.jtfName}: ${j.totalStrength.toLocaleString()} strength, ${j.criticalAssetCount.toLocaleString()} critical asset(s), ${j.checkpointOpsTotal.toLocaleString()} checkpoint op(s)`
+    );
   }
   lines.push("");
 

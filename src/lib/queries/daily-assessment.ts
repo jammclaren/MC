@@ -104,15 +104,15 @@ export function computeDailyAssessment(
   const severityLevel = severityFromPriorityAreas(data.priorityAreaCount);
   const incidentTrend = incidentTrendFrom(data.incidentsByDay);
   const remaining = daysRemaining(data.bpe.endDate);
-  const voterCoveragePct = safePercent(data.totalDeployed, data.totalRegisteredVoters);
+  const voterCoveragePct = safePercent(data.totalStrength, data.totalRegisteredVoters);
 
   const analysis: string[] = [];
   analysis.push(
-    `${data.totalDeployed.toLocaleString()} personnel deployed to polling (${data.totalQrf.toLocaleString()} QRF) BARMM-wide.`
+    `${data.totalStrength.toLocaleString()} personnel strength on file BARMM-wide (${data.totalCriticalAssets.toLocaleString()} critical asset(s), ${data.totalCheckpointOps.toLocaleString()} checkpoint operation(s)).`
   );
   if (data.totalRegisteredVoters > 0) {
     analysis.push(
-      `Deployment covers ${voterCoveragePct?.toFixed(1) ?? "—"}% of ${data.totalRegisteredVoters.toLocaleString()} registered voters on file.`
+      `Personnel strength covers ${voterCoveragePct?.toFixed(1) ?? "—"}% of ${data.totalRegisteredVoters.toLocaleString()} registered voters on file.`
     );
   }
   analysis.push(
@@ -143,20 +143,20 @@ export function computeDailyAssessment(
   // Cross-reference the top priority areas' province against per-JTF
   // deployment totals to flag a JTF that is carrying high-priority ground
   // without a commensurate share of deployed strength.
-  const deploymentByJtf = new Map(data.jtfDeployments.map((d) => [d.jtfName, d]));
-  const totalDeployedAll = data.totalDeployed || 1;
+  const sitRepByJtf = new Map(data.jtfSitReps.map((d) => [d.jtfName, d]));
+  const totalStrengthAll = data.totalStrength || 1;
   const jtfPriorityHits = new Map<string, number>();
   for (const area of data.topPriorityAreas) {
     const jtfName = PROVINCE_TO_JTF[area.province];
     if (jtfName) jtfPriorityHits.set(jtfName, (jtfPriorityHits.get(jtfName) ?? 0) + 1);
   }
   for (const [jtfName, hits] of jtfPriorityHits) {
-    const deployment = deploymentByJtf.get(jtfName);
-    if (!deployment) continue;
-    const deployedSharePct = (deployment.deployedToPolling / totalDeployedAll) * 100;
-    if (hits >= 2 && deployedSharePct < 20) {
+    const sitRep = sitRepByJtf.get(jtfName);
+    if (!sitRep) continue;
+    const strengthSharePct = (sitRep.totalStrength / totalStrengthAll) * 100;
+    if (hits >= 2 && strengthSharePct < 20) {
       strategic.push(
-        `${jtfName} holds ${hits} of the top ${data.topPriorityAreas.length} BARMM-wide priority areas but only ${deployedSharePct.toFixed(0)}% of total deployed strength — consider reallocating troops/QRF from lower-priority JTFs to rebalance command-wide risk.`
+        `${jtfName} holds ${hits} of the top ${data.topPriorityAreas.length} BARMM-wide priority areas but only ${strengthSharePct.toFixed(0)}% of total strength — consider reallocating units from lower-priority JTFs to rebalance command-wide risk.`
       );
     }
   }
@@ -168,7 +168,7 @@ export function computeDailyAssessment(
     voterCoveragePct < 50
   ) {
     strategic.push(
-      `Voter coverage stands at only ${voterCoveragePct.toFixed(0)}% BARMM-wide with ${remaining} day(s) remaining in the BPE window — direct a command-wide acceleration of troop deployment to polling areas rather than a JTF-by-JTF response.`
+      `Voter coverage stands at only ${voterCoveragePct.toFixed(0)}% BARMM-wide with ${remaining} day(s) remaining in the BPE window — direct a command-wide reinforcement of personnel strength rather than a JTF-by-JTF response.`
     );
   }
 
@@ -193,13 +193,13 @@ export function computeDailyAssessment(
   }
   const totalRecentIncidents = data.recentIncidents.length || 1;
   for (const [jtfName, count] of incidentCountByJtf) {
-    const deployment = deploymentByJtf.get(jtfName);
-    if (!deployment) continue;
+    const sitRep = sitRepByJtf.get(jtfName);
+    if (!sitRep) continue;
     const incidentSharePct = (count / totalRecentIncidents) * 100;
-    const deployedSharePct = (deployment.deployedToPolling / totalDeployedAll) * 100;
-    if (incidentSharePct >= 40 && incidentSharePct - deployedSharePct >= 15) {
+    const strengthSharePct = (sitRep.totalStrength / totalStrengthAll) * 100;
+    if (incidentSharePct >= 40 && incidentSharePct - strengthSharePct >= 15) {
       operational.push(
-        `${jtfName} accounts for ${count} of the ${data.recentIncidents.length} most recently monitored incidents (${incidentSharePct.toFixed(0)}%) against ${deployedSharePct.toFixed(0)}% of deployed strength — redistribute QRF assets from adjacent JTFs to restore proportional coverage.`
+        `${jtfName} accounts for ${count} of the ${data.recentIncidents.length} most recently monitored incidents (${incidentSharePct.toFixed(0)}%) against ${strengthSharePct.toFixed(0)}% of total strength — redistribute units from adjacent JTFs to restore proportional coverage.`
       );
     }
   }

@@ -1,7 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
-import { getDeploymentData } from "@/lib/queries/deployments";
+import { getSitRepData } from "@/lib/queries/sitreps";
 import { canAccessPage, canWriteDeployment } from "@/lib/rbac";
 import {
   Card,
@@ -10,13 +10,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { StatTile } from "@/components/stat-tile";
-import { Users, ShieldAlert, Building2, Plane, Ship, Radar, Crosshair } from "lucide-react";
+import { Users, Crosshair, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DeploymentFormDialog } from "@/components/deployment-form-dialog";
-import { DeploymentRowsAccordion } from "@/components/deployment-rows-accordion";
+import { SitRepFormDialog } from "@/components/sitrep-form-dialog";
+import { SitRepAccordion } from "@/components/sitrep-accordion";
+import { SitRepBarChart } from "@/components/charts/sitrep-bar-chart";
 
-export default async function BpeDeploymentPage({
+export default async function DailySitRepPage({
   searchParams,
 }: {
   searchParams: Promise<{ jtfId?: string }>;
@@ -30,46 +39,38 @@ export default async function BpeDeploymentPage({
   }
 
   const { jtfId } = await searchParams;
-  const [data, jtfs, areas] = await Promise.all([
-    getDeploymentData(user, jtfId),
-    prisma.jTF.findMany({ orderBy: { name: "asc" } }),
-    prisma.electionArea.findMany({
-      select: { id: true, jtfId: true, barangay: true, municipality: true, province: true },
-    }),
-  ]);
-  const jtfOptions = jtfs.map((jtf) => ({ id: jtf.id, name: jtf.name }));
-  const areaOptions = areas.map((area) => ({
-    id: area.id,
-    jtfId: area.jtfId,
-    label: [area.barangay, area.municipality, area.province].filter(Boolean).join(", "),
-  }));
   // A WFC_STAFF/MANEUVER ("M2") account isn't tied to one JTF but owns this
   // page command-wide, the same "any JTF" write posture ADMIN already has
   // here (see canWriteDeployment).
-  const isDeploymentOwner =
+  const isSitRepOwner =
     user.role === "ADMIN" || (user.role === "WFC_STAFF" && user.warfightingFunction === "MANEUVER");
   const writableJtfId =
-    isDeploymentOwner
+    isSitRepOwner
       ? undefined
       : user.jtfId && canWriteDeployment(user, user.jtfId)
         ? user.jtfId
         : undefined;
-  const canCreate = isDeploymentOwner || (!!user.jtfId && canWriteDeployment(user, user.jtfId));
+  const canCreate = isSitRepOwner || (!!user.jtfId && canWriteDeployment(user, user.jtfId));
+
+  const [data, jtfs] = await Promise.all([
+    getSitRepData(user, jtfId, (targetJtfId) => canWriteDeployment(user, targetJtfId)),
+    prisma.jTF.findMany({ orderBy: { name: "asc" } }),
+  ]);
+  const jtfOptions = jtfs.map((jtf) => ({ id: jtf.id, name: jtf.name }));
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold tracking-wide uppercase">
-            Deployment
+            Daily SITREP
           </h1>
         </div>
         {canCreate && (
-          <DeploymentFormDialog
+          <SitRepFormDialog
             jtfOptions={jtfOptions}
-            areaOptions={areaOptions}
             lockJtfId={writableJtfId}
-            trigger={<Button>Log Deployment</Button>}
+            trigger={<Button>Log SITREP</Button>}
           />
         )}
       </div>
@@ -97,65 +98,30 @@ export default async function BpeDeploymentPage({
       </form>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {data.jtfCards.map((card) => {
-          return (
-            <Card key={card.jtfId}>
-              <CardHeader>
-                <CardTitle className="text-base">{card.jtfName}</CardTitle>
-                <CardDescription>
-                  {card.numPrecincts.toLocaleString()} precincts ·{" "}
-                  {card.registeredVoters.toLocaleString()} registered voters
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Deployed to Polling Precincts</span>
-                  <span className="font-medium">
-                    {card.deployedToPolling.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Deployed to Polling Centers</span>
-                  <span className="font-medium">
-                    {card.deployedToPollingCenters.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">QRF</span>
-                  <span className="font-medium">{card.qrf.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">PNP Deployed</span>
-                  <span className="font-medium">{card.pnpDeployed.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">PCG Deployed</span>
-                  <span className="font-medium">{card.pcgCount.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">WAVs/TAV</span>
-                  <span className="font-medium">{card.wavsTav.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Air Assets</span>
-                  <span className="font-medium">{card.airAssetCount.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Naval Assets</span>
-                  <span className="font-medium">{card.navalAssetCount.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">ISR Assets</span>
-                  <span className="font-medium">{card.isrAssetCount.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Artillery Assets</span>
-                  <span className="font-medium">{card.artilleryAssetCount.toLocaleString()}</span>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+        {data.jtfCards.map((card) => (
+          <Card key={card.jtfId}>
+            <CardHeader>
+              <CardTitle className="text-base">{card.jtfName}</CardTitle>
+              <CardDescription>
+                {card.taskGroupCount} task group{card.taskGroupCount === 1 ? "" : "s"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Total Strength</span>
+                <span className="font-medium">{card.totalStrength.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Critical Assets</span>
+                <span className="font-medium">{card.criticalAssetCount.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Checkpoint Operations</span>
+                <span className="font-medium">{card.checkpointOpsTotal.toLocaleString()}</span>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
         {data.jtfCards.length === 0 && (
           <p className="text-sm text-muted-foreground">No JTFs in scope.</p>
         )}
@@ -163,26 +129,18 @@ export default async function BpeDeploymentPage({
 
       <div>
         <h2 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-          Recapitulation — command-wide, auto-computed from unit reports
+          Recapitulation — command-wide, auto-computed from SITREP log
         </h2>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <StatTile label="Total Strength" value={data.totalStrength.toLocaleString()} icon={Users} />
           <StatTile
-            label="Deployed to Polling Precincts"
-            value={data.totalDeployed.toLocaleString()}
-            icon={Users}
+            label="Critical Assets"
+            value={data.totalCriticalAssets.toLocaleString()}
+            icon={ShieldAlert}
           />
           <StatTile
-            label="Deployed to Polling Centers"
-            value={data.totalDeployedToPollingCenters.toLocaleString()}
-            icon={Building2}
-          />
-          <StatTile label="QRF" value={data.totalQrf.toLocaleString()} icon={ShieldAlert} />
-          <StatTile label="Air Assets" value={data.totalAirAssets.toLocaleString()} icon={Plane} />
-          <StatTile label="Naval Assets" value={data.totalNavalAssets.toLocaleString()} icon={Ship} />
-          <StatTile label="ISR Assets" value={data.totalIsrAssets.toLocaleString()} icon={Radar} />
-          <StatTile
-            label="Artillery Assets"
-            value={data.totalArtilleryAssets.toLocaleString()}
+            label="Checkpoint Operations"
+            value={data.totalCheckpointOps.toLocaleString()}
             icon={Crosshair}
           />
         </div>
@@ -190,15 +148,63 @@ export default async function BpeDeploymentPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Unit-Level Breakdown</CardTitle>
+          <CardTitle>SITREP Recapitulation</CardTitle>
         </CardHeader>
         <CardContent>
-          <DeploymentRowsAccordion
-            rows={data.rows.map((row) => ({ ...row, canEdit: canWriteDeployment(user, row.jtfId) }))}
-            jtfOptions={jtfOptions}
-            areaOptions={areaOptions}
-            lockJtfId={writableJtfId}
+          <SitRepBarChart
+            data={data.jtfCards.map((c) => ({
+              jtfName: c.jtfName,
+              totalStrength: c.totalStrength,
+              criticalAssetCount: c.criticalAssetCount,
+              checkpointOpsTotal: c.checkpointOpsTotal,
+            }))}
           />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Unit Breakdown</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Unit</TableHead>
+                <TableHead>Task Group</TableHead>
+                <TableHead>JTF</TableHead>
+                <TableHead className="text-right">Strength</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.unitBreakdown.map((row, i) => (
+                <TableRow key={i}>
+                  <TableCell>{row.unitName}</TableCell>
+                  <TableCell>{row.taskGroupName}</TableCell>
+                  <TableCell>{row.jtfName}</TableCell>
+                  <TableCell className="text-right font-mono tabular-nums">
+                    {row.strength.toLocaleString()}
+                  </TableCell>
+                </TableRow>
+              ))}
+              {data.unitBreakdown.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                    No units logged yet.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>SITREP Log</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <SitRepAccordion rows={data.rows} />
         </CardContent>
       </Card>
     </div>

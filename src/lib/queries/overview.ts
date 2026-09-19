@@ -6,18 +6,7 @@ import {
   RECENT_INCIDENT_WINDOW_DAYS,
 } from "@/lib/priority-score";
 import { getScoredAreas } from "@/lib/queries/priority-areas";
-
-export interface JtfDeploymentTotal {
-  jtfId: string;
-  jtfName: string;
-  deployedToPolling: number;
-  deployedToPollingCenters: number;
-  qrf: number;
-  caa: number;
-  airAssetCount: number;
-  navalAssetCount: number;
-  isrAssetCount: number;
-}
+import { getSitRepData, type JtfSitRepSummary } from "@/lib/queries/sitreps";
 
 export interface RecentIncidentRow {
   id: string;
@@ -46,14 +35,10 @@ export interface PriorityAreaSummary {
 }
 
 export interface OverviewData {
-  jtfDeployments: JtfDeploymentTotal[];
-  totalDeployed: number;
-  totalDeployedToPollingCenters: number;
-  totalQrf: number;
-  totalCaa: number;
-  totalAirAssets: number;
-  totalNavalAssets: number;
-  totalIsrAssets: number;
+  jtfSitReps: JtfSitRepSummary[];
+  totalStrength: number;
+  totalCriticalAssets: number;
+  totalCheckpointOps: number;
   totalRegisteredVoters: number;
   recentIncidents: RecentIncidentRow[];
   recentIncidentCount30d: number;
@@ -83,31 +68,14 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
   );
 
   const [
-    jtfs,
-    deployments,
+    sitRepData,
     recentIncidents,
     recentIncidentCount30d,
     scoredAreas,
     registeredVotersAgg,
     incidentsForDailyChart,
   ] = await Promise.all([
-    prisma.jTF.findMany({
-      where: rollupScopeJtfId ? { id: rollupScopeJtfId } : undefined,
-      orderBy: { name: "asc" },
-    }),
-    prisma.troopDeployment.findMany({
-      where: { jtfId: rollupScopeJtfId },
-      select: {
-        jtfId: true,
-        deployedToPolling: true,
-        deployedToPollingCenters: true,
-        qrf: true,
-        caa: true,
-        airAssetCount: true,
-        navalAssetCount: true,
-        isrAssetCount: true,
-      },
-    }),
+    getSitRepData(user),
     prisma.incident.findMany({
       where: { jtfId: detailScopeJtfId },
       orderBy: { date: "desc" },
@@ -120,7 +88,6 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
               where: { date: { gte: windowStart } },
               select: { type: true, date: true },
             },
-            deployments: { select: { deployedToPolling: true } },
           },
         },
       },
@@ -177,33 +144,16 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     priorityScore: area.priorityScore,
   }));
 
-  const jtfDeployments: JtfDeploymentTotal[] = jtfs.map((jtf) => {
-    const rows = deployments.filter((d) => d.jtfId === jtf.id);
-    return {
-      jtfId: jtf.id,
-      jtfName: jtf.name,
-      deployedToPolling: rows.reduce((sum, r) => sum + r.deployedToPolling, 0),
-      deployedToPollingCenters: rows.reduce((sum, r) => sum + r.deployedToPollingCenters, 0),
-      qrf: rows.reduce((sum, r) => sum + r.qrf, 0),
-      caa: rows.reduce((sum, r) => sum + r.caa, 0),
-      airAssetCount: rows.reduce((sum, r) => sum + r.airAssetCount, 0),
-      navalAssetCount: rows.reduce((sum, r) => sum + r.navalAssetCount, 0),
-      isrAssetCount: rows.reduce((sum, r) => sum + r.isrAssetCount, 0),
-    };
-  });
-
   const recentIncidentRows: RecentIncidentRow[] = recentIncidents.map((incident) => {
     let isPriority = false;
     if (incident.electionArea) {
       const area = incident.electionArea;
-      const deployedToPolling = area.deployments.reduce(
-        (sum, d) => sum + d.deployedToPolling,
-        0
-      );
+      // See priority-areas.ts — SITREP has no per-area deployment figure,
+      // so the coverage deduction is always 0 here now.
       const score = computePriorityScore({
         hotspotCategory: area.hotspotCategory,
         incidents: area.incidents,
-        deployedToPolling,
+        deployedToPolling: 0,
         registeredVoters: area.registeredVoters,
       });
       isPriority = score >= PRIORITY_FLAG_THRESHOLD;
@@ -229,17 +179,10 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
   });
 
   return {
-    jtfDeployments,
-    totalDeployed: jtfDeployments.reduce((sum, d) => sum + d.deployedToPolling, 0),
-    totalDeployedToPollingCenters: jtfDeployments.reduce(
-      (sum, d) => sum + d.deployedToPollingCenters,
-      0
-    ),
-    totalQrf: jtfDeployments.reduce((sum, d) => sum + d.qrf, 0),
-    totalCaa: jtfDeployments.reduce((sum, d) => sum + d.caa, 0),
-    totalAirAssets: jtfDeployments.reduce((sum, d) => sum + d.airAssetCount, 0),
-    totalNavalAssets: jtfDeployments.reduce((sum, d) => sum + d.navalAssetCount, 0),
-    totalIsrAssets: jtfDeployments.reduce((sum, d) => sum + d.isrAssetCount, 0),
+    jtfSitReps: sitRepData.jtfCards,
+    totalStrength: sitRepData.totalStrength,
+    totalCriticalAssets: sitRepData.totalCriticalAssets,
+    totalCheckpointOps: sitRepData.totalCheckpointOps,
     totalRegisteredVoters,
     recentIncidents: recentIncidentRows,
     recentIncidentCount30d,

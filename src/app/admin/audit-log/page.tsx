@@ -19,9 +19,8 @@ const ENTITIES = [
   "HviLogEntry",
   "RidoSettlement",
   "ElectionArea",
-  "TroopDeployment",
+  "SitRep",
   "Incident",
-  "ElectionOpsStatus",
 ];
 
 export default async function AuditLogPage({

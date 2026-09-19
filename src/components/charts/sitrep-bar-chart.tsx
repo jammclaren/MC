@@ -11,16 +11,16 @@ import {
   YAxis,
 } from "recharts";
 
-export interface DeploymentBarChartDatum {
+export interface SitRepBarChartDatum {
   jtfName: string;
-  deployedToPolling: number;
-  deployedToPollingCenters: number;
-  qrf: number;
+  totalStrength: number;
+  criticalAssetCount: number;
+  checkpointOpsTotal: number;
 }
 
 const TICK_STYLE = { fill: "var(--muted-foreground)", fontSize: 12 };
 
-export function DeploymentBarChart({ data }: { data: DeploymentBarChartDatum[] }) {
+export function SitRepBarChart({ data }: { data: SitRepBarChartDatum[] }) {
   return (
     <ResponsiveContainer width="100%" height={280}>
       <BarChart data={data}>
@@ -39,8 +39,8 @@ export function DeploymentBarChart({ data }: { data: DeploymentBarChartDatum[] }
         />
         <Legend wrapperStyle={{ fontSize: 12, color: "var(--muted-foreground)" }} />
         <Bar
-          dataKey="deployedToPolling"
-          name="Deployed to Polling Precincts"
+          dataKey="totalStrength"
+          name="Total Strength"
           fill="var(--chart-1)"
           radius={[2, 2, 0, 0]}
           animationDuration={1000}
@@ -48,8 +48,8 @@ export function DeploymentBarChart({ data }: { data: DeploymentBarChartDatum[] }
           animationBegin={0}
         />
         <Bar
-          dataKey="deployedToPollingCenters"
-          name="Deployed to Polling Centers"
+          dataKey="criticalAssetCount"
+          name="Critical Assets"
           fill="var(--chart-3)"
           radius={[2, 2, 0, 0]}
           animationDuration={1000}
@@ -57,8 +57,8 @@ export function DeploymentBarChart({ data }: { data: DeploymentBarChartDatum[] }
           animationBegin={120}
         />
         <Bar
-          dataKey="qrf"
-          name="QRF"
+          dataKey="checkpointOpsTotal"
+          name="Checkpoint Ops"
           fill="var(--chart-2)"
           radius={[2, 2, 0, 0]}
           animationDuration={1000}

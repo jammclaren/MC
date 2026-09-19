@@ -39,16 +39,20 @@ export async function getScoredAreas(user: SessionUser): Promise<ScoredArea[]> {
         where: { date: { gte: windowStart } },
         select: { type: true, date: true },
       },
-      deployments: { select: { deployedToPolling: true } },
     },
   });
 
   return areas
     .map((area) => {
-      const deployedToPolling = area.deployments.reduce(
-        (sum, deployment) => sum + deployment.deployedToPolling,
-        0
-      );
+      // SITREP (which replaced the old per-area TroopDeployment log) is
+      // reported at JTF/Task-Group level with no area linkage, so there is
+      // no longer a per-area deployment figure to deduct here — the
+      // coverage-deduction term in computePriorityScore always evaluates
+      // to 0 now, and priority score is effectively hotspot + incident
+      // severity only. Kept as an explicit 0 (not removed from the
+      // formula) so this is easy to reconnect if a future SITREP revision
+      // adds area-level location back.
+      const deployedToPolling = 0;
       const priorityScore = computePriorityScore({
         hotspotCategory: area.hotspotCategory,
         incidents: area.incidents,

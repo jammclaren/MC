@@ -14,23 +14,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DeploymentBarChart } from "@/components/charts/deployment-bar-chart";
+import { SitRepBarChart } from "@/components/charts/sitrep-bar-chart";
 import { StatTile } from "@/components/stat-tile";
 import { DailyAssessmentPanel } from "@/components/daily-assessment-panel";
 import { JtfAssessmentCard } from "@/components/jtf-assessment-card";
 import { OverviewIncidentOpsPanel } from "@/components/overview-incident-ops-panel";
-import {
-  Users,
-  Shield,
-  ShieldAlert,
-  TriangleAlert,
-  Crosshair,
-  Vote,
-  Plane,
-  Ship,
-  Building2,
-  Radar,
-} from "lucide-react";
+import { Users, ShieldAlert, TriangleAlert, Crosshair, Vote } from "lucide-react";
 
 export default async function OverviewPage() {
   const user = await getSessionUser();
@@ -54,32 +43,16 @@ export default async function OverviewPage() {
           value={data.totalRegisteredVoters.toLocaleString()}
           icon={Vote}
         />
+        <StatTile label="Total Strength" value={data.totalStrength.toLocaleString()} icon={Users} />
         <StatTile
-          label="Deployed to Polling Precincts"
-          value={data.totalDeployed.toLocaleString()}
-          icon={Users}
+          label="Critical Assets"
+          value={data.totalCriticalAssets.toLocaleString()}
+          icon={ShieldAlert}
         />
         <StatTile
-          label="Deployed to Polling Centers"
-          value={data.totalDeployedToPollingCenters.toLocaleString()}
-          icon={Building2}
-        />
-        <StatTile label="Total CAA Deployed" value={data.totalCaa.toLocaleString()} icon={Shield} />
-        <StatTile label="QRF" value={data.totalQrf.toLocaleString()} icon={ShieldAlert} />
-        <StatTile
-          label="Total Air Assets Deployed"
-          value={data.totalAirAssets.toLocaleString()}
-          icon={Plane}
-        />
-        <StatTile
-          label="Total Naval Assets Deployed"
-          value={data.totalNavalAssets.toLocaleString()}
-          icon={Ship}
-        />
-        <StatTile
-          label="Total ISR Assets Deployed"
-          value={data.totalIsrAssets.toLocaleString()}
-          icon={Radar}
+          label="Checkpoint Operations"
+          value={data.totalCheckpointOps.toLocaleString()}
+          icon={Crosshair}
         />
         <StatTile
           label="Incidents (30d)"
@@ -106,36 +79,43 @@ export default async function OverviewPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Troop Deployment Recapitulation</CardTitle>
+          <CardTitle>SITREP Recapitulation</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
-          <DeploymentBarChart data={data.jtfDeployments} />
+          <SitRepBarChart
+            data={data.jtfSitReps.map((row) => ({
+              jtfName: row.jtfName,
+              totalStrength: row.totalStrength,
+              criticalAssetCount: row.criticalAssetCount,
+              checkpointOpsTotal: row.checkpointOpsTotal,
+            }))}
+          />
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>JTF</TableHead>
-                <TableHead className="text-right">Deployed to Polling Precincts</TableHead>
-                <TableHead className="text-right">Deployed to Polling Centers</TableHead>
-                <TableHead className="text-right">QRF</TableHead>
+                <TableHead className="text-right">Total Strength</TableHead>
+                <TableHead className="text-right">Critical Assets</TableHead>
+                <TableHead className="text-right">Checkpoint Ops</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.jtfDeployments.map((row) => (
+              {data.jtfSitReps.map((row) => (
                 <TableRow key={row.jtfId}>
                   <TableCell>{row.jtfName}</TableCell>
+                  <TableCell className="text-right">{row.totalStrength.toLocaleString()}</TableCell>
                   <TableCell className="text-right">
-                    {row.deployedToPolling.toLocaleString()}
+                    {row.criticalAssetCount.toLocaleString()}
                   </TableCell>
                   <TableCell className="text-right">
-                    {row.deployedToPollingCenters.toLocaleString()}
+                    {row.checkpointOpsTotal.toLocaleString()}
                   </TableCell>
-                  <TableCell className="text-right">{row.qrf.toLocaleString()}</TableCell>
                 </TableRow>
               ))}
-              {data.jtfDeployments.length === 0 && (
+              {data.jtfSitReps.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center text-muted-foreground">
-                    No deployment data yet.
+                    No SITREP data yet.
                   </TableCell>
                 </TableRow>
               )}
