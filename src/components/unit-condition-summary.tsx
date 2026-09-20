@@ -48,58 +48,63 @@ function ReadinessGauge({ pct }: { pct: number | null }) {
   );
 }
 
+/** A JTF's own readiness % on Overview is a rollup, not a repeat of the
+ * per-task-group detail JTF Accounts shows — the average of its rated
+ * task groups' overall %, ignoring any not-yet-rated ones. A JTF with no
+ * rated task groups (or none reported at all) shows "Not set". */
+function jtfRollupPct(group: UnitConditionJtfGroup): number | null {
+  const rated = group.taskGroups.filter(
+    (tg): tg is typeof tg & { overallPct: number } => tg.overallPct !== null
+  );
+  if (rated.length === 0) return null;
+  return Math.round(rated.reduce((sum, tg) => sum + tg.overallPct, 0) / rated.length);
+}
+
 /** Read-only Overview summary of every JTF's current Unit Readiness rating
- * — grouped by JTF, one radial gauge per Task Group, however many that
- * JTF currently has (derived from its most recent SitRep). */
+ * — a 2-up grid of radial gauges, one per JTF, each the average of that
+ * JTF's rated Task Groups. The per-Task-Group breakdown lives on the JTF
+ * Accounts page, not here. */
 export function UnitConditionSummary({ groups }: { groups: UnitConditionJtfGroup[] }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Unit Readiness Status</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-5">
-        {groups.map((group) => (
-          <div key={group.jtfId} className="flex flex-col gap-2">
-            <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-              {group.jtfName}
-            </span>
-            {group.taskGroups.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No task groups reported yet.</p>
-            ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {group.taskGroups.map((tg) => {
-                  const rating = tg.overallPct === null ? null : ratingForPct(tg.overallPct);
-                  return (
-                    <div
-                      key={tg.taskGroupName}
-                      className="neu-raised flex items-center gap-3 rounded-md bg-card p-3"
+      <CardContent>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {groups.map((group) => {
+            const pct = jtfRollupPct(group);
+            const rating = pct === null ? null : ratingForPct(pct);
+            return (
+              <div
+                key={group.jtfId}
+                className="neu-raised flex items-center gap-3 rounded-md bg-card p-3"
+              >
+                <ReadinessGauge pct={pct} />
+                <div className="flex min-w-0 flex-col gap-1">
+                  <span className="truncate font-display text-sm font-semibold tracking-wide uppercase">
+                    {group.jtfName}
+                  </span>
+                  {rating ? (
+                    <span
+                      className="w-fit rounded-full px-2 py-0.5 text-xs font-semibold"
+                      style={{
+                        backgroundColor: `color-mix(in oklch, ${rating.color}, transparent 80%)`,
+                        color: rating.color,
+                      }}
                     >
-                      <ReadinessGauge pct={tg.overallPct} />
-                      <div className="flex min-w-0 flex-col gap-1">
-                        <span className="truncate text-sm font-semibold">{tg.taskGroupName}</span>
-                        {rating ? (
-                          <span
-                            className="w-fit rounded-full px-2 py-0.5 text-xs font-semibold"
-                            style={{
-                              backgroundColor: `color-mix(in oklch, ${rating.color}, transparent 80%)`,
-                              color: rating.color,
-                            }}
-                          >
-                            {rating.code} · {rating.label}
-                          </span>
-                        ) : (
-                          <span className="w-fit rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-                            Not set
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                      {rating.code} · {rating.label}
+                    </span>
+                  ) : (
+                    <span className="w-fit rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+                      Not set
+                    </span>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-        ))}
+            );
+          })}
+        </div>
       </CardContent>
     </Card>
   );
