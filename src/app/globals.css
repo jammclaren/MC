@@ -412,6 +412,15 @@
     inset -3px -3px 7px rgba(255, 255, 255, 0.03);
 }
 
+/* With the nav bar hidden, the show-nav switch floats fixed in the
+ * top-right corner instead of taking its own header row. Reserve just
+ * enough top clearance for it so it never sits on top of a page's
+ * first-row content (e.g. Overview's stat tiles) — far less space
+ * than the full nav bar took, but never zero. */
+body:has(header[data-nav-collapsed="true"]) > main {
+  padding-top: 4.5rem;
+}
+
 /* Sign-in background — a slow, continuous Ken Burns drift (scale + pan)
  * on the photo behind the login card. Long duration and a subtle range so
  * it reads as ambient atmosphere, not a slideshow effect. */

@@ -39,7 +39,7 @@ export function NavTopBar({
 
   if (collapsed) {
     return (
-      <header className="fixed top-8 right-8 z-40">
+      <header data-nav-collapsed="true" className="fixed top-8 right-8 z-40">
         <Switch checked={collapsed} onCheckedChange={toggle} aria-label="Show navigation bar" />
       </header>
     );
