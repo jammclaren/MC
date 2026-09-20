@@ -3,6 +3,7 @@ import { NavTopBar } from "@/components/nav-topbar";
 import { prisma } from "@/lib/prisma";
 import {
   canAccessIntelligenceUpdate,
+  canAccessJtfRedcon,
   canAccessPage,
   canAccessSocialMonitor,
 } from "@/lib/rbac";
@@ -46,6 +47,7 @@ export async function Nav() {
     ...(canAccessIntelligenceUpdate(user)
       ? [{ href: "/intel-update", label: "INTELLIGENCE" }]
       : []),
+    ...(canAccessJtfRedcon(user) ? [{ href: "/jtf-redcon", label: "JTF REDCON" }] : []),
     ...visibleAdminLinks.map((l) => ({
       href: l.href,
       label: l.label,
