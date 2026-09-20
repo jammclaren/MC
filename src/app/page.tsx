@@ -37,6 +37,10 @@ export default async function OverviewPage() {
 
   return (
     <div className="flex flex-col gap-8">
+      <div>
+        <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Overview</h1>
+      </div>
+
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         <StatTile label="Total Strength" value={data.totalStrength.toLocaleString()} icon={Users} />
         <StatTile

@@ -413,12 +413,12 @@
 }
 
 /* With the nav bar hidden, the show-nav switch floats fixed in the
- * top-right corner instead of taking its own header row. Reserve just
- * enough top clearance for it so it never sits on top of a page's
- * first-row content (e.g. Overview's stat tiles) — far less space
- * than the full nav bar took, but never zero. */
+ * top-right corner instead of taking its own header row. Every page
+ * now starts with a left-aligned title (matching Situation Map etc.),
+ * leaving the top-right corner clear, so content can start flush at
+ * the very top with no reserved gap. */
 body:has(header[data-nav-collapsed="true"]) > main {
-  padding-top: 4.5rem;
+  padding-top: 0;
 }
 
 /* Sign-in background — a slow, continuous Ken Burns drift (scale + pan)

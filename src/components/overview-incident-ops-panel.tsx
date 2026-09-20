@@ -77,9 +77,6 @@ export function OverviewIncidentOpsPanel({
     <Card className="border-primary/30">
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="font-display text-xs font-semibold tracking-widest text-primary uppercase">
-            Command Overview // Sector-Wide
-          </p>
           <CardTitle className="text-xl">Monitored Incidents Map</CardTitle>
         </div>
         <div className="flex flex-wrap gap-2">
