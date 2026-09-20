@@ -4,11 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { getIncidentMarkers } from "@/lib/queries/incident-markers";
 import { getIntelMarkers } from "@/lib/queries/intel-markers";
 import { canAccessPage, canWriteJtf } from "@/lib/rbac";
-import { getBarangayIndex } from "@/lib/barangay-index";
 import { PriorityMapLoader } from "@/components/priority-map-loader";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ElectionAreaFormDialog } from "@/components/election-area-form-dialog";
 
 export default async function PriorityMapPage() {
   const user = await getSessionUser();
@@ -43,18 +40,8 @@ export default async function PriorityMapPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Situation Map</h1>
-        </div>
-        {canCreate && (
-          <ElectionAreaFormDialog
-            jtfOptions={jtfOptions}
-            lockJtfId={writableJtfId}
-            barangayIndex={getBarangayIndex()}
-            trigger={<Button>Add Area</Button>}
-          />
-        )}
+      <div>
+        <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Situation Map</h1>
       </div>
 
       <Card>

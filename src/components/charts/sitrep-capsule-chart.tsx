@@ -48,23 +48,27 @@ export function SitRepCapsuleChart({
             <div className="flex items-end gap-1.5">
               {SERIES.map((s) => {
                 const value = s.pick(d);
-                const fillPct = (value / max) * 100;
+                const fillPct = Math.max((value / max) * 100, value > 0 ? 6 : 0);
                 return (
                   <div
                     key={s.name}
-                    className="neu-inset relative flex w-5 flex-col justify-end rounded-full bg-input"
+                    className="neu-inset relative w-5 rounded-full bg-input"
                     style={{ height: trackHeight }}
                     title={`${s.name}: ${value.toLocaleString()}`}
                   >
                     <div
-                      className="relative w-full rounded-full transition-all"
+                      className="absolute inset-x-0 bottom-0 rounded-full transition-all"
                       style={{
-                        height: `${Math.max(fillPct, value > 0 ? 6 : 0)}%`,
+                        height: `${fillPct}%`,
                         background: `linear-gradient(to bottom, color-mix(in oklch, ${s.color}, white 35%), ${s.color})`,
                       }}
-                    >
-                      <span className="neu-raised absolute top-0 left-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" />
-                    </div>
+                    />
+                    {value > 0 && (
+                      <span
+                        className="neu-raised absolute left-1/2 size-3.5 -translate-x-1/2 translate-y-1/2 rounded-full bg-white"
+                        style={{ bottom: `${fillPct}%` }}
+                      />
+                    )}
                   </div>
                 );
               })}
