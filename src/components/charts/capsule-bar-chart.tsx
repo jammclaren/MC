@@ -36,7 +36,7 @@ export function CapsuleBarChart({ data }: { data: CapsuleBarDatum[] }) {
         return (
           <div key={d.label} className="flex flex-col gap-1.5">
             <span className="text-sm text-foreground">{d.label}</span>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-6">
               <div className="neu-inset relative h-1.5 min-w-0 flex-1 rounded-full bg-input">
                 <div
                   className="relative h-full rounded-full transition-all"
