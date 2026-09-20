@@ -39,20 +39,14 @@ export function NavTopBar({
 
   if (collapsed) {
     return (
-      <header
-        data-nav-collapsed="true"
-        className="sticky top-0 z-40 flex justify-end border-b border-primary/30 bg-background/95 px-3 py-1.5 backdrop-blur supports-backdrop-filter:bg-background/80"
-      >
+      <header className="fixed top-8 right-8 z-40">
         <Switch checked={collapsed} onCheckedChange={toggle} aria-label="Show navigation bar" />
       </header>
     );
   }
 
   return (
-    <header
-      data-nav-collapsed="false"
-      className="sticky top-0 z-40 border-b border-primary/30 bg-background/95 shadow-[0_1px_16px_-4px_var(--primary)] backdrop-blur supports-backdrop-filter:bg-background/80"
-    >
+    <header className="sticky top-0 z-40 border-b border-primary/30 bg-background/95 shadow-[0_1px_16px_-4px_var(--primary)] backdrop-blur supports-backdrop-filter:bg-background/80">
       <div className="flex w-full items-center gap-3 px-3 sm:gap-6 sm:px-6">
         <div className="flex min-w-0 flex-1 items-center gap-4 sm:gap-8">
           <div className="flex shrink-0 items-center gap-2.5 py-3">
