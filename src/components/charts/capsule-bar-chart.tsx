@@ -10,11 +10,24 @@ const TRACK_WIDTH_PX = 28;
 
 const TICK_COUNT = 5;
 
-/** Fixed incident-count bands: 0-30 low, 31-50 medium, 51+ high. */
-function severityColor(count: number): string {
-  if (count >= 51) return "var(--status-critical)";
-  if (count >= 31) return "var(--status-warning)";
-  return "#facc15";
+// Fixed incident-count bands: 0-30 low (yellow), 31-50 medium (orange),
+// 51-60+ high (red) — red reaches full saturation by HIGH_BAND_END rather
+// than at the axis's own top, so a bar in the high band actually reads as
+// red instead of a faint tint diluted across however tall the axis grows.
+const LOW_BAND_END = 30;
+const MEDIUM_BAND_END = 50;
+const HIGH_BAND_END = 60;
+
+/** Builds the severity gradient anchored to the full axis scale (0 to
+ * scaleMax), not to a single bar's own height, so a short/low bar only
+ * ever reveals its yellow bottom slice while a bar reaching into the
+ * high band reveals red near its top — same technique as a thermometer
+ * fill, positioned via backgroundSize/backgroundPosition on the fill. */
+function severityGradient(scaleMax: number): string {
+  const lowStop = Math.min((LOW_BAND_END / scaleMax) * 100, 100);
+  const medStop = Math.min((MEDIUM_BAND_END / scaleMax) * 100, 100);
+  const highStop = Math.min((HIGH_BAND_END / scaleMax) * 100, 100);
+  return `linear-gradient(to top, #facc15 0%, #facc15 ${lowStop}%, var(--status-warning) ${medStop}%, var(--status-critical) ${highStop}%, var(--status-critical) 100%)`;
 }
 
 /** Rounds a raw max up to a "nice" round number (1/2/5 x a power of ten)
@@ -36,9 +49,10 @@ function niceMax(value: number): number {
  * oriented vertically. A minimum fill height keeps a real-but-small count
  * from rendering as an invisible sliver.
  *
- * The fill's color is a severity tier based on the bar's own raw incident
- * count (see severityColor), not its height relative to the tallest bar —
- * a JTF with 24 incidents reads as low even if every other JTF has fewer.
+ * The fill's color reads as a severity scale (see severityGradient): the
+ * gradient is anchored to the full axis range rather than each bar's own
+ * height, so a JTF with 24 incidents shows yellow even if every other JTF
+ * has fewer, and only a count past the high threshold reveals red.
  *
  * A y-axis with evenly spaced numeric ticks and horizontal gridlines sits
  * to the left, same idea as a standard bar chart's value axis, using the
@@ -95,7 +109,9 @@ export function CapsuleBarChart({
                     className="absolute inset-x-0 bottom-0 rounded-full transition-all"
                     style={{
                       height: `${fillPct}%`,
-                      background: `linear-gradient(to bottom, color-mix(in oklch, ${severityColor(d.count)}, white 35%), ${severityColor(d.count)})`,
+                      backgroundImage: severityGradient(scaleMax),
+                      backgroundSize: `100% ${trackHeight}px`,
+                      backgroundPosition: "bottom",
                     }}
                   />
                   {d.count > 0 && (
