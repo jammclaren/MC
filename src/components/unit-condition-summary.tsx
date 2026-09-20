@@ -48,9 +48,41 @@ function ReadinessGauge({ pct }: { pct: number | null }) {
   );
 }
 
-/** A JTF's own readiness % on Overview is a rollup, not a repeat of the
- * per-task-group detail JTF Accounts shows — the average of its Task
- * Groups' overall %. A JTF with no Task Groups yet shows "Not set". */
+/** One gauge tile — a name, its readiness gauge, and an R1-R4 badge (or
+ * "Not set" when there's no rating yet). Shared by both the by-JTF grid
+ * (command-wide viewers) and the by-Task-Group grid (JTF account
+ * viewers, see UnitConditionSummary) since the tile itself is identical,
+ * only which thing gets one differs. */
+function GaugeTile({ name, pct }: { name: string; pct: number | null }) {
+  const rating = pct === null ? null : ratingForPct(pct);
+  return (
+    <div className="neu-raised flex items-center gap-3 rounded-md bg-card p-3">
+      <ReadinessGauge pct={pct} />
+      <div className="flex min-w-0 flex-col gap-1">
+        <span className="truncate font-display text-sm font-semibold tracking-wide uppercase">{name}</span>
+        {rating ? (
+          <span
+            className="w-fit rounded-full px-2 py-0.5 text-xs font-semibold"
+            style={{
+              backgroundColor: `color-mix(in oklch, ${rating.color}, transparent 80%)`,
+              color: rating.color,
+            }}
+          >
+            {rating.code} · {rating.label}
+          </span>
+        ) : (
+          <span className="w-fit rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+            Not set
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** A JTF's own readiness % elsewhere on this file (the by-JTF grid) is a
+ * rollup, not a repeat of the per-task-group detail — the average of its
+ * Task Groups' overall %. A JTF with no Task Groups yet shows "Not set". */
 function jtfRollupPct(group: UnitConditionJtfGroup): number | null {
   if (group.taskGroups.length === 0) return null;
   return Math.round(
@@ -58,11 +90,44 @@ function jtfRollupPct(group: UnitConditionJtfGroup): number | null {
   );
 }
 
-/** Read-only Overview summary of every JTF's current Unit Readiness rating
- * — a 2-up grid of radial gauges, one per JTF, each the average of that
- * JTF's rated Task Groups. The per-Task-Group breakdown lives on the JTF
- * Accounts page, not here. */
-export function UnitConditionSummary({ groups }: { groups: UnitConditionJtfGroup[] }) {
+/**
+ * Overview's Unit Readiness Status card. Command-wide viewers (ADMIN,
+ * COMMAND, WFC_STAFF, a command-wide VIEWER) see one gauge per JTF — a
+ * rollup, since the per-Task-Group breakdown for every JTF at once would
+ * be too much detail for a command-wide summary. A JTF account
+ * (viewerJtfId set) instead sees their own JTF's Task Groups broken out
+ * one gauge each, since "by JTF" would just be a single tile repeating
+ * what JTF REDCON already shows in full.
+ */
+export function UnitConditionSummary({
+  groups,
+  viewerJtfId,
+}: {
+  groups: UnitConditionJtfGroup[];
+  viewerJtfId: string | null;
+}) {
+  if (viewerJtfId) {
+    const own = groups.find((g) => g.jtfId === viewerJtfId);
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Unit Readiness Status</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!own || own.taskGroups.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No task groups yet.</p>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {own.taskGroups.map((tg) => (
+                <GaugeTile key={tg.id} name={tg.taskGroupName} pct={tg.overallPct} />
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -70,38 +135,9 @@ export function UnitConditionSummary({ groups }: { groups: UnitConditionJtfGroup
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {groups.map((group) => {
-            const pct = jtfRollupPct(group);
-            const rating = pct === null ? null : ratingForPct(pct);
-            return (
-              <div
-                key={group.jtfId}
-                className="neu-raised flex items-center gap-3 rounded-md bg-card p-3"
-              >
-                <ReadinessGauge pct={pct} />
-                <div className="flex min-w-0 flex-col gap-1">
-                  <span className="truncate font-display text-sm font-semibold tracking-wide uppercase">
-                    {group.jtfName}
-                  </span>
-                  {rating ? (
-                    <span
-                      className="w-fit rounded-full px-2 py-0.5 text-xs font-semibold"
-                      style={{
-                        backgroundColor: `color-mix(in oklch, ${rating.color}, transparent 80%)`,
-                        color: rating.color,
-                      }}
-                    >
-                      {rating.code} · {rating.label}
-                    </span>
-                  ) : (
-                    <span className="w-fit rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-                      Not set
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+          {groups.map((group) => (
+            <GaugeTile key={group.jtfId} name={group.jtfName} pct={jtfRollupPct(group)} />
+          ))}
         </div>
       </CardContent>
     </Card>
