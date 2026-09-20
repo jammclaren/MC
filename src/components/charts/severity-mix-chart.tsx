@@ -31,7 +31,15 @@ export function SeverityMixChart({
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="relative size-[168px] shrink-0">
-        <ResponsiveContainer width="100%" height="100%">
+        <div className="neu-inset absolute inset-0 rounded-full bg-input" />
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+          style={{
+            filter:
+              "drop-shadow(5px 5px 8px rgba(0, 0, 0, 0.5)) drop-shadow(-4px -4px 7px rgba(255, 255, 255, 0.05))",
+          }}
+        >
           <PieChart>
             <Pie
               data={hasData ? data : [{ name: "None", value: 1, color: "var(--muted)" }]}
