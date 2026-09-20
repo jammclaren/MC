@@ -8,6 +8,13 @@ export interface CapsuleBarDatum {
 // sliver of the pill peeking out past its edges, at any fill height.
 const TRACK_WIDTH_PX = 28;
 
+/** Fixed incident-count bands: 0-30 low, 31-50 medium, 51+ high. */
+function severityColor(count: number): string {
+  if (count >= 51) return "var(--status-critical)";
+  if (count >= 31) return "var(--status-warning)";
+  return "#facc15";
+}
+
 /**
  * Vertical neumorphic capsule bars — each category gets a fixed-height
  * inset "track" (the available range) with a shorter pill anchored to its
@@ -16,11 +23,9 @@ const TRACK_WIDTH_PX = 28;
  * oriented vertically. A minimum fill height keeps a real-but-small count
  * from rendering as an invisible sliver.
  *
- * The fill's color reads as a severity scale rather than a flat brand
- * color: the gradient is anchored to the full track height (not scaled to
- * the fill's own height), so a short/low bar only reveals the yellow
- * bottom of it, a mid-height bar reaches into orange, and a bar near the
- * max reaches red.
+ * The fill's color is a severity tier based on the bar's own raw incident
+ * count (see severityColor), not its height relative to the tallest bar —
+ * a JTF with 24 incidents reads as low even if every other JTF has fewer.
  */
 export function CapsuleBarChart({
   data,
@@ -36,7 +41,14 @@ export function CapsuleBarChart({
   }
 
   return (
-    <div className="flex items-end justify-around gap-3 px-2" style={{ height: trackHeight + 28 }}>
+    <div
+      className="relative flex items-end justify-around gap-3 px-2"
+      style={{ height: trackHeight + 28 }}
+    >
+      <div
+        className="pointer-events-none absolute inset-x-0"
+        style={{ bottom: 28, borderTop: "1px solid var(--axis-baseline)" }}
+      />
       {data.map((d) => {
         const fillPct = Math.max((d.count / max) * 100, d.count > 0 ? 6 : 0);
         return (
@@ -50,10 +62,7 @@ export function CapsuleBarChart({
                 className="absolute inset-x-0 bottom-0 rounded-full transition-all"
                 style={{
                   height: `${fillPct}%`,
-                  backgroundImage:
-                    "linear-gradient(to top, #facc15 0%, var(--status-warning) 50%, var(--status-critical) 100%)",
-                  backgroundSize: `100% ${trackHeight}px`,
-                  backgroundPosition: "bottom",
+                  background: `linear-gradient(to bottom, color-mix(in oklch, ${severityColor(d.count)}, white 35%), ${severityColor(d.count)})`,
                 }}
               />
               {d.count > 0 && (
