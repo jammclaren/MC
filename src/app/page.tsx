@@ -19,7 +19,9 @@ import { StatTile } from "@/components/stat-tile";
 import { DailyAssessmentPanel } from "@/components/daily-assessment-panel";
 import { JtfAssessmentCard } from "@/components/jtf-assessment-card";
 import { OverviewIncidentOpsPanel } from "@/components/overview-incident-ops-panel";
+import { UnitConditionSummary } from "@/components/unit-condition-summary";
 import { NavCollapseToggle } from "@/components/nav-collapse-toggle";
+import { listUnitConditions } from "@/lib/queries/unit-conditions";
 import { Users, ShieldAlert, TriangleAlert, Crosshair } from "lucide-react";
 
 export default async function OverviewPage() {
@@ -28,10 +30,11 @@ export default async function OverviewPage() {
     redirect("/login");
   }
 
-  const [data, incidentMarkers, jtfAssessments] = await Promise.all([
+  const [data, incidentMarkers, jtfAssessments, unitConditions] = await Promise.all([
     getOverviewData(user),
     getIncidentMarkers(user),
     listJtfAssessments(user),
+    listUnitConditions(),
   ]);
   const now = nowMs();
   const canSubmitAssessment = !!user.jtfId && canWriteJtf(user, user.jtfId);
@@ -42,6 +45,8 @@ export default async function OverviewPage() {
         <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Overview</h1>
         <NavCollapseToggle />
       </div>
+
+      <UnitConditionSummary rows={unitConditions} />
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         <StatTile label="Total Strength" value={data.totalStrength.toLocaleString()} icon={Users} />

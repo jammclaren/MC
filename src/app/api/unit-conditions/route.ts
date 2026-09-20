@@ -1,0 +1,73 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { requireSessionUser } from "@/lib/session";
+import { assertCanWriteJtf } from "@/lib/rbac";
+import { handleApiError } from "@/lib/api-error";
+import { withAudit } from "@/lib/audit";
+import { listUnitConditions } from "@/lib/queries/unit-conditions";
+
+const pctSchema = z.number().int().min(0).max(100);
+
+const upsertSchema = z.object({
+  jtfId: z.string().min(1),
+  personnelPct: pctSchema,
+  equipmentPct: pctSchema,
+  maintenancePct: pctSchema,
+  facilityPct: pctSchema,
+  trainingPct: pctSchema,
+});
+
+export async function GET() {
+  try {
+    await requireSessionUser();
+    const rows = await listUnitConditions();
+    return NextResponse.json(rows);
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+// Same write scoping as SitRep/JtfAssessment: ADMIN can write any JTF,
+// JTF_COMMANDER/JTF_STAFF/BRIGADE_STAFF only their own.
+export async function POST(request: Request) {
+  try {
+    const user = await requireSessionUser();
+    const body = upsertSchema.parse(await request.json());
+    assertCanWriteJtf(user, body.jtfId);
+
+    const saved = await withAudit(
+      (tx) =>
+        tx.unitCondition.upsert({
+          where: { jtfId: body.jtfId },
+          create: {
+            jtfId: body.jtfId,
+            personnelPct: body.personnelPct,
+            equipmentPct: body.equipmentPct,
+            maintenancePct: body.maintenancePct,
+            facilityPct: body.facilityPct,
+            trainingPct: body.trainingPct,
+            updatedById: user.id,
+          },
+          update: {
+            personnelPct: body.personnelPct,
+            equipmentPct: body.equipmentPct,
+            maintenancePct: body.maintenancePct,
+            facilityPct: body.facilityPct,
+            trainingPct: body.trainingPct,
+            updatedById: user.id,
+          },
+        }),
+      {
+        userId: user.id,
+        action: "UPDATE",
+        entity: "UnitCondition",
+        entityId: (result) => result.id,
+        diff: body,
+      }
+    );
+
+    return NextResponse.json(saved, { status: 200 });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}

@@ -8,7 +8,9 @@ import { StatTile } from "@/components/stat-tile";
 import { AnimatedCounter } from "@/components/animated-counter";
 import { UserFormDialog } from "@/components/user-form-dialog";
 import { UsersTable } from "@/components/users-table";
+import { UnitConditionCard } from "@/components/unit-condition-card";
 import { NavCollapseToggle } from "@/components/nav-collapse-toggle";
+import { listUnitConditions } from "@/lib/queries/unit-conditions";
 import { Users, Smartphone, Radio } from "lucide-react";
 
 // Devices get their `lastSeenAt` opportunistically refreshed on every
@@ -27,7 +29,7 @@ export default async function AdminUsersPage() {
   }
 
   const onlineSince = new Date(nowMs() - ONLINE_WINDOW_MS);
-  const [users, jtfs, activeDeviceCounts, onlineDevices] = await Promise.all([
+  const [users, jtfs, activeDeviceCounts, onlineDevices, unitConditions] = await Promise.all([
     prisma.user.findMany({
       select: {
         id: true,
@@ -55,6 +57,7 @@ export default async function AdminUsersPage() {
       where: { status: { not: "KICKED" }, lastSeenAt: { gte: onlineSince } },
       select: { userId: true },
     }),
+    listUnitConditions(),
   ]);
   const jtfOptions = jtfs.map((jtf) => ({ id: jtf.id, name: jtf.name }));
   const activeDeviceCountByUserId = new Map(
@@ -89,6 +92,8 @@ export default async function AdminUsersPage() {
           hint={`${onlineUserCount.toLocaleString()} user${onlineUserCount === 1 ? "" : "s"}`}
         />
       </div>
+
+      <UnitConditionCard rows={unitConditions} />
 
       <Card>
         <CardHeader>

@@ -131,6 +131,7 @@ model User {
   devices             UserDevice[]
   socialListeningReports SocialListeningReport[]
   sitReps             SitRep[]
+  unitConditionUpdates UnitCondition[]
 
   @@index([jtfId])
 }
@@ -148,6 +149,33 @@ model JTF {
   electionAreas   ElectionArea[]
   assessments     JtfAssessment[]
   meeAssets       IntelMeeAsset[]
+  unitCondition   UnitCondition?
+}
+
+/**
+ * A JTF's current Unit Condition (readiness) rating — one row per JTF,
+ * overwritten in place rather than logged historically, since this is a
+ * "status right now" snapshot for the dashboard, not a dated report like
+ * SitRep. Each of the five categories is a 0-100 percentage; the overall
+ * rating (R1-R4) is derived from their average at read time rather than
+ * stored, per the app's convention of computing tiers from raw figures
+ * instead of persisting a redundant derived value. Bands (per the
+ * command's Unit Status Report convention):
+ * R1 85-100% Fully Mission Capable, R2 75-84% Mission Capable,
+ * R3 51-74% Partially Mission Capable, R4 0-50% Not Mission Capable.
+ */
+model UnitCondition {
+  id             String   @id @default(cuid())
+  jtfId          String   @unique
+  jtf            JTF      @relation(fields: [jtfId], references: [id])
+  personnelPct   Int
+  equipmentPct   Int
+  maintenancePct Int
+  facilityPct    Int
+  trainingPct    Int
+  updatedById    String
+  updatedBy      User     @relation(fields: [updatedById], references: [id])
+  updatedAt      DateTime @updatedAt
 }
 
 model Unit {
