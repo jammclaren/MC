@@ -224,14 +224,25 @@ export function assertCanAccessIntelligenceUpdate(user: SessionUser): void {
 }
 
 /**
- * JTF REDCON is a read-only, command-wide view of Unit Readiness
- * Condition broken down by JTF and Task Group — for ADMIN, COMMAND, and
- * every WFC_STAFF function to monitor readiness. There is no write
- * access here regardless of role; editing stays on the ADMIN-only Users
- * page (see UnitConditionCard / assertCanWriteJtf).
+ * JTF REDCON is the Unit Readiness Condition page — command-wide
+ * read-only visibility for ADMIN, COMMAND, and every WFC_STAFF function,
+ * plus JTF_COMMANDER/JTF_STAFF/BRIGADE_STAFF, who get the editable
+ * UnitConditionCard scoped to their own JTF instead of the read-only
+ * view (see the page component: it branches on the same role set as
+ * canWriteJtf, then filters `groups` down to the caller's own JTF before
+ * handing it to UnitConditionCard — writes themselves are still
+ * re-checked server-side by assertCanWriteJtf on save, this only
+ * controls what's rendered).
  */
 export function canAccessJtfRedcon(user: SessionUser): boolean {
-  return user.role === "ADMIN" || user.role === "COMMAND" || user.role === "WFC_STAFF";
+  return (
+    user.role === "ADMIN" ||
+    user.role === "COMMAND" ||
+    user.role === "WFC_STAFF" ||
+    user.role === "JTF_COMMANDER" ||
+    user.role === "JTF_STAFF" ||
+    user.role === "BRIGADE_STAFF"
+  );
 }
 
 export function assertCanAccessJtfRedcon(user: SessionUser): void {

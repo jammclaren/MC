@@ -138,7 +138,7 @@ export function UnitConditionCard({ groups }: { groups: UnitConditionJtfGroup[] 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Unit Condition</CardTitle>
+        <CardTitle>Unit Readiness Condition</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
         {groups.map((group) => {
