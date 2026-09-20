@@ -412,6 +412,13 @@
     inset -3px -3px 7px rgba(255, 255, 255, 0.03);
 }
 
+/* With the nav bar hidden, drop the page's top padding so content
+ * starts right under the thin collapsed strip instead of leaving a
+ * gap sized for the full nav. */
+body:has(header[data-nav-collapsed="true"]) > main {
+  padding-top: 0;
+}
+
 /* Sign-in background — a slow, continuous Ken Burns drift (scale + pan)
  * on the photo behind the login card. Long duration and a subtle range so
  * it reads as ambient atmosphere, not a slideshow effect. */
