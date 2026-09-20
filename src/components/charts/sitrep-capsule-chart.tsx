@@ -1,15 +1,29 @@
 export interface SitRepCapsuleDatum {
-  jtfName: string;
+  label: string;
   totalStrength: number;
   criticalAssetCount: number;
-  checkpointOpsTotal: number;
+  /** Omitted for a by-Task-Group chart — Checkpoint Ops is tracked per
+   * SitRep, not per Task Group, so there's no real per-Task-Group figure
+   * to show (see TaskGroupSitRepSummary's doc comment). */
+  checkpointOpsTotal?: number;
 }
 
-const SERIES = [
-  { name: "Total Strength", color: "var(--chart-1)", pick: (d: SitRepCapsuleDatum) => d.totalStrength },
-  { name: "Critical Assets", color: "var(--chart-3)", pick: (d: SitRepCapsuleDatum) => d.criticalAssetCount },
-  { name: "Checkpoint Ops", color: "var(--chart-2)", pick: (d: SitRepCapsuleDatum) => d.checkpointOpsTotal },
+interface Series {
+  name: string;
+  color: string;
+  pick: (d: SitRepCapsuleDatum) => number;
+}
+
+const BASE_SERIES: Series[] = [
+  { name: "Total Strength", color: "var(--chart-1)", pick: (d) => d.totalStrength },
+  { name: "Critical Assets", color: "var(--chart-3)", pick: (d) => d.criticalAssetCount },
 ];
+
+const CHECKPOINT_OPS_SERIES: Series = {
+  name: "Checkpoint Ops",
+  color: "var(--chart-2)",
+  pick: (d) => d.checkpointOpsTotal ?? 0,
+};
 
 // Track width in px (matches the w-5 class below).
 const TRACK_WIDTH_PX = 20;
@@ -25,20 +39,24 @@ const THUMB_SIZE_PX = 18;
 
 /**
  * Grouped version of CapsuleBarChart's single-metric capsule bars — each
- * JTF gets a cluster of three fixed-height inset tracks (one per SITREP
- * metric), each with its own gradient-filled pill anchored to the
- * bottom, colored per the app's existing chart-1/2/3 tokens so the three
- * metrics stay distinguishable. A color-dot legend up top stands in for
- * recharts' <Legend> since these are plain divs, not an SVG chart.
+ * datum (a JTF, or a Task Group when showCheckpointOps is false) gets a
+ * cluster of fixed-height inset tracks (one per SITREP metric), each with
+ * its own gradient-filled pill anchored to the bottom, colored per the
+ * app's existing chart-1/2/3 tokens so the metrics stay distinguishable.
+ * A color-dot legend up top stands in for recharts' <Legend> since these
+ * are plain divs, not an SVG chart.
  */
 export function SitRepCapsuleChart({
   data,
   trackHeight = 160,
+  showCheckpointOps = true,
 }: {
   data: SitRepCapsuleDatum[];
   trackHeight?: number;
+  showCheckpointOps?: boolean;
 }) {
-  const max = Math.max(1, ...data.flatMap((d) => SERIES.map((s) => s.pick(d))));
+  const series = showCheckpointOps ? [...BASE_SERIES, CHECKPOINT_OPS_SERIES] : BASE_SERIES;
+  const max = Math.max(1, ...data.flatMap((d) => series.map((s) => s.pick(d))));
 
   if (data.length === 0) {
     return <p className="text-sm text-muted-foreground">No SITREP data yet.</p>;
@@ -47,7 +65,7 @@ export function SitRepCapsuleChart({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-        {SERIES.map((s) => (
+        {series.map((s) => (
           <span key={s.name} className="flex items-center gap-1.5">
             <span className="size-2.5 rounded-full" style={{ backgroundColor: s.color }} />
             {s.name}
@@ -56,9 +74,9 @@ export function SitRepCapsuleChart({
       </div>
       <div className="flex items-end justify-around gap-6 px-2" style={{ height: trackHeight + 28 }}>
         {data.map((d) => (
-          <div key={d.jtfName} className="flex flex-col items-center gap-2">
+          <div key={d.label} className="flex flex-col items-center gap-2">
             <div className="flex items-end gap-1.5">
-              {SERIES.map((s) => {
+              {series.map((s) => {
                 const value = s.pick(d);
                 // The fill must render at least as tall as the track is
                 // wide, or it renders as a flat-topped pill instead of a
@@ -90,7 +108,7 @@ export function SitRepCapsuleChart({
                 );
               })}
             </div>
-            <span className="text-xs whitespace-nowrap text-muted-foreground">{d.jtfName}</span>
+            <span className="text-xs whitespace-nowrap text-muted-foreground">{d.label}</span>
           </div>
         ))}
       </div>

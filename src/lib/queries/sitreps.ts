@@ -10,6 +10,20 @@ export interface JtfSitRepSummary {
   checkpointOpsTotal: number;
 }
 
+/** DISPOLOC broken down by Task Group instead of by JTF — for a JTF
+ * account's own Overview, where "by JTF" would just be a single row
+ * repeating what the JTF card above it already shows. Checkpoint Ops
+ * has no per-Task-Group equivalent (it's tracked per SitRep, not per
+ * Task Group — see SitRep.checkpointOpsTotal), so it's left out here
+ * rather than shown as a misleading repeated JTF-wide figure. */
+export interface TaskGroupSitRepSummary {
+  jtfId: string;
+  jtfName: string;
+  taskGroupName: string;
+  totalStrength: number;
+  criticalAssetCount: number;
+}
+
 export interface UnitBreakdownRow {
   unitName: string;
   jtfName: string;
@@ -42,6 +56,7 @@ export interface SitRepRow {
 
 export interface SitRepData {
   jtfCards: JtfSitRepSummary[];
+  taskGroupCards: TaskGroupSitRepSummary[];
   totalStrength: number;
   totalCriticalAssets: number;
   totalCheckpointOps: number;
@@ -85,9 +100,29 @@ export async function getSitRepData(
     }),
   ]);
 
+  const taskGroupCards: TaskGroupSitRepSummary[] = [];
   const jtfCards: JtfSitRepSummary[] = jtfs.map((jtf) => {
     const jtfSitReps = cardSitReps.filter((s) => s.jtfId === jtf.id);
     const taskGroups = jtfSitReps.flatMap((s) => s.taskGroups);
+
+    const byTaskGroupName = new Map<string, { strength: number; assets: number }>();
+    for (const tg of taskGroups) {
+      const strength = tg.units.reduce((s, u) => s + u.strength, 0);
+      const entry = byTaskGroupName.get(tg.name) ?? { strength: 0, assets: 0 };
+      entry.strength += strength;
+      entry.assets += tg.criticalAssets.length;
+      byTaskGroupName.set(tg.name, entry);
+    }
+    for (const [taskGroupName, { strength, assets }] of byTaskGroupName) {
+      taskGroupCards.push({
+        jtfId: jtf.id,
+        jtfName: jtf.name,
+        taskGroupName,
+        totalStrength: strength,
+        criticalAssetCount: assets,
+      });
+    }
+
     return {
       jtfId: jtf.id,
       jtfName: jtf.name,
@@ -144,6 +179,7 @@ export async function getSitRepData(
 
   return {
     jtfCards,
+    taskGroupCards,
     totalStrength: jtfCards.reduce((sum, c) => sum + c.totalStrength, 0),
     totalCriticalAssets: jtfCards.reduce((sum, c) => sum + c.criticalAssetCount, 0),
     totalCheckpointOps: jtfCards.reduce((sum, c) => sum + c.checkpointOpsTotal, 0),

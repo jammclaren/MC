@@ -89,45 +89,93 @@ export default async function OverviewPage() {
           <CardTitle>DISPOLOC</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
-          <SitRepCapsuleChart
-            data={data.jtfSitReps.map((row) => ({
-              jtfName: row.jtfName,
-              totalStrength: row.totalStrength,
-              criticalAssetCount: row.criticalAssetCount,
-              checkpointOpsTotal: row.checkpointOpsTotal,
-            }))}
-          />
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>JTF</TableHead>
-                <TableHead className="text-right">Total Strength</TableHead>
-                <TableHead className="text-right">Critical Assets</TableHead>
-                <TableHead className="text-right">Checkpoint Ops</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.jtfSitReps.map((row) => (
-                <TableRow key={row.jtfId}>
-                  <TableCell>{row.jtfName}</TableCell>
-                  <TableCell className="text-right">{row.totalStrength.toLocaleString()}</TableCell>
-                  <TableCell className="text-right">
-                    {row.criticalAssetCount.toLocaleString()}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {row.checkpointOpsTotal.toLocaleString()}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {data.jtfSitReps.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
-                    No SITREP data yet.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          {user.jtfId ? (
+            <>
+              <SitRepCapsuleChart
+                showCheckpointOps={false}
+                data={data.taskGroupSitReps
+                  .filter((row) => row.jtfId === user.jtfId)
+                  .map((row) => ({
+                    label: row.taskGroupName,
+                    totalStrength: row.totalStrength,
+                    criticalAssetCount: row.criticalAssetCount,
+                  }))}
+              />
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Task Group</TableHead>
+                    <TableHead className="text-right">Total Strength</TableHead>
+                    <TableHead className="text-right">Critical Assets</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.taskGroupSitReps
+                    .filter((row) => row.jtfId === user.jtfId)
+                    .map((row) => (
+                      <TableRow key={row.taskGroupName}>
+                        <TableCell>{row.taskGroupName}</TableCell>
+                        <TableCell className="text-right">
+                          {row.totalStrength.toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {row.criticalAssetCount.toLocaleString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  {data.taskGroupSitReps.filter((row) => row.jtfId === user.jtfId).length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-center text-muted-foreground">
+                        No SITREP data yet.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </>
+          ) : (
+            <>
+              <SitRepCapsuleChart
+                data={data.jtfSitReps.map((row) => ({
+                  label: row.jtfName,
+                  totalStrength: row.totalStrength,
+                  criticalAssetCount: row.criticalAssetCount,
+                  checkpointOpsTotal: row.checkpointOpsTotal,
+                }))}
+              />
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>JTF</TableHead>
+                    <TableHead className="text-right">Total Strength</TableHead>
+                    <TableHead className="text-right">Critical Assets</TableHead>
+                    <TableHead className="text-right">Checkpoint Ops</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.jtfSitReps.map((row) => (
+                    <TableRow key={row.jtfId}>
+                      <TableCell>{row.jtfName}</TableCell>
+                      <TableCell className="text-right">{row.totalStrength.toLocaleString()}</TableCell>
+                      <TableCell className="text-right">
+                        {row.criticalAssetCount.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {row.checkpointOpsTotal.toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {data.jtfSitReps.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground">
+                        No SITREP data yet.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </>
+          )}
         </CardContent>
       </Card>
 

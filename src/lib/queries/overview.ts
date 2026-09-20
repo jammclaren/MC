@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { scopeJtfFilter, type SessionUser } from "@/lib/rbac";
-import { getSitRepData, type JtfSitRepSummary } from "@/lib/queries/sitreps";
+import { getSitRepData, type JtfSitRepSummary, type TaskGroupSitRepSummary } from "@/lib/queries/sitreps";
 
 // How far back "recent incidents" looks for the 30-day count and
 // window-scoped queries below.
@@ -25,6 +25,7 @@ export interface IncidentsByDay {
 
 export interface OverviewData {
   jtfSitReps: JtfSitRepSummary[];
+  taskGroupSitReps: TaskGroupSitRepSummary[];
   totalStrength: number;
   totalCriticalAssets: number;
   totalCheckpointOps: number;
@@ -129,6 +130,7 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
 
   return {
     jtfSitReps: sitRepData.jtfCards,
+    taskGroupSitReps: sitRepData.taskGroupCards,
     totalStrength: sitRepData.totalStrength,
     totalCriticalAssets: sitRepData.totalCriticalAssets,
     totalCheckpointOps: sitRepData.totalCheckpointOps,
