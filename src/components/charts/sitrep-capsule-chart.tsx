@@ -11,6 +11,11 @@ const SERIES = [
   { name: "Checkpoint Ops", color: "var(--chart-2)", pick: (d: SitRepCapsuleDatum) => d.checkpointOpsTotal },
 ];
 
+// Track width in px (matches the w-5 class below) — the thumb is sized to
+// match it exactly so it always fully caps the fill's rounded top with no
+// sliver of the pill peeking out past its edges, at any fill height.
+const TRACK_WIDTH_PX = 20;
+
 /**
  * Grouped version of CapsuleBarChart's single-metric capsule bars — each
  * JTF gets a cluster of three fixed-height inset tracks (one per SITREP
@@ -65,8 +70,8 @@ export function SitRepCapsuleChart({
                     />
                     {value > 0 && (
                       <span
-                        className="neu-raised absolute left-1/2 size-3.5 -translate-x-1/2 translate-y-1/2 rounded-full bg-white"
-                        style={{ bottom: `${fillPct}%` }}
+                        className="neu-raised absolute left-1/2 -translate-x-1/2 translate-y-1/2 rounded-full bg-white"
+                        style={{ bottom: `${fillPct}%`, width: TRACK_WIDTH_PX, height: TRACK_WIDTH_PX }}
                       />
                     )}
                   </div>
