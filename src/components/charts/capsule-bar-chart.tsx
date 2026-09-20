@@ -3,10 +3,16 @@ export interface CapsuleBarDatum {
   count: number;
 }
 
-// Track width in px (matches the w-7 class below) — the thumb is sized to
-// match it exactly so it always fully caps the fill's rounded top with no
-// sliver of the pill peeking out past its edges, at any fill height.
+// Track width in px (matches the w-7 class below).
 const TRACK_WIDTH_PX = 28;
+
+// A round thumb centered on a rounded-full fill's top edge does NOT fully
+// hide that cap just by matching its diameter to the track width — the
+// cap's "shoulders" (where its curve meets the track's straight sides)
+// still poke out unless the thumb's radius is at least sqrt(2) times the
+// cap's radius (track width / 2). 1.5x gives a small safety margin over
+// that minimum.
+const THUMB_SIZE_PX = Math.ceil(TRACK_WIDTH_PX * 1.5);
 
 const TICK_COUNT = 5;
 
@@ -122,7 +128,7 @@ export function CapsuleBarChart({
                   {d.count > 0 && (
                     <span
                       className="neu-raised absolute left-1/2 -translate-x-1/2 translate-y-1/2 rounded-full bg-white"
-                      style={{ bottom: `${fillPct}%`, width: TRACK_WIDTH_PX, height: TRACK_WIDTH_PX }}
+                      style={{ bottom: `${fillPct}%`, width: THUMB_SIZE_PX, height: THUMB_SIZE_PX }}
                     />
                   )}
                 </div>

@@ -11,10 +11,16 @@ const SERIES = [
   { name: "Checkpoint Ops", color: "var(--chart-2)", pick: (d: SitRepCapsuleDatum) => d.checkpointOpsTotal },
 ];
 
-// Track width in px (matches the w-5 class below) — the thumb is sized to
-// match it exactly so it always fully caps the fill's rounded top with no
-// sliver of the pill peeking out past its edges, at any fill height.
+// Track width in px (matches the w-5 class below).
 const TRACK_WIDTH_PX = 20;
+
+// A round thumb centered on a rounded-full fill's top edge does NOT fully
+// hide that cap just by matching its diameter to the track width — the
+// cap's "shoulders" (where its curve meets the track's straight sides)
+// still poke out unless the thumb's radius is at least sqrt(2) times the
+// cap's radius (track width / 2). 1.5x gives a small safety margin over
+// that minimum.
+const THUMB_SIZE_PX = Math.ceil(TRACK_WIDTH_PX * 1.5);
 
 /**
  * Grouped version of CapsuleBarChart's single-metric capsule bars — each
@@ -53,7 +59,11 @@ export function SitRepCapsuleChart({
             <div className="flex items-end gap-1.5">
               {SERIES.map((s) => {
                 const value = s.pick(d);
-                const fillPct = Math.max((value / max) * 100, value > 0 ? 6 : 0);
+                // The fill must render at least as tall as the track is
+                // wide, or it renders as a flat-topped pill instead of a
+                // rounded dome the thumb is sized to cap.
+                const minFillPct = (TRACK_WIDTH_PX / trackHeight) * 100;
+                const fillPct = Math.max((value / max) * 100, value > 0 ? minFillPct : 0);
                 return (
                   <div
                     key={s.name}
@@ -71,7 +81,7 @@ export function SitRepCapsuleChart({
                     {value > 0 && (
                       <span
                         className="neu-raised absolute left-1/2 -translate-x-1/2 translate-y-1/2 rounded-full bg-white"
-                        style={{ bottom: `${fillPct}%`, width: TRACK_WIDTH_PX, height: TRACK_WIDTH_PX }}
+                        style={{ bottom: `${fillPct}%`, width: THUMB_SIZE_PX, height: THUMB_SIZE_PX }}
                       />
                     )}
                   </div>
