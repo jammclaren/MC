@@ -157,8 +157,8 @@ const SOCIAL_MONITOR_LAUNCHED = true;
  * visibility into it, see canWriteSocialMonitor below). Every other role,
  * including JTF_COMMANDER/JTF_STAFF, has no access at all. COMMAND and a
  * command-wide VIEWER are pure viewers (see canWriteSocialMonitor,
- * canWriteIntelligenceUpdate, canWriteDeployment, canWriteSituationReport) —
- * neither ever gets write access to anything.
+ * canWriteIntelligenceUpdate, canWriteDeployment) — neither ever gets
+ * write access to anything.
  */
 export function canAccessSocialMonitor(user: SessionUser): boolean {
   if (!SOCIAL_MONITOR_LAUNCHED) return false;
@@ -192,42 +192,6 @@ export function canWriteSocialMonitor(user: SessionUser): boolean {
 export function assertCanWriteSocialMonitor(user: SessionUser): void {
   if (!canWriteSocialMonitor(user)) {
     throw new ForbiddenError("Not authorized to modify the Social Media Monitor");
-  }
-}
-
-/**
- * Situation Report (Daily Summary of Reports) is written by ADMIN and
- * WFC_STAFF/Maneuver (M2) only — see canWriteSituationReport. CMO and
- * Intelligence can view it (it folds in every one of their own workspaces
- * too) but only view/print, same read-only posture as COMMAND under the
- * command-viewer rule. Not visible to any JTF-scoped role.
- */
-export function canAccessSituationReport(user: SessionUser): boolean {
-  if (user.role === "ADMIN" || user.role === "COMMAND") return true;
-  if (user.role === "WFC_STAFF") {
-    return (
-      user.warfightingFunction === "CMO" ||
-      user.warfightingFunction === "INTELLIGENCE" ||
-      user.warfightingFunction === "MANEUVER"
-    );
-  }
-  return false;
-}
-
-export function assertCanAccessSituationReport(user: SessionUser): void {
-  if (!canAccessSituationReport(user)) {
-    throw new ForbiddenError("Not authorized to access the Situation Report");
-  }
-}
-
-export function canWriteSituationReport(user: SessionUser): boolean {
-  if (user.role === "ADMIN") return true;
-  return user.role === "WFC_STAFF" && user.warfightingFunction === "MANEUVER";
-}
-
-export function assertCanWriteSituationReport(user: SessionUser): void {
-  if (!canWriteSituationReport(user)) {
-    throw new ForbiddenError("Not authorized to modify the Situation Report");
   }
 }
 

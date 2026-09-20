@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import {
   canAccessIntelligenceUpdate,
   canAccessPage,
-  canAccessSituationReport,
   canAccessSocialMonitor,
 } from "@/lib/rbac";
 
@@ -46,9 +45,6 @@ export async function Nav() {
       : []),
     ...(canAccessIntelligenceUpdate(user)
       ? [{ href: "/intel-update", label: "INTELLIGENCE" }]
-      : []),
-    ...(canAccessSituationReport(user)
-      ? [{ href: "/situation-report", label: "Daily Summary of Reports" }]
       : []),
     ...visibleAdminLinks.map((l) => ({
       href: l.href,

@@ -33,7 +33,7 @@ export function computeRecommendedActions(selected: PeriodMetrics, compared: Per
 
   if (selected.highlightedCount > 0) {
     actions.push(
-      `Prioritize the ${selected.highlightedCount} highlighted post${selected.highlightedCount === 1 ? "" : "s"} for IO Cell fact-check and counter-messaging before the next 2200H-2200H Daily Summary of Reports is compiled.`
+      `Prioritize the ${selected.highlightedCount} highlighted post${selected.highlightedCount === 1 ? "" : "s"} for IO Cell fact-check and counter-messaging before the next 2200H-2200H reporting cycle closes.`
     );
   }
 

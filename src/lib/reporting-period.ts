@@ -1,7 +1,7 @@
 // The command's standard daily reporting cycle — 2200H to 2200H (Asia/
 // Manila), not calendar midnight-to-midnight. Shared by every "reports for
-// the day" figure across the dashboard (Daily Summary of Reports, Intel
-// Update's daily count, etc.) so they all agree on exactly what "today"
+// the day" figure across the dashboard (Intel Update's daily count, the
+// Social Monitor feed, etc.) so they all agree on exactly what "today"
 // means rather than each page rolling its own rolling-24h or midnight
 // boundary.
 
