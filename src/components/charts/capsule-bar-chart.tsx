@@ -6,13 +6,16 @@ export interface CapsuleBarDatum {
 // Track width in px (matches the w-7 class below).
 const TRACK_WIDTH_PX = 28;
 
-// A round thumb centered on a rounded-full fill's top edge does NOT fully
-// hide that cap just by matching its diameter to the track width — the
-// cap's "shoulders" (where its curve meets the track's straight sides)
-// still poke out unless the thumb's radius is at least sqrt(2) times the
-// cap's radius (track width / 2). 1.5x gives a small safety margin over
-// that minimum.
-const THUMB_SIZE_PX = Math.ceil(TRACK_WIDTH_PX * 1.5);
+// The fill's bottom corners are fully rounded (track width / 2) so they
+// blend seamlessly into the track's own rounded-full bottom cap — but the
+// top corners use a much smaller radius (matching the cap radius Top
+// Incident Types' thin bars use), so a normal-sized thumb can fully cover
+// it. A round thumb only fully hides a rounded cap if its own radius is
+// at least sqrt(2) times the cap's radius, so a thumb sized to match a
+// 28px-wide cap 1:1 would need to nearly double in size to compensate —
+// shrinking the cap instead keeps the thumb at its normal size.
+const TOP_RADIUS_PX = 5;
+const THUMB_SIZE_PX = 16;
 
 const TICK_COUNT = 5;
 
@@ -117,9 +120,10 @@ export function CapsuleBarChart({
                   title={`${d.label}: ${d.count.toLocaleString()}`}
                 >
                   <div
-                    className="absolute inset-x-0 bottom-0 rounded-full transition-all"
+                    className="absolute inset-x-0 bottom-0 transition-all"
                     style={{
                       height: `${fillPct}%`,
+                      borderRadius: `${TOP_RADIUS_PX}px ${TOP_RADIUS_PX}px ${TRACK_WIDTH_PX / 2}px ${TRACK_WIDTH_PX / 2}px`,
                       backgroundImage: severityGradient(scaleMax),
                       backgroundSize: `100% ${trackHeight}px`,
                       backgroundPosition: "bottom",
