@@ -11,7 +11,8 @@ import { SeverityMixChart } from "@/components/charts/severity-mix-chart";
 import { OverviewIncidentMapLoader } from "@/components/overview-incident-map-loader";
 import { isViolentIncidentType } from "@/lib/incident-classification";
 import type { IncidentMarker } from "@/lib/queries/incident-markers";
-import { AlertTriangle } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { AlertTriangle, Maximize2 } from "lucide-react";
 
 const TOP_TYPES_LIMIT = 5;
 const LAST_24H_MS = 24 * 60 * 60 * 1000;
@@ -86,11 +87,6 @@ export function OverviewIncidentOpsPanel({
               Armed incident in last 24h
             </span>
           )}
-          {canAccessSituationMap && (
-            <Link href="/priority-map" className="self-center text-sm text-primary hover:underline">
-              Open Situation Map →
-            </Link>
-          )}
         </div>
       </CardHeader>
       <CardContent>
@@ -119,8 +115,22 @@ export function OverviewIncidentOpsPanel({
           </div>
 
           <div className="flex flex-col gap-4">
-            <div className="min-h-[400px] flex-1">
+            <div className="relative min-h-[400px] flex-1">
               <OverviewIncidentMapLoader markers={markers} />
+              {canAccessSituationMap && (
+                <Link
+                  href="/priority-map"
+                  title="Open full Situation Map"
+                  aria-label="Open full Situation Map"
+                  className={buttonVariants({
+                    variant: "secondary",
+                    size: "icon",
+                    className: "absolute top-3 right-3 z-[1000]",
+                  })}
+                >
+                  <Maximize2 />
+                </Link>
+              )}
             </div>
             <div className="rounded-md border border-border p-3">
               <h3 className="mb-1 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
