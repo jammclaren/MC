@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { SitRepFormDialog } from "@/components/sitrep-form-dialog";
 import { SitRepAccordion } from "@/components/sitrep-accordion";
 import { SitRepBarChart } from "@/components/charts/sitrep-bar-chart";
+import { NavCollapseToggle } from "@/components/nav-collapse-toggle";
 
 export default async function DailySitRepPage({
   searchParams,
@@ -61,10 +62,11 @@ export default async function DailySitRepPage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
+        <div className="flex items-center gap-3">
           <h1 className="font-display text-2xl font-bold tracking-wide uppercase">
             Daily SITREP
           </h1>
+          <NavCollapseToggle />
         </div>
         {canCreate && (
           <SitRepFormDialog

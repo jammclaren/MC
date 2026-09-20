@@ -4,6 +4,7 @@ import { canAccessSituationReport, canWriteSituationReport } from "@/lib/rbac";
 import { getSituationReport } from "@/lib/queries/situation-report";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SituationReportEditor } from "@/components/situation-report-editor";
+import { NavCollapseToggle } from "@/components/nav-collapse-toggle";
 
 export default async function SituationReportPage() {
   const user = await getSessionUser();
@@ -19,10 +20,11 @@ export default async function SituationReportPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="no-print">
+      <div className="no-print flex items-center gap-3">
         <h1 className="font-display text-2xl font-bold tracking-wide uppercase">
           Daily Summary of Reports
         </h1>
+        <NavCollapseToggle />
       </div>
 
       <Card className="border-primary/30">

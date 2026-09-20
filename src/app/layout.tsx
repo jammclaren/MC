@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Nav } from "@/components/nav";
 import { Toaster } from "@/components/ui/sonner";
+import { NavCollapseProvider } from "@/components/nav-collapse-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -58,16 +59,12 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${rajdhani.variable} ${alexBrush.variable} ${duneRise.variable} dark h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <div className="hud-viewport-frame" aria-hidden="true">
-          <span className="hud-corner-tl" />
-          <span className="hud-corner-tr" />
-          <span className="hud-corner-bl" />
-          <span className="hud-corner-br" />
-        </div>
-        <Nav />
-        <main className="w-full flex-1 px-8 py-8">
-          {children}
-        </main>
+        <NavCollapseProvider>
+          <Nav />
+          <main className="w-full flex-1 px-8 py-8">
+            {children}
+          </main>
+        </NavCollapseProvider>
         <Toaster />
       </body>
     </html>

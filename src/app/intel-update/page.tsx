@@ -28,6 +28,7 @@ import { IntelMeeCards } from "@/components/intel-mee-cards";
 import type { IntelUpdateRow } from "@/lib/queries/intel-updates";
 import { truncateLabel } from "@/lib/text";
 import { FileWarning, ShieldAlert, Radar, CalendarClock } from "lucide-react";
+import { NavCollapseToggle } from "@/components/nav-collapse-toggle";
 
 const ACTIVITY_TREND_WINDOW_DAYS = 14;
 
@@ -168,10 +169,11 @@ export default async function IntelUpdatePage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
+        <div className="flex items-center gap-3">
           <h1 className="font-display text-2xl font-bold tracking-wide uppercase">
             Intelligence Update
           </h1>
+          <NavCollapseToggle />
         </div>
         {canWrite && (
           <div className="flex gap-2">

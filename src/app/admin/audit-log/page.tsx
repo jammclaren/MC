@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { NavCollapseToggle } from "@/components/nav-collapse-toggle";
 import { formatTimestamp24h } from "@/lib/datetime";
 
 const ENTITIES = [
@@ -53,8 +54,9 @@ export default async function AuditLogPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
+      <div className="flex items-center gap-3">
         <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Audit Log</h1>
+        <NavCollapseToggle />
       </div>
 
       <Card>

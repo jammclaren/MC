@@ -8,6 +8,7 @@ import { StatTile } from "@/components/stat-tile";
 import { AnimatedCounter } from "@/components/animated-counter";
 import { UserFormDialog } from "@/components/user-form-dialog";
 import { UsersTable } from "@/components/users-table";
+import { NavCollapseToggle } from "@/components/nav-collapse-toggle";
 import { Users, Smartphone, Radio } from "lucide-react";
 
 // Devices get their `lastSeenAt` opportunistically refreshed on every
@@ -66,8 +67,9 @@ export default async function AdminUsersPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
+        <div className="flex items-center gap-3">
           <h1 className="font-display text-2xl font-bold tracking-wide uppercase">User Management</h1>
+          <NavCollapseToggle />
         </div>
         <UserFormDialog jtfOptions={jtfOptions} trigger={<Button>Create User</Button>} />
       </div>

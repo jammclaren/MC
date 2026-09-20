@@ -19,6 +19,7 @@ import { StatTile } from "@/components/stat-tile";
 import { DailyAssessmentPanel } from "@/components/daily-assessment-panel";
 import { JtfAssessmentCard } from "@/components/jtf-assessment-card";
 import { OverviewIncidentOpsPanel } from "@/components/overview-incident-ops-panel";
+import { NavCollapseToggle } from "@/components/nav-collapse-toggle";
 import { Users, ShieldAlert, TriangleAlert, Crosshair } from "lucide-react";
 
 export default async function OverviewPage() {
@@ -37,8 +38,9 @@ export default async function OverviewPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
+      <div className="flex items-center gap-3">
         <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Overview</h1>
+        <NavCollapseToggle />
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

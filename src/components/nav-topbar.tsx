@@ -1,12 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { NavLinks, type NavLinkItem } from "@/components/nav-links";
 import { LiveClock } from "@/components/live-clock";
 import { SignOutButton } from "@/components/sign-out-button";
-
-const STORAGE_KEY = "wesmincom-topbar-collapsed";
+import { useNavCollapse } from "@/components/nav-collapse-context";
 
 export function NavTopBar({
   links,
@@ -15,34 +13,13 @@ export function NavTopBar({
   links: readonly NavLinkItem[];
   roleLine: string;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
+  const { collapsed, toggle } = useNavCollapse();
 
-  // Read the saved preference after mount (not during SSR) so the server-
-  // and first-client-render markup match; a stored "collapsed" value
-  // otherwise causes a hydration mismatch against the always-expanded SSR
-  // output. Deferred via setTimeout, same as LiveClock's first tick, to
-  // avoid a synchronous setState-in-effect cascading render on mount.
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setCollapsed(localStorage.getItem(STORAGE_KEY) === "1");
-    }, 0);
-    return () => clearTimeout(timeout);
-  }, []);
-
-  function toggle() {
-    setCollapsed((prev) => {
-      const next = !prev;
-      localStorage.setItem(STORAGE_KEY, next ? "1" : "0");
-      return next;
-    });
-  }
-
+  // The "Show navigation bar" switch itself lives inline next to each
+  // page's title (see NavCollapseToggle) so it's guaranteed to sit in the
+  // same row, not a separate header element guessing at alignment.
   if (collapsed) {
-    return (
-      <header data-nav-collapsed="true" className="fixed top-8 right-8 z-40">
-        <Switch checked={collapsed} onCheckedChange={toggle} aria-label="Show navigation bar" />
-      </header>
-    );
+    return null;
   }
 
   return (

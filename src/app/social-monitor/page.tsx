@@ -27,6 +27,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FacebookLogo } from "@/components/icons/facebook-logo";
+import { NavCollapseToggle } from "@/components/nav-collapse-toggle";
 import { ExternalLink, FileText, Flag, ShieldAlert, ShieldCheck, Clock } from "lucide-react";
 
 /** Best-effort tone from a free-text risk/status label — display only,
@@ -201,6 +202,7 @@ export default async function SocialMonitorPage({
           <h1 className="font-display text-2xl font-bold tracking-wide uppercase">
             Facebook Dashboard
           </h1>
+          <NavCollapseToggle />
         </div>
         <div className="flex flex-wrap items-end gap-3">
           <SocialMonitorPeriodForm spStart={spStartStr} spEnd={spEndStr} cpStart={cpStartStr} cpEnd={cpEndStr} />

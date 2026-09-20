@@ -6,6 +6,7 @@ import { getIntelMarkers } from "@/lib/queries/intel-markers";
 import { canAccessPage, canWriteJtf } from "@/lib/rbac";
 import { PriorityMapLoader } from "@/components/priority-map-loader";
 import { Card, CardContent } from "@/components/ui/card";
+import { NavCollapseToggle } from "@/components/nav-collapse-toggle";
 
 export default async function PriorityMapPage() {
   const user = await getSessionUser();
@@ -40,8 +41,9 @@ export default async function PriorityMapPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
+      <div className="flex items-center gap-3">
         <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Situation Map</h1>
+        <NavCollapseToggle />
       </div>
 
       <Card>

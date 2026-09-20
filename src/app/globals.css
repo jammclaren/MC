@@ -412,15 +412,6 @@
     inset -3px -3px 7px rgba(255, 255, 255, 0.03);
 }
 
-/* With the nav bar hidden, the show-nav switch floats fixed in the
- * top-right corner instead of taking its own header row. Every page
- * now starts with a left-aligned title (matching Situation Map etc.),
- * leaving the top-right corner clear, so content can start flush at
- * the very top with no reserved gap. */
-body:has(header[data-nav-collapsed="true"]) > main {
-  padding-top: 0;
-}
-
 /* Sign-in background — a slow, continuous Ken Burns drift (scale + pan)
  * on the photo behind the login card. Long duration and a subtle range so
  * it reads as ambient atmosphere, not a slideshow effect. */
@@ -538,70 +529,6 @@ body:has(header[data-nav-collapsed="true"]) > main {
   paint-order: stroke fill;
 }
 
-/* ---------------------------------------------------------------------
- * Futuristic command-center viewport chrome — a persistent HUD frame and
- * a slow ambient scan-line sweep, both purely decorative (pointer-events
- * disabled) and fixed to the viewport rather than any one page, so every
- * screen in the app reads as the same console rather than a website.
- * ------------------------------------------------------------------- */
-.hud-viewport-frame {
-  position: fixed;
-  inset: 0;
-  z-index: 30;
-  pointer-events: none;
-}
-.hud-viewport-frame span {
-  position: absolute;
-  width: 28px;
-  height: 28px;
-  opacity: 0.55;
-}
-.hud-viewport-frame span::before,
-.hud-viewport-frame span::after {
-  content: "";
-  position: absolute;
-  background: var(--primary);
-  box-shadow: 0 0 6px 0 var(--primary);
-}
-.hud-viewport-frame span::before {
-  width: 100%;
-  height: 2px;
-}
-.hud-viewport-frame span::after {
-  width: 2px;
-  height: 100%;
-}
-.hud-corner-tl {
-  top: 10px;
-  left: 10px;
-}
-.hud-corner-tr {
-  top: 10px;
-  right: 10px;
-}
-.hud-corner-tr::before,
-.hud-corner-tr::after {
-  right: 0;
-}
-.hud-corner-bl {
-  bottom: 10px;
-  left: 10px;
-}
-.hud-corner-bl::before,
-.hud-corner-bl::after {
-  bottom: 0;
-}
-.hud-corner-br {
-  bottom: 10px;
-  right: 10px;
-}
-.hud-corner-br::before,
-.hud-corner-br::after {
-  bottom: 0;
-  right: 0;
-}
-
-
 /* Daily Summary of Reports print support — hidden on screen, shown only
  * when actually printing; and the tactical console chrome (nav bar, HUD
  * corner frame, background grid) has no place on a printed page.
@@ -614,8 +541,7 @@ body:has(header[data-nav-collapsed="true"]) > main {
 }
 @media print {
   .no-print,
-  header,
-  .hud-viewport-frame {
+  header {
     display: none !important;
   }
   .print-only {
