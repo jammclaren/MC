@@ -413,8 +413,8 @@
 }
 
 /* Sign-in background — a slow, continuous Ken Burns drift (scale + pan)
- * on the photo behind the login card. Long duration and a subtle range so
- * it reads as ambient atmosphere, not a slideshow effect. */
+ * on the terrain contours behind the login card. Long duration and a
+ * subtle range so it reads as ambient atmosphere, not a slideshow effect. */
 @keyframes login-bg-drift {
   0% {
     transform: scale(1) translate(0, 0);
@@ -426,11 +426,36 @@
     transform: scale(1) translate(0, 0);
   }
 }
-.login-bg-photo {
+.login-bg-drift {
   animation: login-bg-drift 32s ease-in-out infinite;
 }
 @media (prefers-reduced-motion: reduce) {
-  .login-bg-photo {
+  .login-bg-drift {
+    animation: none;
+  }
+}
+
+/* Single running "survey light" — a small dot traveling around the one
+ * largest closed contour loop (see LoginTerrainContours), via CSS motion
+ * path rather than stroke-dashoffset so it reads as a distinct point of
+ * light instead of a glowing dash. The path itself is set per-instance
+ * via the inline `offset-path` style. */
+@keyframes login-terrain-runlight {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+.login-terrain-runlight {
+  offset-rotate: 0deg;
+  animation-name: login-terrain-runlight;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-terrain-runlight {
     animation: none;
   }
 }
@@ -527,5 +552,201 @@
   stroke: rgba(40, 30, 16, 0.7);
   stroke-width: 2.5px;
   paint-order: stroke fill;
+}
+
+/* Grenade login gate — replaces the old click-to-open sign-in button.
+ * A grenade sits centered on the sign-in screen; pulling its ring runs
+ * pin-pull -> explosion -> reveal, then the sign-in card takes its place. */
+.grenade-darkness {
+  transition: opacity 0.7s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .grenade-darkness {
+    transition: none;
+  }
+}
+@keyframes grenade-idle-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+.grenade-idle-bob {
+  animation: grenade-idle-bob 3.2s ease-in-out infinite;
+}
+
+@keyframes grenade-ring-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 3px rgba(201, 162, 39, 0.55));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(201, 162, 39, 0.95));
+  }
+}
+.grenade-ring-pulse {
+  animation: grenade-ring-pulse 2s ease-in-out infinite;
+}
+
+@keyframes grenade-pin-pull {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(58px, -34px) rotate(50deg);
+    opacity: 0;
+  }
+}
+.grenade-pin-pull {
+  animation: grenade-pin-pull 0.42s cubic-bezier(0.34, 0.5, 0.6, 1) both;
+}
+
+@keyframes grenade-lever-flip {
+  0% {
+    transform: rotate(0deg) translate(0, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(48deg) translate(30px, -18px);
+    opacity: 0;
+  }
+}
+.grenade-lever-flip {
+  animation: grenade-lever-flip 0.4s cubic-bezier(0.34, 0.5, 0.6, 1) 0.08s both;
+}
+
+@keyframes grenade-body-shake {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-2px, 1px);
+  }
+  40% {
+    transform: translate(2px, -1px);
+  }
+  60% {
+    transform: translate(-3px, 0);
+  }
+  80% {
+    transform: translate(3px, 1px);
+  }
+}
+.grenade-body-shake {
+  animation: grenade-body-shake 0.18s linear 0.3s 2;
+}
+
+@keyframes grenade-body-vanish {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+}
+.grenade-body-vanish {
+  animation: grenade-body-vanish 0.18s ease-in 0.42s both;
+}
+
+@keyframes grenade-explosion-flash {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+.grenade-explosion-flash {
+  animation: grenade-explosion-flash 0.6s cubic-bezier(0.15, 0.7, 0.3, 1) both;
+}
+
+@keyframes grenade-screen-bloom {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.grenade-screen-bloom {
+  animation: grenade-screen-bloom 0.7s ease-out both;
+}
+
+@keyframes grenade-particle-burst {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--tx), var(--ty)) scale(0.2) rotate(var(--prot));
+    opacity: 0;
+  }
+}
+.grenade-particle {
+  animation: grenade-particle-burst 0.65s cubic-bezier(0.2, 0.6, 0.35, 1) both;
+  animation-delay: var(--pdelay, 0ms);
+}
+
+/* Card settles in right after the flash — a slightly sharper, quicker
+ * variant of .login-card-in so it reads as "the bang just revealed
+ * this" rather than a routine fade. */
+@keyframes grenade-reveal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.grenade-reveal-in {
+  animation: grenade-reveal-in 0.45s cubic-bezier(0.16, 0.9, 0.28, 1) both;
+}
+
+@keyframes grenade-prompt-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.grenade-prompt-blink {
+  animation: grenade-prompt-blink 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grenade-idle-bob,
+  .grenade-ring-pulse,
+  .grenade-pin-pull,
+  .grenade-lever-flip,
+  .grenade-body-shake,
+  .grenade-body-vanish,
+  .grenade-explosion-flash,
+  .grenade-screen-bloom,
+  .grenade-particle,
+  .grenade-prompt-blink {
+    animation: none;
+  }
+  .grenade-reveal-in {
+    animation-duration: 0.01s;
+  }
 }
 
