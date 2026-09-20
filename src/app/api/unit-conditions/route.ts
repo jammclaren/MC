@@ -11,6 +11,11 @@ const pctSchema = z.number().int().min(0).max(100);
 const upsertSchema = z.object({
   jtfId: z.string().min(1),
   taskGroupName: z.string().trim().min(1).max(200),
+  /** The task group's name as currently stored, when editing/renaming an
+   * existing one — omitted when adding a brand-new task group. Locates
+   * the row to update; taskGroupName above is the value to save (which
+   * may differ, i.e. a rename). */
+  originalTaskGroupName: z.string().trim().min(1).max(200).optional(),
   personnelPct: pctSchema,
   equipmentPct: pctSchema,
   maintenancePct: pctSchema,
@@ -36,11 +41,15 @@ export async function POST(request: Request) {
     const body = upsertSchema.parse(await request.json());
     assertCanWriteJtf(user, body.jtfId);
 
+    // Look up by the name the row is currently saved under (rename case),
+    // falling back to the new name itself (add-new / no-rename case).
+    const lookupName = body.originalTaskGroupName ?? body.taskGroupName;
+
     const saved = await withAudit(
       (tx) =>
         tx.unitCondition.upsert({
           where: {
-            jtfId_taskGroupName: { jtfId: body.jtfId, taskGroupName: body.taskGroupName },
+            jtfId_taskGroupName: { jtfId: body.jtfId, taskGroupName: lookupName },
           },
           create: {
             jtfId: body.jtfId,
@@ -53,6 +62,7 @@ export async function POST(request: Request) {
             updatedById: user.id,
           },
           update: {
+            taskGroupName: body.taskGroupName,
             personnelPct: body.personnelPct,
             equipmentPct: body.equipmentPct,
             maintenancePct: body.maintenancePct,

@@ -49,15 +49,13 @@ function ReadinessGauge({ pct }: { pct: number | null }) {
 }
 
 /** A JTF's own readiness % on Overview is a rollup, not a repeat of the
- * per-task-group detail JTF Accounts shows — the average of its rated
- * task groups' overall %, ignoring any not-yet-rated ones. A JTF with no
- * rated task groups (or none reported at all) shows "Not set". */
+ * per-task-group detail JTF Accounts shows — the average of its Task
+ * Groups' overall %. A JTF with no Task Groups yet shows "Not set". */
 function jtfRollupPct(group: UnitConditionJtfGroup): number | null {
-  const rated = group.taskGroups.filter(
-    (tg): tg is typeof tg & { overallPct: number } => tg.overallPct !== null
+  if (group.taskGroups.length === 0) return null;
+  return Math.round(
+    group.taskGroups.reduce((sum, tg) => sum + tg.overallPct, 0) / group.taskGroups.length
   );
-  if (rated.length === 0) return null;
-  return Math.round(rated.reduce((sum, tg) => sum + tg.overallPct, 0) / rated.length);
 }
 
 /** Read-only Overview summary of every JTF's current Unit Readiness rating
