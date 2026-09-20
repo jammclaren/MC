@@ -149,25 +149,31 @@ model JTF {
   electionAreas   ElectionArea[]
   assessments     JtfAssessment[]
   meeAssets       IntelMeeAsset[]
-  unitCondition   UnitCondition?
+  unitConditions  UnitCondition[]
 }
 
 /**
- * A JTF's current Unit Condition (readiness) rating — one row per JTF,
- * overwritten in place rather than logged historically, since this is a
- * "status right now" snapshot for the dashboard, not a dated report like
- * SitRep. Each of the five categories is a 0-100 percentage; the overall
- * rating (R1-R4) is derived from their average at read time rather than
- * stored, per the app's convention of computing tiers from raw figures
- * instead of persisting a redundant derived value. Bands (per the
- * command's Unit Status Report convention):
- * R1 85-100% Fully Mission Capable, R2 75-84% Mission Capable,
- * R3 51-74% Partially Mission Capable, R4 0-50% Not Mission Capable.
+ * A Task Group's current Unit Condition (readiness) rating — one row per
+ * (JTF, task group name), overwritten in place rather than logged
+ * historically, since this is a "status right now" snapshot for the
+ * dashboard, not a dated report like SitRep. Each of the five categories
+ * is a 0-100 percentage; the overall rating (R1-R4) is derived from their
+ * average at read time rather than stored. Bands (per the command's Unit
+ * Status Report convention): R1 85-100% Fully Mission Capable, R2 75-84%
+ * Mission Capable, R3 51-74% Partially Mission Capable, R4 0-50% Not
+ * Mission Capable.
+ *
+ * taskGroupName is a bare string, not a foreign key — Task Group has no
+ * stable identity anywhere in this app (SitRep.TaskGroup rows are
+ * free-typed and re-created on every submission, see
+ * src/lib/queries/unit-conditions.ts). It's matched against the distinct
+ * task group names on each JTF's most recent SitRep at read time.
  */
 model UnitCondition {
   id             String   @id @default(cuid())
-  jtfId          String   @unique
+  jtfId          String
   jtf            JTF      @relation(fields: [jtfId], references: [id])
+  taskGroupName  String
   personnelPct   Int
   equipmentPct   Int
   maintenancePct Int
@@ -176,6 +182,8 @@ model UnitCondition {
   updatedById    String
   updatedBy      User     @relation(fields: [updatedById], references: [id])
   updatedAt      DateTime @updatedAt
+
+  @@unique([jtfId, taskGroupName])
 }
 
 model Unit {

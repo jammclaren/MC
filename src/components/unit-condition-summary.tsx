@@ -3,7 +3,7 @@
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ratingForPct } from "@/lib/unit-condition";
-import type { UnitConditionRow } from "@/lib/queries/unit-conditions";
+import type { UnitConditionJtfGroup } from "@/lib/queries/unit-conditions";
 
 function ReadinessGauge({ pct }: { pct: number | null }) {
   const rating = pct === null ? null : ratingForPct(pct);
@@ -49,47 +49,57 @@ function ReadinessGauge({ pct }: { pct: number | null }) {
 }
 
 /** Read-only Overview summary of every JTF's current Unit Readiness rating
- * — a 2-up grid of radial gauges (overall % + R1-R4 band), one per JTF. */
-export function UnitConditionSummary({ rows }: { rows: UnitConditionRow[] }) {
+ * — grouped by JTF, one radial gauge per Task Group, however many that
+ * JTF currently has (derived from its most recent SitRep). */
+export function UnitConditionSummary({ groups }: { groups: UnitConditionJtfGroup[] }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Unit Readiness Status</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {rows.map((row) => {
-            const rating = row.overallPct === null ? null : ratingForPct(row.overallPct);
-            return (
-              <div
-                key={row.jtfId}
-                className="neu-raised flex items-center gap-3 rounded-md bg-card p-3"
-              >
-                <ReadinessGauge pct={row.overallPct} />
-                <div className="flex min-w-0 flex-col gap-1">
-                  <span className="truncate font-display text-sm font-semibold tracking-wide uppercase">
-                    {row.jtfName}
-                  </span>
-                  {rating ? (
-                    <span
-                      className="w-fit rounded-full px-2 py-0.5 text-xs font-semibold"
-                      style={{
-                        backgroundColor: `color-mix(in oklch, ${rating.color}, transparent 80%)`,
-                        color: rating.color,
-                      }}
+      <CardContent className="flex flex-col gap-5">
+        {groups.map((group) => (
+          <div key={group.jtfId} className="flex flex-col gap-2">
+            <span className="font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+              {group.jtfName}
+            </span>
+            {group.taskGroups.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No task groups reported yet.</p>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {group.taskGroups.map((tg) => {
+                  const rating = tg.overallPct === null ? null : ratingForPct(tg.overallPct);
+                  return (
+                    <div
+                      key={tg.taskGroupName}
+                      className="neu-raised flex items-center gap-3 rounded-md bg-card p-3"
                     >
-                      {rating.code} · {rating.label}
-                    </span>
-                  ) : (
-                    <span className="w-fit rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-                      Not set
-                    </span>
-                  )}
-                </div>
+                      <ReadinessGauge pct={tg.overallPct} />
+                      <div className="flex min-w-0 flex-col gap-1">
+                        <span className="truncate text-sm font-semibold">{tg.taskGroupName}</span>
+                        {rating ? (
+                          <span
+                            className="w-fit rounded-full px-2 py-0.5 text-xs font-semibold"
+                            style={{
+                              backgroundColor: `color-mix(in oklch, ${rating.color}, transparent 80%)`,
+                              color: rating.color,
+                            }}
+                          >
+                            {rating.code} · {rating.label}
+                          </span>
+                        ) : (
+                          <span className="w-fit rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+                            Not set
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
-        </div>
+            )}
+          </div>
+        ))}
       </CardContent>
     </Card>
   );

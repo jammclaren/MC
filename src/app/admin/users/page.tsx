@@ -93,7 +93,7 @@ export default async function AdminUsersPage() {
         />
       </div>
 
-      <UnitConditionCard rows={unitConditions} />
+      <UnitConditionCard groups={unitConditions} />
 
       <Card>
         <CardHeader>

@@ -10,6 +10,7 @@ const pctSchema = z.number().int().min(0).max(100);
 
 const upsertSchema = z.object({
   jtfId: z.string().min(1),
+  taskGroupName: z.string().trim().min(1).max(200),
   personnelPct: pctSchema,
   equipmentPct: pctSchema,
   maintenancePct: pctSchema,
@@ -38,9 +39,12 @@ export async function POST(request: Request) {
     const saved = await withAudit(
       (tx) =>
         tx.unitCondition.upsert({
-          where: { jtfId: body.jtfId },
+          where: {
+            jtfId_taskGroupName: { jtfId: body.jtfId, taskGroupName: body.taskGroupName },
+          },
           create: {
             jtfId: body.jtfId,
+            taskGroupName: body.taskGroupName,
             personnelPct: body.personnelPct,
             equipmentPct: body.equipmentPct,
             maintenancePct: body.maintenancePct,

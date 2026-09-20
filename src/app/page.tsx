@@ -46,7 +46,7 @@ export default async function OverviewPage() {
         <NavCollapseToggle />
       </div>
 
-      <UnitConditionSummary rows={unitConditions} />
+      <UnitConditionSummary groups={unitConditions} />
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         <StatTile label="Total Strength" value={data.totalStrength.toLocaleString()} icon={Users} />
