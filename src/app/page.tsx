@@ -3,7 +3,7 @@ import { getSessionUser } from "@/lib/session";
 import { getOverviewData } from "@/lib/queries/overview";
 import { getIncidentMarkers } from "@/lib/queries/incident-markers";
 import { listJtfAssessments } from "@/lib/queries/jtf-assessments";
-import { canAccessPage, canWriteJtf } from "@/lib/rbac";
+import { canAccessPage, canWriteAlertLevel, canWriteJtf } from "@/lib/rbac";
 import { nowMs } from "@/lib/time";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -20,8 +20,10 @@ import { DailyAssessmentPanel } from "@/components/daily-assessment-panel";
 import { JtfAssessmentCard } from "@/components/jtf-assessment-card";
 import { OverviewIncidentOpsPanel } from "@/components/overview-incident-ops-panel";
 import { UnitConditionSummary } from "@/components/unit-condition-summary";
+import { AlertLevelTile } from "@/components/alert-level-tile";
 import { NavCollapseToggle } from "@/components/nav-collapse-toggle";
 import { listUnitConditions } from "@/lib/queries/unit-conditions";
+import { getAlertLevelStatus } from "@/lib/queries/alert-level";
 import { Users, ShieldAlert, TriangleAlert, Crosshair } from "lucide-react";
 
 export default async function OverviewPage() {
@@ -30,11 +32,12 @@ export default async function OverviewPage() {
     redirect("/login");
   }
 
-  const [data, incidentMarkers, jtfAssessments, unitConditions] = await Promise.all([
+  const [data, incidentMarkers, jtfAssessments, unitConditions, alertLevel] = await Promise.all([
     getOverviewData(user),
     getIncidentMarkers(user),
     listJtfAssessments(user),
     listUnitConditions(),
+    getAlertLevelStatus(),
   ]);
   const now = nowMs();
   const canSubmitAssessment = !!user.jtfId && canWriteJtf(user, user.jtfId);
@@ -48,7 +51,13 @@ export default async function OverviewPage() {
 
       <UnitConditionSummary groups={unitConditions} viewerJtfId={user.jtfId} />
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <AlertLevelTile
+          level={alertLevel.level}
+          updatedByName={alertLevel.updatedByName}
+          updatedAt={alertLevel.updatedAt?.toISOString() ?? null}
+          canWrite={canWriteAlertLevel(user)}
+        />
         <StatTile label="Total Strength" value={data.totalStrength.toLocaleString()} icon={Users} />
         <StatTile
           label="Critical Assets"

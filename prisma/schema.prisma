@@ -132,6 +132,7 @@ model User {
   socialListeningReports SocialListeningReport[]
   sitReps             SitRep[]
   unitConditionUpdates UnitCondition[]
+  alertLevelUpdates   AlertLevelStatus[]
 
   @@index([jtfId])
 }
@@ -184,6 +185,27 @@ model UnitCondition {
   updatedAt      DateTime @updatedAt
 
   @@unique([jtfId, taskGroupName])
+}
+
+enum AlertLevel {
+  WHITE
+  BLUE
+  RED
+}
+
+/**
+ * Command-wide alert posture — a single current-state row (always
+ * `id: "global"`, upserted in place rather than logged historically,
+ * same "status right now" shape as UnitCondition) set by COMMAND or WFC
+ * Maneuver ("M2"). Overview shows it to every logged-in user; only
+ * COMMAND/M2/ADMIN can change it (see canWriteAlertLevel).
+ */
+model AlertLevelStatus {
+  id          String     @id
+  level       AlertLevel @default(WHITE)
+  updatedById String
+  updatedBy   User       @relation(fields: [updatedById], references: [id])
+  updatedAt   DateTime   @updatedAt
 }
 
 model Unit {

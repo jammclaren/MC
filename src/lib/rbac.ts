@@ -251,6 +251,25 @@ export function assertCanAccessJtfRedcon(user: SessionUser): void {
   }
 }
 
+/**
+ * Alert Level Status (the command-wide White/Blue/Red posture on
+ * Overview) is decided by COMMAND or WFC Maneuver ("M2") — the same
+ * "command-wide, not JTF-scoped" write grant canWriteDeployment already
+ * gives M2, plus COMMAND itself, which elsewhere in this app is
+ * read-only. Every logged-in user can still see the current level; this
+ * only gates changing it.
+ */
+export function canWriteAlertLevel(user: SessionUser): boolean {
+  if (user.role === "ADMIN" || user.role === "COMMAND") return true;
+  return user.role === "WFC_STAFF" && user.warfightingFunction === "MANEUVER";
+}
+
+export function assertCanWriteAlertLevel(user: SessionUser): void {
+  if (!canWriteAlertLevel(user)) {
+    throw new ForbiddenError("Not authorized to change the Alert Level Status");
+  }
+}
+
 export function canWriteIntelligenceUpdate(user: SessionUser): boolean {
   if (user.role === "ADMIN") return true;
   return user.role === "WFC_STAFF" && user.warfightingFunction === "INTELLIGENCE";
