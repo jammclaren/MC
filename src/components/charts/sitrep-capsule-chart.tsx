@@ -18,11 +18,10 @@ const TRACK_WIDTH_PX = 20;
 // blend seamlessly into the track's own rounded-full bottom cap — but the
 // top corners use a much smaller radius, so a normal-sized thumb can
 // fully cover it. A round thumb only fully hides a rounded cap if its own
-// radius is at least sqrt(2) times the cap's radius, so a thumb sized to
-// match a 20px-wide cap 1:1 would need to grow well past its old size to
-// compensate — shrinking the cap instead keeps the thumb small.
-const TOP_RADIUS_PX = 4;
-const THUMB_SIZE_PX = 14;
+// radius is at least sqrt(2) times the cap's radius, so 5px keeps a
+// comfortable margin under an 18px thumb (needs >=14px).
+const TOP_RADIUS_PX = 5;
+const THUMB_SIZE_PX = 18;
 
 /**
  * Grouped version of CapsuleBarChart's single-metric capsule bars — each
