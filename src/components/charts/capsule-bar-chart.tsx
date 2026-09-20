@@ -10,12 +10,12 @@ const TRACK_WIDTH_PX = 28;
 
 const TICK_COUNT = 5;
 
-// Fixed incident-count bands: 0-30 low (yellow), 31-50 medium (orange),
-// 51-60+ high (red) — red reaches full saturation by HIGH_BAND_END rather
+// Fixed incident-count bands: 0-20 low (yellow), 21-40 medium (orange),
+// 41-60+ high (red) — red reaches full saturation by HIGH_BAND_END rather
 // than at the axis's own top, so a bar in the high band actually reads as
 // red instead of a faint tint diluted across however tall the axis grows.
-const LOW_BAND_END = 30;
-const MEDIUM_BAND_END = 50;
+const LOW_BAND_END = 20;
+const MEDIUM_BAND_END = 40;
 const HIGH_BAND_END = 60;
 
 /** Builds the severity gradient anchored to the full axis scale (0 to
@@ -97,7 +97,12 @@ export function CapsuleBarChart({
         ))}
         <div className="relative flex h-full items-end justify-around gap-3 px-2">
           {data.map((d) => {
-            const fillPct = Math.max((d.count / scaleMax) * 100, d.count > 0 ? 4 : 0);
+            // The fill must render at least as tall as the track is wide,
+            // or it renders as a flat-topped pill (width > height) instead
+            // of a rounded dome — and the round thumb, sized to match the
+            // track width, can only fully cap a dome, not a flat top.
+            const minFillPct = (TRACK_WIDTH_PX / trackHeight) * 100;
+            const fillPct = Math.max((d.count / scaleMax) * 100, d.count > 0 ? minFillPct : 0);
             return (
               <div key={d.label} className="flex flex-col items-center gap-2">
                 <div
