@@ -2,7 +2,7 @@ import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import type { Role, WarfightingFunction } from "@/generated/prisma/client";
+import type { Role, WarfightingFunction, ComponentType } from "@/generated/prisma/client";
 import { extractRequestMeta, hashDeviceFingerprint, parseDeviceInfo } from "@/lib/device";
 import { notifyAdminsOfNewDevice } from "@/lib/notify-device-login";
 
@@ -11,6 +11,7 @@ declare module "next-auth" {
     role: Role;
     jtfId: string | null;
     warfightingFunction: WarfightingFunction | null;
+    component: ComponentType | null;
     deviceId: string | null;
   }
   interface Session {
@@ -21,6 +22,7 @@ declare module "next-auth" {
       role: Role;
       jtfId: string | null;
       warfightingFunction: WarfightingFunction | null;
+      component: ComponentType | null;
       deviceId: string | null;
     };
   }
@@ -32,6 +34,7 @@ declare module "@auth/core/jwt" {
     role: Role;
     jtfId: string | null;
     warfightingFunction: WarfightingFunction | null;
+    component: ComponentType | null;
     deviceId: string | null;
   }
 }
@@ -142,6 +145,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           role: user.role,
           jtfId: user.jtfId,
           warfightingFunction: user.warfightingFunction,
+          component: user.component,
           deviceId,
         };
       },
@@ -156,6 +160,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.role = user.role;
         token.jtfId = user.jtfId;
         token.warfightingFunction = user.warfightingFunction;
+        token.component = user.component;
         token.deviceId = user.deviceId;
       }
       return token;
@@ -165,6 +170,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.user.role = token.role;
       session.user.jtfId = token.jtfId;
       session.user.warfightingFunction = token.warfightingFunction;
+      session.user.component = token.component;
       session.user.deviceId = token.deviceId ?? null;
       return session;
     },

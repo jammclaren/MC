@@ -29,6 +29,14 @@ export interface OverviewData {
   totalStrength: number;
   totalCriticalAssets: number;
   totalCheckpointOps: number;
+  totalWav: number;
+  totalWavUnserviceable: number;
+  totalTav: number;
+  totalTavUnserviceable: number;
+  totalArtillery: number;
+  totalArtilleryUnserviceable: number;
+  totalNaval: number;
+  totalNavalUnserviceable: number;
   totalRegisteredVoters: number;
   recentIncidents: RecentIncidentRow[];
   recentIncidentCount30d: number;
@@ -134,6 +142,14 @@ export async function getOverviewData(user: SessionUser): Promise<OverviewData> 
     totalStrength: sitRepData.totalStrength,
     totalCriticalAssets: sitRepData.totalCriticalAssets,
     totalCheckpointOps: sitRepData.totalCheckpointOps,
+    totalWav: sitRepData.totalWav,
+    totalWavUnserviceable: sitRepData.totalWavUnserviceable,
+    totalTav: sitRepData.totalTav,
+    totalTavUnserviceable: sitRepData.totalTavUnserviceable,
+    totalArtillery: sitRepData.totalArtillery,
+    totalArtilleryUnserviceable: sitRepData.totalArtilleryUnserviceable,
+    totalNaval: sitRepData.totalNaval,
+    totalNavalUnserviceable: sitRepData.totalNavalUnserviceable,
     totalRegisteredVoters,
     recentIncidents: recentIncidentRows,
     recentIncidentCount30d,

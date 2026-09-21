@@ -1,10 +1,11 @@
-import type { Role, WarfightingFunction } from "@/generated/prisma/client";
+import type { Role, WarfightingFunction, ComponentType } from "@/generated/prisma/client";
 
 export type SessionUser = {
   id: string;
   role: Role;
   jtfId: string | null;
   warfightingFunction: WarfightingFunction | null;
+  component: ComponentType | null;
 };
 
 export class ForbiddenError extends Error {
@@ -224,6 +225,35 @@ export function assertCanAccessIntelligenceUpdate(user: SessionUser): void {
 }
 
 /**
+ * CMO Workspace is scoped tighter than Social Media Monitor/Intelligence
+ * Update above — CMO is the only function with any access at all here, no
+ * COMMAND rollup view, no command-wide VIEWER, no cross-visibility for
+ * INTELLIGENCE/MANEUVER (confirmed with the user 2026-09-21). Read and
+ * write are the same group since CMO is both the sole owner and sole
+ * viewer of its own workspace.
+ */
+export function canAccessCmoWorkspace(user: SessionUser): boolean {
+  if (user.role === "ADMIN") return true;
+  return user.role === "WFC_STAFF" && user.warfightingFunction === "CMO";
+}
+
+export function assertCanAccessCmoWorkspace(user: SessionUser): void {
+  if (!canAccessCmoWorkspace(user)) {
+    throw new ForbiddenError("Not authorized to access the CMO Workspace");
+  }
+}
+
+export function canWriteCmoActivity(user: SessionUser): boolean {
+  return canAccessCmoWorkspace(user);
+}
+
+export function assertCanWriteCmoActivity(user: SessionUser): void {
+  if (!canWriteCmoActivity(user)) {
+    throw new ForbiddenError("Not authorized to modify CMO activities");
+  }
+}
+
+/**
  * JTF REDCON is the Unit Readiness Condition page — command-wide
  * read-only visibility for ADMIN, COMMAND, and every WFC_STAFF function,
  * plus JTF_COMMANDER/JTF_STAFF/BRIGADE_STAFF, who get the editable
@@ -267,6 +297,28 @@ export function canWriteAlertLevel(user: SessionUser): boolean {
 export function assertCanWriteAlertLevel(user: SessionUser): void {
   if (!canWriteAlertLevel(user)) {
     throw new ForbiddenError("Not authorized to change the Alert Level Status");
+  }
+}
+
+/**
+ * Component Command's own SITREP (see ComponentSitRep in schema.prisma)
+ * is standalone, not JTF-scoped, and single-component: an Air Component
+ * account only ever files Air reports, a Naval one only Naval (see
+ * User.component). Requiring component to be set (not just the role)
+ * means ADMIN can't write through this path — there's no "which
+ * component" context for an account that isn't actually assigned one,
+ * unlike this app's usual all-access convention elsewhere. There is no
+ * read-scoping function the way JTF data has scopeJtfFilter, since every
+ * ComponentSitRep already belongs to a single account and command-wide
+ * viewers don't currently have a reason to browse it.
+ */
+export function canWriteComponentSitRep(user: SessionUser): boolean {
+  return user.role === "COMPONENT_COMMAND" && user.component !== null;
+}
+
+export function assertCanWriteComponentSitRep(user: SessionUser): void {
+  if (!canWriteComponentSitRep(user)) {
+    throw new ForbiddenError("Not authorized to log a Component SITREP");
   }
 }
 

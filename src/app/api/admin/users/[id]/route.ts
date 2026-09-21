@@ -15,6 +15,7 @@ const roleSchema = z.enum([
   "BRIGADE_STAFF",
   "VIEWER",
   "WFC_STAFF",
+  "COMPONENT_COMMAND",
 ]);
 
 const warfightingFunctionSchema = z.enum([
@@ -27,11 +28,14 @@ const warfightingFunctionSchema = z.enum([
   "CMO",
 ]);
 
+const componentSchema = z.enum(["AIR", "NAVAL"]);
+
 const updateUserSchema = z.object({
   name: z.string().min(1).optional(),
   role: roleSchema.optional(),
   jtfId: z.string().nullable().optional(),
   warfightingFunction: warfightingFunctionSchema.nullable().optional(),
+  component: componentSchema.nullable().optional(),
   password: z.string().min(8).optional(),
   maxDevices: z.number().int().positive().nullable().optional(),
 });
@@ -61,6 +65,7 @@ export async function PATCH(
             role: true,
             jtfId: true,
             warfightingFunction: true,
+            component: true,
             maxDevices: true,
           },
         }),

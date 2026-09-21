@@ -11,10 +11,20 @@ const taskGroupUnitSchema = z.object({
   strength: z.number().int().nonnegative(),
 });
 
+const assetCountSchema = z.number().int().nonnegative().default(0);
+
 const taskGroupSchema = z.object({
   name: z.string().trim().min(1).max(120),
   units: z.array(taskGroupUnitSchema).default([]),
   criticalAssets: z.array(z.string().trim().min(1).max(120)).default([]),
+  wavCount: assetCountSchema,
+  wavUnserviceable: assetCountSchema,
+  tavCount: assetCountSchema,
+  tavUnserviceable: assetCountSchema,
+  artilleryCount: assetCountSchema,
+  artilleryUnserviceable: assetCountSchema,
+  navalCount: assetCountSchema,
+  navalUnserviceable: assetCountSchema,
 });
 
 const checkpointOpSchema = z.object({
@@ -92,6 +102,14 @@ export async function POST(request: NextRequest) {
                 name: tg.name,
                 units: { create: tg.units },
                 criticalAssets: { create: tg.criticalAssets.map((unitName) => ({ unitName })) },
+                wavCount: tg.wavCount,
+                wavUnserviceable: tg.wavUnserviceable,
+                tavCount: tg.tavCount,
+                tavUnserviceable: tg.tavUnserviceable,
+                artilleryCount: tg.artilleryCount,
+                artilleryUnserviceable: tg.artilleryUnserviceable,
+                navalCount: tg.navalCount,
+                navalUnserviceable: tg.navalUnserviceable,
               })),
             },
             checkpointBreakdown: { create: body.checkpointBreakdown },

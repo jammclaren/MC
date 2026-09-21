@@ -15,6 +15,7 @@ const roleSchema = z.enum([
   "BRIGADE_STAFF",
   "VIEWER",
   "WFC_STAFF",
+  "COMPONENT_COMMAND",
 ]);
 
 const warfightingFunctionSchema = z.enum([
@@ -27,6 +28,8 @@ const warfightingFunctionSchema = z.enum([
   "CMO",
 ]);
 
+const componentSchema = z.enum(["AIR", "NAVAL"]);
+
 const createUserSchema = z
   .object({
     name: z.string().min(1),
@@ -35,6 +38,7 @@ const createUserSchema = z
     role: roleSchema,
     jtfId: z.string().optional(),
     warfightingFunction: warfightingFunctionSchema.optional(),
+    component: componentSchema.optional(),
     maxDevices: z.number().int().positive().nullable().optional(),
   })
   .refine(
@@ -42,6 +46,7 @@ const createUserSchema = z
       data.role === "ADMIN" ||
       data.role === "COMMAND" ||
       data.role === "WFC_STAFF" ||
+      data.role === "COMPONENT_COMMAND" || // standalone, never tied to a JTF
       data.role === "VIEWER" || // VIEWER may be command-wide (no jtfId) or scoped to one
       !!data.jtfId,
     {
@@ -52,6 +57,10 @@ const createUserSchema = z
   .refine((data) => data.role !== "WFC_STAFF" || !!data.warfightingFunction, {
     message: "warfightingFunction is required for WFC_STAFF",
     path: ["warfightingFunction"],
+  })
+  .refine((data) => data.role !== "COMPONENT_COMMAND" || !!data.component, {
+    message: "component is required for COMPONENT_COMMAND",
+    path: ["component"],
   });
 
 export async function GET() {
@@ -68,6 +77,7 @@ export async function GET() {
         jtfId: true,
         jtf: { select: { name: true } },
         warfightingFunction: true,
+        component: true,
         createdAt: true,
         maxDevices: true,
       },
@@ -97,6 +107,7 @@ export async function POST(request: NextRequest) {
             role: body.role,
             jtfId: body.jtfId,
             warfightingFunction: body.warfightingFunction,
+            component: body.component,
             maxDevices: body.maxDevices,
           },
           select: {
@@ -106,6 +117,7 @@ export async function POST(request: NextRequest) {
             role: true,
             jtfId: true,
             warfightingFunction: true,
+            component: true,
             maxDevices: true,
           },
         }),
@@ -120,6 +132,7 @@ export async function POST(request: NextRequest) {
           role: body.role,
           jtfId: body.jtfId,
           warfightingFunction: body.warfightingFunction,
+          component: body.component,
           maxDevices: body.maxDevices,
         },
       }

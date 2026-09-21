@@ -2,7 +2,8 @@ import { redirect, notFound } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { getSitRepData } from "@/lib/queries/sitreps";
-import { canAccessPage, canWriteDeployment } from "@/lib/rbac";
+import { listComponentSitReps } from "@/lib/queries/component-sitreps";
+import { canAccessPage, canWriteComponentSitRep, canWriteDeployment } from "@/lib/rbac";
 import {
   Card,
   CardContent,
@@ -10,20 +11,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { StatTile } from "@/components/stat-tile";
-import { Users, Crosshair, ShieldAlert } from "lucide-react";
+import { criticalAssetsStatus } from "@/lib/critical-assets-status";
+import { Users, Crosshair, ShieldAlert, Truck, Shield, Rocket, Ship } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SitRepFormDialog } from "@/components/sitrep-form-dialog";
 import { SitRepAccordion } from "@/components/sitrep-accordion";
+import { UnitBreakdownAccordion } from "@/components/unit-breakdown-accordion";
 import { SitRepBarChart } from "@/components/charts/sitrep-bar-chart";
+import { ComponentSitRepFormDialog } from "@/components/component-sitrep-form-dialog";
+import { ComponentSitRepLog } from "@/components/component-sitrep-log";
 import { NavCollapseToggle } from "@/components/nav-collapse-toggle";
 
 export default async function DailySitRepPage({
@@ -37,6 +34,45 @@ export default async function DailySitRepPage({
   }
   if (!canAccessPage(user, "deployment")) {
     notFound();
+  }
+
+  // COMPONENT_COMMAND accounts aren't JTF-scoped at all — they log their
+  // own Air/Naval SITREP here instead of the JTF Task Group one below.
+  if (user.role === "COMPONENT_COMMAND") {
+    const rows = await listComponentSitReps(user);
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <h1 className="font-display text-2xl font-bold tracking-wide uppercase">
+              Daily SITREP
+            </h1>
+            <NavCollapseToggle />
+          </div>
+          {canWriteComponentSitRep(user) && (
+            <ComponentSitRepFormDialog
+              component={user.component!}
+              trigger={<Button>Log SITREP</Button>}
+            />
+          )}
+        </div>
+
+        {!user.component && (
+          <p className="text-sm text-muted-foreground">
+            This account has no component (Air or Naval) assigned — contact an administrator.
+          </p>
+        )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle>SITREP Log</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ComponentSitRepLog rows={rows} />
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const { jtfId } = await searchParams;
@@ -58,6 +94,7 @@ export default async function DailySitRepPage({
     prisma.jTF.findMany({ orderBy: { name: "asc" } }),
   ]);
   const jtfOptions = jtfs.map((jtf) => ({ id: jtf.id, name: jtf.name }));
+  const criticalStatus = criticalAssetsStatus(data);
 
   return (
     <div className="flex flex-col gap-6">
@@ -136,15 +173,26 @@ export default async function DailySitRepPage({
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <StatTile label="Total Strength" value={data.totalStrength.toLocaleString()} icon={Users} />
           <StatTile
-            label="Critical Assets"
-            value={data.totalCriticalAssets.toLocaleString()}
+            label="Status of Critical Assets"
+            value={<span className="text-lg leading-tight">{criticalStatus.value}</span>}
             icon={ShieldAlert}
+            tone={criticalStatus.tone}
           />
           <StatTile
             label="Checkpoint Operations"
             value={data.totalCheckpointOps.toLocaleString()}
             icon={Crosshair}
           />
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <StatTile label="Number of WAVs" value={data.totalWav.toLocaleString()} icon={Truck} />
+          <StatTile label="Number of TAVs" value={data.totalTav.toLocaleString()} icon={Shield} />
+          <StatTile
+            label="Number of Artillery Assets"
+            value={data.totalArtillery.toLocaleString()}
+            icon={Rocket}
+          />
+          <StatTile label="Number of Naval Assets" value={data.totalNaval.toLocaleString()} icon={Ship} />
         </div>
       </div>
 
@@ -169,35 +217,7 @@ export default async function DailySitRepPage({
           <CardTitle>Unit Breakdown</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Unit</TableHead>
-                <TableHead>Task Group</TableHead>
-                <TableHead>JTF</TableHead>
-                <TableHead className="text-right">Strength</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.unitBreakdown.map((row, i) => (
-                <TableRow key={i}>
-                  <TableCell>{row.unitName}</TableCell>
-                  <TableCell>{row.taskGroupName}</TableCell>
-                  <TableCell>{row.jtfName}</TableCell>
-                  <TableCell className="text-right font-mono tabular-nums">
-                    {row.strength.toLocaleString()}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {data.unitBreakdown.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
-                    No units logged yet.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <UnitBreakdownAccordion rows={data.unitBreakdown} />
         </CardContent>
       </Card>
 

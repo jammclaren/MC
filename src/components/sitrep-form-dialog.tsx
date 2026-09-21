@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,22 @@ interface TaskGroupForm {
   name: string;
   units: TaskGroupUnitForm[];
   criticalAssets: string[];
+  wavCount: string;
+  wavUnserviceable: string;
+  tavCount: string;
+  tavUnserviceable: string;
+  artilleryCount: string;
+  artilleryUnserviceable: string;
+  navalCount: string;
+  navalUnserviceable: string;
 }
+
+const WAR_ASSET_FIELDS = [
+  { key: "wav", label: "WAVs" },
+  { key: "tav", label: "TAVs" },
+  { key: "artillery", label: "Artillery Assets" },
+  { key: "naval", label: "Naval Assets" },
+] as const;
 
 interface CheckpointOpForm {
   location: string;
@@ -49,6 +64,14 @@ const emptyTaskGroup = (): TaskGroupForm => ({
   name: "",
   units: [{ unitName: "", strength: "" }],
   criticalAssets: [""],
+  wavCount: "",
+  wavUnserviceable: "",
+  tavCount: "",
+  tavUnserviceable: "",
+  artilleryCount: "",
+  artilleryUnserviceable: "",
+  navalCount: "",
+  navalUnserviceable: "",
 });
 
 export function SitRepFormDialog({
@@ -188,6 +211,14 @@ export function SitRepFormDialog({
               .filter((u) => u.unitName.trim() !== "")
               .map((u) => ({ unitName: u.unitName.trim(), strength: Number(u.strength) || 0 })),
             criticalAssets: tg.criticalAssets.map((a) => a.trim()).filter((a) => a !== ""),
+            wavCount: Number(tg.wavCount) || 0,
+            wavUnserviceable: Number(tg.wavUnserviceable) || 0,
+            tavCount: Number(tg.tavCount) || 0,
+            tavUnserviceable: Number(tg.tavUnserviceable) || 0,
+            artilleryCount: Number(tg.artilleryCount) || 0,
+            artilleryUnserviceable: Number(tg.artilleryUnserviceable) || 0,
+            navalCount: Number(tg.navalCount) || 0,
+            navalUnserviceable: Number(tg.navalUnserviceable) || 0,
           })),
         checkpointOpsTotal: Number(checkpointOpsTotal) || 0,
         checkpointBreakdown: checkpointBreakdown
@@ -306,11 +337,11 @@ export function SitRepFormDialog({
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <Label className="text-xs text-muted-foreground">Critical Assets</Label>
+                    <Label className="text-xs text-muted-foreground">Status of Critical Assets</Label>
                     {tg.criticalAssets.map((asset, aIndex) => (
                       <div key={aIndex} className="flex items-center gap-2">
                         <Input
-                          placeholder="e.g. 6FAB"
+                          placeholder="e.g. Serviceable, or 6FAB unserviceable"
                           value={asset}
                           onChange={(e) => updateCriticalAsset(tgIndex, aIndex, e.target.value)}
                         />
@@ -324,6 +355,43 @@ export function SitRepFormDialog({
                     <Button type="button" variant="outline" size="sm" className="self-start" onClick={() => addCriticalAsset(tgIndex)}>
                       + Add Critical Asset
                     </Button>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <Label className="text-xs text-muted-foreground">War Assets</Label>
+                    <div className="grid grid-cols-[1fr_5rem_6rem] items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground">
+                      <span />
+                      <span>Total</span>
+                      <span>Unserviceable</span>
+                      {WAR_ASSET_FIELDS.map(({ key, label }) => (
+                        <Fragment key={key}>
+                          <Label htmlFor={`tg-${key}-${tgIndex}`} className="text-sm text-foreground">
+                            {label}
+                          </Label>
+                          <Input
+                            id={`tg-${key}-${tgIndex}`}
+                            type="number"
+                            min={0}
+                            className="h-8"
+                            value={tg[`${key}Count` as const]}
+                            onChange={(e) =>
+                              updateTaskGroup(tgIndex, { [`${key}Count`]: e.target.value } as Partial<TaskGroupForm>)
+                            }
+                          />
+                          <Input
+                            type="number"
+                            min={0}
+                            className="h-8"
+                            value={tg[`${key}Unserviceable` as const]}
+                            onChange={(e) =>
+                              updateTaskGroup(tgIndex, {
+                                [`${key}Unserviceable`]: e.target.value,
+                              } as Partial<TaskGroupForm>)
+                            }
+                          />
+                        </Fragment>
+                      ))}
+                    </div>
                   </div>
                 </div>
               ))}

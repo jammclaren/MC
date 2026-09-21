@@ -28,6 +28,7 @@ export interface UserRow {
   jtfId: string | null;
   jtfName: string | null;
   warfightingFunction: UserFormInitial["warfightingFunction"];
+  component: UserFormInitial["component"];
   createdAtLabel: string;
   deviceLoginCount: number;
   maxDevices: number | null;
@@ -37,7 +38,12 @@ const ALL_FUNCTIONS_VALUE = "__all__";
 const NONE_VALUE = "__none__";
 
 function functionLabel(row: UserRow): string {
-  return row.jtfName ?? row.warfightingFunction?.replaceAll("_", " ") ?? "—";
+  return (
+    row.jtfName ??
+    row.warfightingFunction?.replaceAll("_", " ") ??
+    (row.component ? `${row.component === "AIR" ? "Air" : "Naval"} Component` : null) ??
+    "—"
+  );
 }
 
 export function UsersTable({
@@ -134,6 +140,7 @@ export function UsersTable({
                       role: row.role,
                       jtfId: row.jtfId,
                       warfightingFunction: row.warfightingFunction,
+                      component: row.component,
                       maxDevices: row.maxDevices,
                     }}
                     trigger={

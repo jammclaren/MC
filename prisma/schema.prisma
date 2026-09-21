@@ -56,6 +56,10 @@ enum Role {
   // own JTF only), but a narrower nav/page surface: Overview, Monitored
   // Incidents, Election Status, Election Profile only — no Situation Map,
   // no Deployment. See canAccessPage in rbac.ts.
+  COMPONENT_COMMAND // Air/Naval component command — standalone, not tied
+  // to any JTF (unlike JTF_COMMANDER/JTF_STAFF/BRIGADE_STAFF). Logs its
+  // own Air/Naval SitRep instead of the JTF Task Group one; see
+  // ComponentSitRep and the Daily SITREP page's role branch.
 }
 
 // AFP/joint staff warfighting function cells (command-level, cut across
@@ -119,6 +123,9 @@ model User {
   jtfId               String?
   jtf                 JTF?                 @relation(fields: [jtfId], references: [id])
   warfightingFunction WarfightingFunction? // set for WFC_STAFF, null otherwise
+  component           ComponentType? // set for COMPONENT_COMMAND (which
+  // component it owns — AIR or NAVAL), null otherwise. Same "role plus
+  // one scoping field" shape as warfightingFunction/WFC_STAFF above.
   maxDevices          Int? // cap on concurrent (non-KICKED) UserDevice rows; null = unlimited
   createdAt           DateTime             @default(now())
   auditLogs           AuditLog[]
@@ -133,6 +140,8 @@ model User {
   sitReps             SitRep[]
   unitConditionUpdates UnitCondition[]
   alertLevelUpdates   AlertLevelStatus[]
+  componentSitReps    ComponentSitRep[]
+  cmoActivities       CmoActivity[]
 
   @@index([jtfId])
 }
@@ -348,6 +357,20 @@ model TaskGroup {
   name           String // e.g. "TG UNIFIER"
   units          TaskGroupUnit[]
   criticalAssets TaskGroupCriticalAsset[]
+
+  // War asset counts, one total + one unserviceable count per category —
+  // feeds Overview's WAV/TAV/Artillery/Naval Assets tiles (summed across
+  // a JTF's task groups) and the "Status of Critical Assets" tile (which
+  // reads only the *Unserviceable columns: "Serviceable" when all four
+  // are 0 across scope, otherwise the specifics, e.g. "5 WAV Unserviceable").
+  wavCount               Int @default(0)
+  wavUnserviceable       Int @default(0)
+  tavCount               Int @default(0)
+  tavUnserviceable       Int @default(0)
+  artilleryCount         Int @default(0)
+  artilleryUnserviceable Int @default(0)
+  navalCount             Int @default(0)
+  navalUnserviceable     Int @default(0)
 
   @@index([sitRepId])
 }
@@ -697,6 +720,41 @@ model SocialListeningActivity {
   @@index([reportId])
 }
 
+// --- CMO Workspace — WFC Civil-Military Operations (CMO) and ADMIN only,
+// see rbac.ts canAccessCmoWorkspace. CMO is the sole owner and sole
+// viewer (unlike Social Media Monitor/Intelligence Update, neither COMMAND
+// nor a command-wide VIEWER nor the other WFC_STAFF functions get any
+// visibility into it — confirmed with the user 2026-09-21).
+enum CmoActivityCategory {
+  PUBLIC_AFFAIRS
+  CIVIL_AFFAIRS
+  PSYOPS
+  IEC // Information Education Campaign
+}
+
+// A pinned CMO activity — same "entered as MGRS, converted to lat/lng at
+// write time" convention as IntelUpdate/Incident above (see lib/mgrs.ts).
+// "Most significant" per category (see cmo-activity-assessment.ts) is
+// simply the most recent one on file in that category — no severity split
+// like Intel Update's violent/non-violent, since a CMO activity doesn't
+// have an inherent severity axis.
+model CmoActivity {
+  id            String              @id @default(cuid())
+  category      CmoActivityCategory
+  title         String
+  narrative     String
+  locationLabel String
+  lat           Float
+  lng           Float
+  date          DateTime
+  createdById   String
+  createdBy     User                @relation(fields: [createdById], references: [id])
+  createdAt     DateTime            @default(now())
+
+  @@index([category])
+  @@index([date])
+}
+
 // --- Situation Report (SITREP) — WFC Intelligence (M2) and ADMIN only, see
 // rbac.ts canAccessSituationReport. One per calendar day: opening the page
 // with none on file for today auto-drafts one from on-file stats (see
@@ -714,4 +772,51 @@ model SituationReport {
   updatedAt       DateTime @updatedAt
 
   @@unique([date])
+}
+
+// --- Component Command SITREP — COMPONENT_COMMAND accounts (Air/Naval),
+// standalone and not JTF-scoped (see Role.COMPONENT_COMMAND). Structurally
+// different from the JTF SitRep/TaskGroup shape: units are just
+// name+strength grouped by component, and each component also has an
+// asset-type breakdown (e.g. "S70i" x5) rather than a named critical-asset
+// list. "Total Air/Naval Assets" shown in the UI is derived by summing
+// that component's asset rows, not stored separately, so it can't drift.
+enum ComponentType {
+  AIR
+  NAVAL
+}
+
+model ComponentSitRep {
+  id          String                 @id @default(cuid())
+  createdById String
+  createdBy   User                   @relation(fields: [createdById], references: [id])
+  // Always the reporting account's own User.component — an Air Component
+  // account only ever files Air reports, a Naval one only Naval, so this
+  // is set server-side from the session, never taken from request input.
+  component   ComponentType
+  reportedAt  DateTime               @default(now())
+  units       ComponentSitRepUnit[]
+  assets      ComponentSitRepAsset[]
+
+  @@index([createdById])
+}
+
+model ComponentSitRepUnit {
+  id                String          @id @default(cuid())
+  componentSitRepId String
+  componentSitRep   ComponentSitRep @relation(fields: [componentSitRepId], references: [id], onDelete: Cascade)
+  unitName          String
+  strength          Int             @default(0)
+
+  @@index([componentSitRepId])
+}
+
+model ComponentSitRepAsset {
+  id                String          @id @default(cuid())
+  componentSitRepId String
+  componentSitRep   ComponentSitRep @relation(fields: [componentSitRepId], references: [id], onDelete: Cascade)
+  assetName         String
+  number            Int             @default(0)
+
+  @@index([componentSitRepId])
 }

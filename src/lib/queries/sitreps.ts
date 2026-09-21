@@ -8,6 +8,14 @@ export interface JtfSitRepSummary {
   taskGroupCount: number;
   criticalAssetCount: number;
   checkpointOpsTotal: number;
+  wavTotal: number;
+  wavUnserviceable: number;
+  tavTotal: number;
+  tavUnserviceable: number;
+  artilleryTotal: number;
+  artilleryUnserviceable: number;
+  navalTotal: number;
+  navalUnserviceable: number;
 }
 
 /** DISPOLOC broken down by Task Group instead of by JTF — for a JTF
@@ -60,6 +68,14 @@ export interface SitRepData {
   totalStrength: number;
   totalCriticalAssets: number;
   totalCheckpointOps: number;
+  totalWav: number;
+  totalWavUnserviceable: number;
+  totalTav: number;
+  totalTavUnserviceable: number;
+  totalArtillery: number;
+  totalArtilleryUnserviceable: number;
+  totalNaval: number;
+  totalNavalUnserviceable: number;
   unitBreakdown: UnitBreakdownRow[];
   rows: SitRepRow[];
 }
@@ -133,6 +149,14 @@ export async function getSitRepData(
       taskGroupCount: taskGroups.length,
       criticalAssetCount: taskGroups.reduce((sum, tg) => sum + tg.criticalAssets.length, 0),
       checkpointOpsTotal: jtfSitReps.reduce((sum, s) => sum + s.checkpointOpsTotal, 0),
+      wavTotal: taskGroups.reduce((sum, tg) => sum + tg.wavCount, 0),
+      wavUnserviceable: taskGroups.reduce((sum, tg) => sum + tg.wavUnserviceable, 0),
+      tavTotal: taskGroups.reduce((sum, tg) => sum + tg.tavCount, 0),
+      tavUnserviceable: taskGroups.reduce((sum, tg) => sum + tg.tavUnserviceable, 0),
+      artilleryTotal: taskGroups.reduce((sum, tg) => sum + tg.artilleryCount, 0),
+      artilleryUnserviceable: taskGroups.reduce((sum, tg) => sum + tg.artilleryUnserviceable, 0),
+      navalTotal: taskGroups.reduce((sum, tg) => sum + tg.navalCount, 0),
+      navalUnserviceable: taskGroups.reduce((sum, tg) => sum + tg.navalUnserviceable, 0),
     };
   });
 
@@ -183,6 +207,14 @@ export async function getSitRepData(
     totalStrength: jtfCards.reduce((sum, c) => sum + c.totalStrength, 0),
     totalCriticalAssets: jtfCards.reduce((sum, c) => sum + c.criticalAssetCount, 0),
     totalCheckpointOps: jtfCards.reduce((sum, c) => sum + c.checkpointOpsTotal, 0),
+    totalWav: jtfCards.reduce((sum, c) => sum + c.wavTotal, 0),
+    totalWavUnserviceable: jtfCards.reduce((sum, c) => sum + c.wavUnserviceable, 0),
+    totalTav: jtfCards.reduce((sum, c) => sum + c.tavTotal, 0),
+    totalTavUnserviceable: jtfCards.reduce((sum, c) => sum + c.tavUnserviceable, 0),
+    totalArtillery: jtfCards.reduce((sum, c) => sum + c.artilleryTotal, 0),
+    totalArtilleryUnserviceable: jtfCards.reduce((sum, c) => sum + c.artilleryUnserviceable, 0),
+    totalNaval: jtfCards.reduce((sum, c) => sum + c.navalTotal, 0),
+    totalNavalUnserviceable: jtfCards.reduce((sum, c) => sum + c.navalUnserviceable, 0),
     unitBreakdown,
     rows,
   };

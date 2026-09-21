@@ -30,6 +30,7 @@ const ROLES = [
   "BRIGADE_STAFF",
   "VIEWER",
   "WFC_STAFF",
+  "COMPONENT_COMMAND",
 ] as const;
 type Role = (typeof ROLES)[number];
 
@@ -56,6 +57,13 @@ const WFC_LABELS: Record<WarfightingFunction, string> = {
   CMO: "Civil-Military Operations",
 };
 
+const COMPONENTS = ["AIR", "NAVAL"] as const;
+type ComponentType = (typeof COMPONENTS)[number];
+const COMPONENT_LABELS: Record<ComponentType, string> = {
+  AIR: "Air",
+  NAVAL: "Naval",
+};
+
 export interface JtfOption {
   id: string;
   name: string;
@@ -67,6 +75,7 @@ export interface UserFormInitial {
   role: Role;
   jtfId: string | null;
   warfightingFunction: WarfightingFunction | null;
+  component: ComponentType | null;
   maxDevices: number | null;
 }
 
@@ -93,6 +102,7 @@ export function UserFormDialog({
   const [warfightingFunction, setWarfightingFunction] = useState<WarfightingFunction | "">(
     initial?.warfightingFunction ?? ""
   );
+  const [component, setComponent] = useState<ComponentType | "">(initial?.component ?? "");
   const [maxDevices, setMaxDevices] = useState<string>(
     initial?.maxDevices != null ? String(initial.maxDevices) : ""
   );
@@ -106,6 +116,7 @@ export function UserFormDialog({
     role === "JTF_COMMANDER" || role === "JTF_STAFF" || role === "BRIGADE_STAFF" || role === "VIEWER";
   const requireJtf = showJtf && role !== "VIEWER";
   const needsWfc = role === "WFC_STAFF";
+  const needsComponent = role === "COMPONENT_COMMAND";
   // Lets each <Select>'s trigger show a real label instead of the raw
   // value — Base UI's Select.Value only resolves a label automatically
   // when the Root is given this `items` list.
@@ -121,6 +132,10 @@ export function UserFormDialog({
     () => WARFIGHTING_FUNCTIONS.map((fn) => ({ value: fn, label: WFC_LABELS[fn] })),
     []
   );
+  const componentItems = useMemo(
+    () => COMPONENTS.map((c) => ({ value: c, label: COMPONENT_LABELS[c] })),
+    []
+  );
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -130,6 +145,10 @@ export function UserFormDialog({
     }
     if (needsWfc && !warfightingFunction) {
       toast.error("Select a warfighting function for this role");
+      return;
+    }
+    if (needsComponent && !component) {
+      toast.error("Select a component (Air or Naval) for this role");
       return;
     }
     setSubmitting(true);
@@ -144,6 +163,7 @@ export function UserFormDialog({
             role,
             jtfId: resolvedJtfId,
             warfightingFunction: needsWfc ? warfightingFunction : null,
+            component: needsComponent ? component : null,
             maxDevices: resolvedMaxDevices,
             ...(password ? { password } : {}),
           }
@@ -154,6 +174,7 @@ export function UserFormDialog({
             role,
             jtfId: resolvedJtfId ?? undefined,
             warfightingFunction: needsWfc ? warfightingFunction : undefined,
+            component: needsComponent ? component : undefined,
             maxDevices: resolvedMaxDevices,
           };
 
@@ -277,6 +298,27 @@ export function UserFormDialog({
                     {WARFIGHTING_FUNCTIONS.map((fn) => (
                       <SelectItem key={fn} value={fn}>
                         {WFC_LABELS[fn]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {needsComponent && (
+              <div className="flex flex-col gap-2">
+                <Label>Component</Label>
+                <Select
+                  items={componentItems}
+                  value={component}
+                  onValueChange={(v: string | null) => setComponent((v as ComponentType) ?? "")}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select component" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COMPONENTS.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {COMPONENT_LABELS[c]}
                       </SelectItem>
                     ))}
                   </SelectContent>
