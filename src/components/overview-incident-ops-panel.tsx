@@ -7,12 +7,11 @@ import { StatTile } from "@/components/stat-tile";
 import { CapsuleBarChart } from "@/components/charts/capsule-bar-chart";
 import { IncidentsByDayChart, type IncidentsByDayDatum } from "@/components/charts/incidents-by-day-chart";
 import { TopIncidentTypesChart } from "@/components/charts/top-incident-types-chart";
-import { SeverityMixChart } from "@/components/charts/severity-mix-chart";
 import { OverviewIncidentMapLoader } from "@/components/overview-incident-map-loader";
 import { isViolentIncidentType } from "@/lib/incident-classification";
 import type { IncidentMarker } from "@/lib/queries/incident-markers";
 import { buttonVariants } from "@/components/ui/button";
-import { AlertTriangle, Maximize2 } from "lucide-react";
+import { AlertTriangle, Maximize2, TriangleAlert } from "lucide-react";
 
 const TOP_TYPES_LIMIT = 5;
 const LAST_24H_MS = 24 * 60 * 60 * 1000;
@@ -21,6 +20,7 @@ export function OverviewIncidentOpsPanel({
   markers,
   incidentsByDay,
   now,
+  recentIncidentCount30d,
   canAccessSituationMap = true,
 }: {
   markers: IncidentMarker[];
@@ -28,6 +28,10 @@ export function OverviewIncidentOpsPanel({
   /** Request-time timestamp (ms), computed server-side and passed down so
    * the "last 24h" calculation stays a pure function of props. */
   now: number;
+  /** Command-wide 30-day incident count — computed alongside the rest of
+   * Overview's data (see getOverviewData), not derivable from `markers`
+   * alone since those are strictly JTF-scoped (see getIncidentMarkers). */
+  recentIncidentCount30d: number;
   /** BRIGADE_STAFF has no access to /priority-map at all (see rbac.ts
    * canAccessPage) — the nav already hides that link, but this card's own
    * shortcut needs the same guard or it'd be a stray way in. */
@@ -38,7 +42,6 @@ export function OverviewIncidentOpsPanel({
     const last24h = markers.filter(
       (m) => now - new Date(m.createdAt).getTime() <= LAST_24H_MS
     );
-    const violent = markers.filter((m) => isViolentIncidentType(m.type));
 
     const byJtf = new Map<string, number>();
     const byType = new Map<string, number>();
@@ -67,10 +70,6 @@ export function OverviewIncidentOpsPanel({
       jtfChartData,
       topTypes,
       mostRecent,
-      severitySegments: [
-        { label: "Armed / Violent Type", count: violent.length, color: "var(--chart-1)" },
-        { label: "Other", count: total - violent.length, color: "var(--chart-5)" },
-      ],
     };
   }, [markers, now]);
 
@@ -92,10 +91,6 @@ export function OverviewIncidentOpsPanel({
       <CardContent>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)]">
           <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-3">
-              <StatTile label="Incidents Plotted" value={stats.total.toLocaleString()} />
-              <StatTile label="Logged (24h)" value={stats.last24hCount.toLocaleString()} />
-            </div>
             <div className="flex min-h-0 flex-1 flex-col">
               <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
                 Incidents by JTF
@@ -160,11 +155,15 @@ export function OverviewIncidentOpsPanel({
               </h3>
               <TopIncidentTypesChart data={stats.topTypes} total={stats.total} />
             </div>
-            <div>
-              <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-                Severity Mix
-              </h3>
-              <SeverityMixChart total={stats.total} segments={stats.severitySegments} />
+            <div className="flex flex-col gap-3">
+              <StatTile label="Incidents Plotted" value={stats.total.toLocaleString()} />
+              <StatTile label="Logged (24h)" value={stats.last24hCount.toLocaleString()} />
+              <StatTile
+                label="Incidents (30d)"
+                value={recentIncidentCount30d.toLocaleString()}
+                icon={TriangleAlert}
+                tone={recentIncidentCount30d > 0 ? "warning" : "default"}
+              />
             </div>
           </div>
         </div>

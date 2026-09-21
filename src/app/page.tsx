@@ -5,16 +5,6 @@ import { getIncidentMarkers } from "@/lib/queries/incident-markers";
 import { listJtfAssessments } from "@/lib/queries/jtf-assessments";
 import { canAccessPage, canWriteAlertLevel, canWriteJtf } from "@/lib/rbac";
 import { nowMs } from "@/lib/time";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { SitRepCapsuleChart } from "@/components/charts/sitrep-capsule-chart";
 import { StatTile } from "@/components/stat-tile";
 import { DailyAssessmentPanel } from "@/components/daily-assessment-panel";
 import { JtfAssessmentCard } from "@/components/jtf-assessment-card";
@@ -24,7 +14,8 @@ import { AlertLevelTile } from "@/components/alert-level-tile";
 import { NavCollapseToggle } from "@/components/nav-collapse-toggle";
 import { listUnitConditions } from "@/lib/queries/unit-conditions";
 import { getAlertLevelStatus } from "@/lib/queries/alert-level";
-import { Users, ShieldAlert, TriangleAlert, Crosshair } from "lucide-react";
+import { criticalAssetsStatus } from "@/lib/critical-assets-status";
+import { Users, ShieldAlert, Crosshair, Truck, Shield, Rocket, Ship } from "lucide-react";
 
 export default async function OverviewPage() {
   const user = await getSessionUser();
@@ -41,143 +32,56 @@ export default async function OverviewPage() {
   ]);
   const now = nowMs();
   const canSubmitAssessment = !!user.jtfId && canWriteJtf(user, user.jtfId);
+  const criticalStatus = criticalAssetsStatus(data);
 
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center gap-3">
-        <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Overview</h1>
+        <h1 className="font-display text-2xl font-bold tracking-wide uppercase">Command Overview</h1>
         <NavCollapseToggle />
       </div>
 
       <UnitConditionSummary groups={unitConditions} viewerJtfId={user.jtfId} />
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <AlertLevelTile
           level={alertLevel.level}
           updatedByName={alertLevel.updatedByName}
           updatedAt={alertLevel.updatedAt?.toISOString() ?? null}
           canWrite={canWriteAlertLevel(user)}
         />
-        <StatTile label="Total Strength" value={data.totalStrength.toLocaleString()} icon={Users} />
         <StatTile
-          label="Critical Assets"
-          value={data.totalCriticalAssets.toLocaleString()}
+          label="Status of Critical Assets"
+          value={<span className="text-lg leading-tight">{criticalStatus.value}</span>}
           icon={ShieldAlert}
+          tone={criticalStatus.tone}
         />
+        <StatTile label="Total Strength" value={data.totalStrength.toLocaleString()} icon={Users} />
         <StatTile
           label="Checkpoint Operations"
           value={data.totalCheckpointOps.toLocaleString()}
           icon={Crosshair}
         />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <StatTile label="Number of WAVs" value={data.totalWav.toLocaleString()} icon={Truck} />
+        <StatTile label="Number of TAVs" value={data.totalTav.toLocaleString()} icon={Shield} />
         <StatTile
-          label="Incidents (30d)"
-          value={data.recentIncidentCount30d.toLocaleString()}
-          icon={TriangleAlert}
-          tone={data.recentIncidentCount30d > 0 ? "warning" : "default"}
+          label="Number of Artillery Assets"
+          value={data.totalArtillery.toLocaleString()}
+          icon={Rocket}
         />
+        <StatTile label="Number of Naval Assets" value={data.totalNaval.toLocaleString()} icon={Ship} />
       </div>
 
       <OverviewIncidentOpsPanel
         markers={incidentMarkers}
         incidentsByDay={data.incidentsByDay}
         now={now}
+        recentIncidentCount30d={data.recentIncidentCount30d}
         canAccessSituationMap={canAccessPage(user, "situation-map")}
       />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>DISPOLOC</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-6">
-          {user.jtfId ? (
-            <>
-              <SitRepCapsuleChart
-                showCheckpointOps={false}
-                data={data.taskGroupSitReps
-                  .filter((row) => row.jtfId === user.jtfId)
-                  .map((row) => ({
-                    label: row.taskGroupName,
-                    totalStrength: row.totalStrength,
-                    criticalAssetCount: row.criticalAssetCount,
-                  }))}
-              />
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Task Group</TableHead>
-                    <TableHead className="text-right">Total Strength</TableHead>
-                    <TableHead className="text-right">Critical Assets</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.taskGroupSitReps
-                    .filter((row) => row.jtfId === user.jtfId)
-                    .map((row) => (
-                      <TableRow key={row.taskGroupName}>
-                        <TableCell>{row.taskGroupName}</TableCell>
-                        <TableCell className="text-right">
-                          {row.totalStrength.toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {row.criticalAssetCount.toLocaleString()}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  {data.taskGroupSitReps.filter((row) => row.jtfId === user.jtfId).length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={3} className="text-center text-muted-foreground">
-                        No SITREP data yet.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </>
-          ) : (
-            <>
-              <SitRepCapsuleChart
-                data={data.jtfSitReps.map((row) => ({
-                  label: row.jtfName,
-                  totalStrength: row.totalStrength,
-                  criticalAssetCount: row.criticalAssetCount,
-                  checkpointOpsTotal: row.checkpointOpsTotal,
-                }))}
-              />
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>JTF</TableHead>
-                    <TableHead className="text-right">Total Strength</TableHead>
-                    <TableHead className="text-right">Critical Assets</TableHead>
-                    <TableHead className="text-right">Checkpoint Ops</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.jtfSitReps.map((row) => (
-                    <TableRow key={row.jtfId}>
-                      <TableCell>{row.jtfName}</TableCell>
-                      <TableCell className="text-right">{row.totalStrength.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">
-                        {row.criticalAssetCount.toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {row.checkpointOpsTotal.toLocaleString()}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {data.jtfSitReps.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground">
-                        No SITREP data yet.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </>
-          )}
-        </CardContent>
-      </Card>
 
       <JtfAssessmentCard assessments={jtfAssessments} canSubmit={canSubmitAssessment} />
 
