@@ -4,11 +4,13 @@ import { canAccessCmoWorkspace, canWriteCmoActivity } from "@/lib/rbac";
 import { listCmoActivities } from "@/lib/queries/cmo-activities";
 import { computeCmoActivityAssessment, CMO_CATEGORY_LABELS } from "@/lib/cmo-activity-assessment";
 import type { CmoActivityCategory, CmoActivityRow } from "@/lib/queries/cmo-activities";
+import { getSipsDeclarationCount } from "@/lib/queries/sips-declaration-count";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatTile } from "@/components/stat-tile";
 import { Button } from "@/components/ui/button";
 import { CmoActivityFormDialog } from "@/components/cmo-activity-form-dialog";
 import { CmoActivityMapLoader } from "@/components/cmo-activity-map-loader";
+import { SipsDeclarationCountTile } from "@/components/sips-declaration-count-tile";
 import { NavCollapseToggle } from "@/components/nav-collapse-toggle";
 import { Megaphone, HeartHandshake, Brain, GraduationCap } from "lucide-react";
 
@@ -37,7 +39,10 @@ export default async function CmoWorkspacePage() {
 
   // Already sorted by date desc (see listCmoActivities), so the first match
   // per category is that category's most recent — i.e. most significant.
-  const rows = await listCmoActivities(user);
+  const [rows, sipsCount] = await Promise.all([
+    listCmoActivities(user),
+    getSipsDeclarationCount(),
+  ]);
   const assessment = computeCmoActivityAssessment(rows);
 
   const countsByCategory = new Map<CmoActivityCategory, number>();
@@ -52,12 +57,10 @@ export default async function CmoWorkspacePage() {
           <h1 className="font-display text-2xl font-bold tracking-wide uppercase">CMO Workspace</h1>
           <NavCollapseToggle />
         </div>
-        {canWrite && (
-          <CmoActivityFormDialog trigger={<Button>Log Activity</Button>} />
-        )}
+        {canWrite && <CmoActivityFormDialog trigger={<Button>Log Activity</Button>} />}
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
         {CATEGORY_ORDER.map((cat) => (
           <StatTile
             key={cat}
@@ -66,6 +69,13 @@ export default async function CmoWorkspacePage() {
             icon={CATEGORY_ICONS[cat]}
           />
         ))}
+        <SipsDeclarationCountTile
+          municipalCount={sipsCount.municipalCount}
+          provinceCount={sipsCount.provinceCount}
+          updatedByName={sipsCount.updatedByName}
+          updatedAt={sipsCount.updatedAt}
+          canWrite={canWrite}
+        />
       </div>
 
       <Card className="border-primary/30">

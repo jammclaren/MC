@@ -142,6 +142,7 @@ model User {
   alertLevelUpdates   AlertLevelStatus[]
   componentSitReps    ComponentSitRep[]
   cmoActivities       CmoActivity[]
+  sipsDeclarationCounts SipsDeclarationCount[]
 
   @@index([jtfId])
 }
@@ -753,6 +754,19 @@ model CmoActivity {
 
   @@index([category])
   @@index([date])
+}
+
+// Manually-entered current count of Cities/Municipalities and Provinces
+// that have declared SIPS — a CMO-maintained figure, not derived from any
+// other log. Single current-state row, same "one row, upserted in place"
+// shape as AlertLevelStatus (see lib/queries/sips-declaration-count.ts).
+model SipsDeclarationCount {
+  id             String   @id
+  municipalCount Int      @default(0)
+  provinceCount  Int      @default(0)
+  updatedById    String
+  updatedBy      User     @relation(fields: [updatedById], references: [id])
+  updatedAt      DateTime @updatedAt
 }
 
 // --- Situation Report (SITREP) — WFC Intelligence (M2) and ADMIN only, see
