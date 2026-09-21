@@ -25,6 +25,7 @@ import { IntelOverallAssessmentList } from "@/components/intel-overall-assessmen
 import { IntelUpdatesPanel } from "@/components/intel-updates-panel";
 import { IntelMeeFormDialog } from "@/components/intel-mee-form-dialog";
 import { IntelMeeCards } from "@/components/intel-mee-cards";
+import { IntelUpdateMapLoader } from "@/components/intel-update-map-loader";
 import type { IntelUpdateRow } from "@/lib/queries/intel-updates";
 import { truncateLabel } from "@/lib/text";
 import { FileWarning, ShieldAlert, Radar, CalendarClock } from "lucide-react";
@@ -143,6 +144,19 @@ export default async function IntelUpdatePage() {
     rows.map((r) => r.politicalParty).filter((v): v is string => !!v?.trim()),
     7
   );
+  // Combined across both categories — the map panel's own "at a glance"
+  // ranking, distinct from the dedicated Non-Violent/Violent Activities
+  // charts further down which split by category.
+  const topActivityTypes = topCounts(
+    rows.map((r) => r.activityType),
+    5
+  );
+  // Violent activity outranks non-violent for "most significant" regardless
+  // of recency — same severity-first convention computeIntelAssessment
+  // already uses for its own "most recent violent activity" line. Falls
+  // back to the latest report overall only when no violent activity is on
+  // file at all, rather than showing nothing.
+  const mostSignificant = violent[0] ?? rows[0] ?? null;
   const topNonViolentActivities = topCounts(
     nonViolent.map((r) => r.activityType),
     5
@@ -171,7 +185,7 @@ export default async function IntelUpdatePage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           <h1 className="font-display text-2xl font-bold tracking-wide uppercase">
-            Intelligence Update
+            Intelligence Workspace
           </h1>
           <NavCollapseToggle />
         </div>
@@ -200,47 +214,110 @@ export default async function IntelUpdatePage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Violent vs Non-Violent</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <SeverityMixChart
-              total={rows.length}
-              segments={[
-                { label: "Violent", count: violent.length, color: "var(--status-critical)" },
-                { label: "Non-Violent", count: nonViolent.length, color: "var(--status-warning)" },
-              ]}
-            />
-          </CardContent>
-        </Card>
+      <Card className="border-primary/30">
+        <CardHeader>
+          <CardTitle className="text-xl">Intel Activity Map</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)]">
+            <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-2 gap-3">
+                <StatTile
+                  label="Reports Today"
+                  value={recent24h.length.toLocaleString()}
+                  icon={Radar}
+                />
+                <StatTile
+                  label="Reports (30d)"
+                  value={recent30d.length.toLocaleString()}
+                  icon={CalendarClock}
+                />
+                <StatTile
+                  label="Violent"
+                  value={violent.length.toLocaleString()}
+                  icon={ShieldAlert}
+                  tone={violent.length > 0 ? "critical" : "good"}
+                />
+                <StatTile
+                  label="Non-Violent"
+                  value={nonViolent.length.toLocaleString()}
+                  icon={FileWarning}
+                  tone={nonViolent.length > 0 ? "warning" : "default"}
+                />
+              </div>
+              <div className="flex min-h-0 flex-1 flex-col">
+                <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+                  Non-Violent Activity Trend
+                </h3>
+                <div className="min-h-[140px] flex-1">
+                  <ActivityTrendChart
+                    data={nonViolentActivityTrend}
+                    activityLabels={nonViolentActivityLabels}
+                  />
+                </div>
+              </div>
+              <div className="flex min-h-0 flex-1 flex-col">
+                <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+                  Violent Activity Trend
+                </h3>
+                <div className="min-h-[140px] flex-1">
+                  <ActivityTrendChart data={violentActivityTrend} activityLabels={violentActivityLabels} />
+                </div>
+              </div>
+            </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <StatTile
-            label="Total Reports for the Day (2200H-2200H)"
-            value={recent24h.length.toLocaleString()}
-            icon={Radar}
-          />
-          <StatTile
-            label="Reports (30d)"
-            value={recent30d.length.toLocaleString()}
-            icon={CalendarClock}
-          />
-          <StatTile
-            label="Violent"
-            value={violent.length.toLocaleString()}
-            icon={ShieldAlert}
-            tone={violent.length > 0 ? "critical" : "good"}
-          />
-          <StatTile
-            label="Non-Violent"
-            value={nonViolent.length.toLocaleString()}
-            icon={FileWarning}
-            tone={nonViolent.length > 0 ? "warning" : "default"}
-          />
-        </div>
-      </div>
+            <div className="flex flex-col gap-4">
+              <div className="relative min-h-[400px] flex-1">
+                <IntelUpdateMapLoader rows={rows} />
+              </div>
+              <div className="rounded-md border border-border p-3">
+                <h3 className="mb-1 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+                  Most Significant Activity
+                </h3>
+                {mostSignificant ? (
+                  <p className="text-sm">
+                    <span
+                      className="line-clamp-2 font-medium"
+                      title={mostSignificant.activityType ?? undefined}
+                    >
+                      {mostSignificant.activityType ?? mostSignificant.category}
+                    </span>
+                    {mostSignificant.locationLabel ? ` — ${mostSignificant.locationLabel}` : ""}
+                    <br />
+                    <span className="text-muted-foreground">
+                      {mostSignificant.category === "VIOLENT" ? "Violent" : "Non-Violent"} ·{" "}
+                      {mostSignificant.province} · {new Date(mostSignificant.date).toLocaleDateString()}
+                    </span>
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No plotted reports yet.</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <div>
+                <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+                  Violent vs Non-Violent
+                </h3>
+                <SeverityMixChart
+                  total={rows.length}
+                  segments={[
+                    { label: "Violent", count: violent.length, color: "var(--status-critical)" },
+                    { label: "Non-Violent", count: nonViolent.length, color: "var(--status-warning)" },
+                  ]}
+                />
+              </div>
+              <div>
+                <h3 className="mb-2 font-display text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+                  Top Activity Types
+                </h3>
+                <TopIncidentTypesChart data={withShortLabels(topActivityTypes)} total={rows.length} />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
@@ -287,26 +364,6 @@ export default async function IntelUpdatePage() {
           </CardHeader>
           <CardContent>
             <TopIncidentTypesChart data={withShortLabels(topViolentActivities)} total={violent.length} />
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Non-Violent Activity Trend</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ActivityTrendChart data={nonViolentActivityTrend} activityLabels={nonViolentActivityLabels} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Violent Activity Trend</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ActivityTrendChart data={violentActivityTrend} activityLabels={violentActivityLabels} />
           </CardContent>
         </Card>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { truncateLabel } from "@/lib/text";
 
 export interface ActivityTrendDatum {
@@ -52,7 +52,18 @@ export function ActivityTrendChart({
   return (
     <div className="flex flex-col gap-2">
       <ResponsiveContainer width="100%" height={height}>
-        <LineChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+        <AreaChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+          <defs>
+            {activityLabels.map((label, i) => {
+              const color = LINE_COLORS[i % LINE_COLORS.length];
+              return (
+                <linearGradient key={label} id={`activity-trend-fill-${i}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={color} stopOpacity={0.35} />
+                  <stop offset="95%" stopColor={color} stopOpacity={0} />
+                </linearGradient>
+              );
+            })}
+          </defs>
           <XAxis
             dataKey="date"
             tickFormatter={formatDay}
@@ -73,18 +84,19 @@ export function ActivityTrendChart({
             }}
           />
           {activityLabels.map((label, i) => (
-            <Line
+            <Area
               key={label}
               type="monotone"
               dataKey={label}
               name={label}
               stroke={LINE_COLORS[i % LINE_COLORS.length]}
               strokeWidth={2}
+              fill={`url(#activity-trend-fill-${i})`}
               dot={{ r: 2, strokeWidth: 0 }}
               activeDot={{ r: 4 }}
             />
           ))}
-        </LineChart>
+        </AreaChart>
       </ResponsiveContainer>
       <div className="flex flex-wrap gap-x-4 gap-y-1">
         {activityLabels.map((label, i) => (

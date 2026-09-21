@@ -87,14 +87,19 @@ export function computeIntelAssessment(rows: IntelUpdateRow[]): IntelAssessment 
     );
   }
 
-  const mostRecentViolent = violent[0];
-  if (mostRecentViolent) {
-    const label = mostRecentViolent.activityType ?? mostRecentViolent.narrative;
+  // Same severity-first pick as the Intel Activity Map's "Most Significant
+  // Activity" box (see intel-update/page.tsx) — violent outranks
+  // non-violent regardless of recency, falling back to the latest
+  // non-violent report only when no violent activity is on file at all.
+  const mostSignificant = violent[0] ?? nonViolent[0];
+  if (mostSignificant) {
+    const label = mostSignificant.activityType ?? mostSignificant.narrative;
+    const severity = mostSignificant.category === "VIOLENT" ? "violent" : "non-violent";
     analysis.push(
-      `Most recent violent activity: ${label} in ${mostRecentViolent.province} on ${new Date(mostRecentViolent.date).toLocaleDateString()}.`
+      `Most significant activity: ${label} (${severity}) in ${mostSignificant.province} on ${new Date(mostSignificant.date).toLocaleDateString()}.`
     );
   } else {
-    analysis.push("No violent activity on file.");
+    analysis.push("No activity on file.");
   }
 
   return { analysis };
