@@ -6,14 +6,27 @@ import { LiveClock } from "@/components/live-clock";
 import { SignOutButton } from "@/components/sign-out-button";
 import { useNavCollapse } from "@/components/nav-collapse-context";
 
+// Falls back to the command-wide WESMINCOM seal for anyone not scoped to
+// one of these four JTFs (ADMIN, COMMAND, WFC_STAFF, COMPONENT_COMMAND, a
+// command-wide VIEWER) rather than guessing.
+const JTF_SEALS: Record<string, string> = {
+  "JTF CENTRAL": "/jtf-central-seal.png",
+  "JTF ORION": "/jtf-orion-seal.png",
+  "JTF POSEIDON": "/jtf-poseidon-seal.png",
+  "JTF ZAMPELAN": "/jtf-zampelan-seal.png",
+};
+
 export function NavTopBar({
   links,
   roleLine,
+  jtfName,
 }: {
   links: readonly NavLinkItem[];
   roleLine: string;
+  jtfName: string | null;
 }) {
   const { collapsed, toggle } = useNavCollapse();
+  const sealSrc = (jtfName && JTF_SEALS[jtfName.toUpperCase()]) || "/wesmincom-seal.png";
 
   // The "Show navigation bar" switch itself lives inline next to each
   // page's title (see NavCollapseToggle) so it's guaranteed to sit in the
@@ -31,11 +44,10 @@ export function NavTopBar({
                 static header mark; not worth next/image's optimization
                 pipeline for a 22KB, always-visible icon. */}
             <img
-              src="/wesmincom-seal.png"
-              alt="Western Mindanao Command seal"
+              src={sealSrc}
+              alt={jtfName ? `${jtfName} seal` : "Western Mindanao Command seal"}
               className="size-8"
             />
-            <span className="flex size-2 rounded-full bg-status-good shadow-[0_0_6px_var(--status-good)]" />
             <span className="font-dune hidden text-base tracking-widest uppercase md:inline">
               WMC <span className="text-sunset-gradient">MONITORING</span>
             </span>

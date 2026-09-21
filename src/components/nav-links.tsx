@@ -119,7 +119,7 @@ export function NavLinks({ links }: { links: readonly NavLinkItem[] }) {
           Select/Dropdown trigger — see .neu-raised-interactive), with the
           active page distinguished by a teal fill instead of the neutral
           card color the rest sit at. */}
-      <nav className="neu-inset flex items-center gap-1 rounded-full bg-secondary/60 p-1 text-sm">
+      <nav className="neu-inset flex w-fit items-center gap-1 rounded-full bg-secondary/60 p-1 text-sm">
         {visibleLinks.map((link) => {
           const active = isActive(pathname, link.href);
           return (
