@@ -2,6 +2,7 @@ import { getSessionUser } from "@/lib/session";
 import { NavTopBar } from "@/components/nav-topbar";
 import { prisma } from "@/lib/prisma";
 import {
+  canAccessCmoWorkspace,
   canAccessIntelligenceUpdate,
   canAccessJtfRedcon,
   canAccessPage,
@@ -47,6 +48,7 @@ export async function Nav() {
     ...(canAccessIntelligenceUpdate(user)
       ? [{ href: "/intel-update", label: "INTELLIGENCE" }]
       : []),
+    ...(canAccessCmoWorkspace(user) ? [{ href: "/cmo-workspace", label: "CMO" }] : []),
     ...(canAccessJtfRedcon(user) ? [{ href: "/jtf-redcon", label: "JTF REDCON" }] : []),
     ...visibleAdminLinks.map((l) => ({
       href: l.href,
@@ -59,5 +61,5 @@ export async function Nav() {
     user.warfightingFunction ? ` · ${user.warfightingFunction.replaceAll("_", " ")}` : ""
   }`;
 
-  return <NavTopBar links={allLinks} roleLine={roleLine} />;
+  return <NavTopBar links={allLinks} roleLine={roleLine} jtfName={jtf?.name ?? null} />;
 }
