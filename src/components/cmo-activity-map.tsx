@@ -30,9 +30,9 @@ const DEFAULT_CENTER: [number, number] = [7.2, 124.2];
 const DEFAULT_ZOOM = 7;
 
 const CATEGORY_COLOR: Record<CmoActivityCategory, string> = {
-  PUBLIC_AFFAIRS: "var(--chart-1)",
-  CIVIL_AFFAIRS: "var(--chart-2)",
-  PSYOPS: "var(--chart-3)",
+  PUBLIC_AFFAIRS: "var(--status-good)", // green
+  CIVIL_AFFAIRS: "var(--chart-2)", // orange
+  PSYOPS: "#ec4899", // pink — no theme token for this hue, hardcoded like the chart-* palette
   IEC: "var(--chart-4)",
 };
 
