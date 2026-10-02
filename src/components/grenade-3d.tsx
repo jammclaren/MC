@@ -201,11 +201,16 @@ export function Grenade3D({ phase, onPullPin }: { phase: Phase; onPullPin: () =>
         <ContactShadows position={[0, -1.35, 0]} opacity={0.55} scale={5} blur={2.4} far={2} />
       </Canvas>
       {phase === "idle" && (
+        // Covers the whole canvas (not just the ring) — the ring is a
+        // fiddly sub-20px target to land a click on at this render size,
+        // so the hit area is the entire grenade instead of "find the
+        // exact spot," same forgiving-target idea the overlay had before,
+        // just much bigger.
         <button
           type="button"
           onClick={onPullPin}
           aria-label="Pull the pin to sign in"
-          className="absolute top-2 right-2 size-14 -translate-y-2 translate-x-2 cursor-pointer rounded-full focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none sm:size-16"
+          className="absolute inset-0 cursor-pointer rounded-full focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
         />
       )}
     </div>
