@@ -4,10 +4,11 @@ import { getSessionUser } from "@/lib/session";
 import { canWriteSocialMonitor } from "@/lib/rbac";
 import { classifyPostContent, classifyPostTopic } from "@/lib/social-classifier";
 
-// How far back to look on every run — generous overlap with the hourly
-// cadence so a slow run or a missed tick doesn't drop posts; upserts on
+// How far back to look on every run — generous overlap with the daily
+// cron cadence (Vercel's free tier only allows once-a-day crons) so a slow
+// run or a missed tick doesn't drop posts; upserts on
 // (platform, externalPostId) make re-fetching the same post a no-op.
-const LOOKBACK_HOURS = 6;
+const LOOKBACK_HOURS = 30;
 
 interface FacebookPost {
   id: string;
@@ -48,6 +49,9 @@ async function fetchPageBatch(
   const url = new URL(`https://graph.facebook.com/v19.0/${pageId}/posts`);
   url.searchParams.set("fields", "id,message,created_time,permalink_url,from");
   url.searchParams.set("since", sinceIso);
+  // Default page size is 25 — a daily run's 30h window on a busy page can
+  // exceed that and this fetch doesn't follow paging cursors.
+  url.searchParams.set("limit", "100");
   url.searchParams.set("access_token", accessToken);
 
   const res = await fetch(url.toString());
